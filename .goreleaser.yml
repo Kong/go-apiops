@@ -1,0 +1,24 @@
+universal_binaries:
+  - replace: true
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+      - freebsd
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: freebsd
+        goarch: arm64
+      - goos: windows
+        goarch: arm64
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X github.com/kong/deck/cmd.VERSION={{ .Tag }} -X github.com/kong/deck/cmd.COMMIT={{ .ShortCommit }}
+snapshot:
+  name_template: "{{ .Tag }}"
