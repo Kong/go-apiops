@@ -3,7 +3,7 @@ module github.com/Kong/kced
 go 1.19
 
 require (
-	github.com/Kong/fw v0.0.0-20230105135007-cb8aa17c2b03 // indirect
+	github.com/Kong/fw v0.0.0-20230106131953-c395476580e9 // indirect
 	github.com/getkin/kin-openapi v0.108.0 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/swag v0.19.5 // indirect
