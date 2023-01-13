@@ -14,3 +14,12 @@ cat kong.yaml
 ```
 
 You'll see that a Kong Gateway 3.0 compatible decK configuration has been generated
+
+## Updating the version of `fw`
+
+1. Commit your changes to the `fw` repo
+2. Run `GOPRIVATE=github.com/Kong/fw go get github.com/Kong/fw@<sha>` to update the `kced` dependency
+3. Tag a new release of `kced` and the artifacts will be automatically be built
+
+> If you're not using `https` git URLs, you might need to run `git config --global url."git@github.com:Kong/fw".insteadOf "https://github.com/Kong/fw"` before running `go get`
+
