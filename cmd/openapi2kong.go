@@ -4,50 +4,161 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 
-	"github.com/Kong/fw/convert"
+	"github.com/Kong/fw/convertoas3"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
 
+const (
+	defaultJsonIndent = "  "
+)
+
+// mustReadFile reads file contents. Will panic if reading fails.
+//  Reads from stdin if filename == "-"
+func mustReadFile(filename string) *[]byte {
+	if filename == "-" {
+		filename = "/dev/stdin"
+	}
+
+	body, err := os.ReadFile(filename)
+	if err != nil {
+		log.Fatalf("unable to read file: %v", err)
+	}
+	return &body
+}
+
+// mustSerialize will serialize the result as a JSON/YAML. Will panic
+// if serializing fails.
+func mustSerialize(content map[string]interface{}, asYaml bool) *[]byte {
+	var (
+		str []byte
+		err error
+	)
+
+	if asYaml {
+		str, err = yaml.Marshal(content)
+		if err != nil {
+			log.Fatal("failed to yaml-serialize the resulting file; %w", err)
+		}
+	} else {
+		str, err = json.MarshalIndent(content, "", defaultJsonIndent)
+		if err != nil {
+			log.Fatal("failed to json-serialize the resulting file; %w", err)
+		}
+	}
+
+	return &str
+}
+
+// mustWriteFile writes the output to a file. Will panic if writing fails.
+// Writes to stdout if filename == "-"
+func mustWriteFile(filename string, content *[]byte) {
+
+	var f *os.File
+	var err error
+
+	if filename != "-" {
+		// write to file
+		f, err = os.Create(filename)
+		if err != nil {
+			log.Fatalf("failed to create output file '%s'", filename)
+		}
+		defer f.Close()
+	} else {
+		// writing to stdout
+		f = os.Stdout
+	}
+	_, err = f.Write(*content)
+	if err != nil {
+		log.Fatalf(fmt.Sprintf("failed to write to output file '%s'; %%w", filename), err)
+	}
+}
+
+// Executes the CLI command "openapi2kong"
+func execute(cmd *cobra.Command, args []string) {
+	inputFilename, err := cmd.Flags().GetString("state")
+	if err != nil {
+		log.Fatalf(fmt.Sprintf("failed getting cli argument 'state'; %%w"), err)
+	}
+
+	outputFilename, err := cmd.Flags().GetString("output-file")
+	if err != nil {
+		log.Fatalf(fmt.Sprintf("failed getting cli argument 'output-file'; %%w"), err)
+	}
+
+	docName, err := cmd.Flags().GetString("uuid-base")
+	if err != nil {
+		log.Fatalf(fmt.Sprintf("failed getting cli argument 'uuid-base'; %%w"), err)
+	}
+
+	var entityTags *[]string
+	{
+		tags, err := cmd.Flags().GetStringSlice("select-tag")
+		if err != nil {
+			log.Fatalf(fmt.Sprintf("failed getting cli argument 'select-tag'; %%w"), err)
+		}
+		entityTags = &tags
+		if len(*entityTags) == 0 {
+			entityTags = nil
+		}
+	}
+
+	var asYaml bool
+	{
+		outputFormat, err := cmd.Flags().GetString("format")
+		if err != nil {
+			log.Fatalf(fmt.Sprintf("failed getting cli argument 'format'; %%w"), err)
+		}
+		if outputFormat == "yaml" {
+			asYaml = true
+		} else if outputFormat == "json" {
+			asYaml = false
+		} else {
+			log.Fatalf("expected '--format' to be either 'yaml' or 'json', got: '%s'", outputFormat)
+		}
+	}
+
+	options := convertoas3.O2kOptions{
+		Tags:    entityTags,
+		DocName: docName,
+	}
+
+	// do the work: read/convert/write
+	input := mustReadFile(inputFilename)
+	result := convertoas3.MustConvert(input, options)
+	output := mustSerialize(result, asYaml)
+	mustWriteFile(outputFilename, output)
+}
+
+//
+//
+// Define the CLI data for the openapi2kong command
+//
+//
+
 var openapi2kongCmd = &cobra.Command{
 	Use:   "openapi2kong",
 	Short: "Convert OpenAPI files to Kong's decK format",
-	Long:  `Convert OpenAPI files to Kong's decK format`,
-	Run: func(cmd *cobra.Command, args []string) {
-		inputFilename, _ := cmd.Flags().GetString("input")
+	Long: `Convert OpenAPI files to Kong's decK format.
 
-		input, err := os.ReadFile(inputFilename)
-		if err != nil {
-			fmt.Printf("%v", err)
-			return
-		}
-
-		deckContent, err := convert.ConvertOas3(&input, convert.O2kOptions{
-			Tags: &[]string{"OAS3_import"},
-		})
-
-		if err != nil {
-			fmt.Printf("%v", err)
-		} else {
-			outputFilename, _ := cmd.Flags().GetString("output")
-			YAMLOut, _ := yaml.Marshal(deckContent)
-			err = os.WriteFile(outputFilename, YAMLOut, 0666)
-			if err != nil {
-				fmt.Printf("%v", err)
-				return
-			}
-			fmt.Printf("Wrote %s\n", outputFilename)
-		}
-	},
+The example file has extensive annotations explaining the conversion
+process, as well as all supported custom annotations (x-kong-... directives).
+See: https://github.com/Kong/fw/blob/main/learnservice_oas.yaml`,
+	Run: execute,
 }
 
 func init() {
 	rootCmd.AddCommand(openapi2kongCmd)
-	openapi2kongCmd.Flags().StringP("input", "i", "", "The input file to process")
-	openapi2kongCmd.Flags().StringP("output", "o", "", "The output file to write")
-	openapi2kongCmd.MarkFlagRequired("input")
-	openapi2kongCmd.MarkFlagRequired("output")
+	openapi2kongCmd.Flags().StringP("state", "s", "-", "state file (OAS3, json/yaml) to process. Use - to read from stdin")
+	openapi2kongCmd.Flags().StringP("output-file", "o", "-", "output file to write. Use - to write to stdout")
+	openapi2kongCmd.Flags().StringP("format", "", "yaml", "output format: json or yaml")
+	openapi2kongCmd.Flags().StringP("uuid-base", "", "", `the unique base-string for uuid-v5 generation of enity id's (if omitted
+will use the root-level "x-kong-name" directive, or fall back to 'info.title')`)
+	openapi2kongCmd.Flags().StringSlice("select-tag", nil, `select tags to apply to all entities (if omitted will use the "x-kong-tags"
+directive from the file)`)
 }

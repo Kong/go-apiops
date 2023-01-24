@@ -3,7 +3,12 @@ module github.com/Kong/kced
 go 1.19
 
 require (
-	github.com/Kong/fw v0.0.0-20230106131953-c395476580e9 // indirect
+	github.com/Kong/fw v0.0.0-20230124131059-6f9916c7700a
+	github.com/spf13/cobra v1.6.1
+	gopkg.in/yaml.v3 v3.0.1
+)
+
+require (
 	github.com/getkin/kin-openapi v0.108.0 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/swag v0.19.5 // indirect
@@ -14,8 +19,6 @@ require (
 	github.com/mozillazg/go-slugify v0.2.0 // indirect
 	github.com/mozillazg/go-unidecode v0.2.0 // indirect
 	github.com/satori/go.uuid v1.2.0 // indirect
-	github.com/spf13/cobra v1.6.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
