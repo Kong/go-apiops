@@ -3,7 +3,7 @@ module github.com/Kong/kced
 go 1.19
 
 require (
-	github.com/Kong/fw v0.0.0-20230124131059-6f9916c7700a
+	github.com/Kong/fw v0.0.0-20230201102530-6a9452dc2c37
 	github.com/spf13/cobra v1.6.1
 	gopkg.in/yaml.v3 v3.0.1
 )

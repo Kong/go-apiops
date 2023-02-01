@@ -40,7 +40,8 @@ The `kced` repo is a CLI wrapper around the `fw` library.
 
 1. Commit your changes to the `fw` repo
 2. Run `GOPRIVATE=github.com/Kong/fw go get github.com/Kong/fw@<sha>` to update the `kced` dependency
-3. Tag a new release of `kced` and the artifacts will be automatically be built
+3. run `go mod tidy` to clean up old references
+4. Commit the changes and tag a new release of `kced` and the artifacts will be automatically be built
 
 > If you're not using `https` git URLs, you might need to run `git config --global url."git@github.com:Kong/fw".insteadOf "https://github.com/Kong/fw"` before running `go get`
 

@@ -1,7 +1,5 @@
-github.com/Kong/fw v0.0.0-20230124113753-fceb5efadc42 h1:0KPTUAkmiAmblMBveUc0ip++gnLYCF1mx96HFB89Th8=
-github.com/Kong/fw v0.0.0-20230124113753-fceb5efadc42/go.mod h1:7QKrUpxphkl4z2MM296aXZQIPTjedkKR/o+LLwoGZZ4=
-github.com/Kong/fw v0.0.0-20230124131059-6f9916c7700a h1:kAbs/259Mmez/yOKC43offH5A7g5zPYJgcKvX2culO4=
-github.com/Kong/fw v0.0.0-20230124131059-6f9916c7700a/go.mod h1:7QKrUpxphkl4z2MM296aXZQIPTjedkKR/o+LLwoGZZ4=
+github.com/Kong/fw v0.0.0-20230201102530-6a9452dc2c37 h1:7EP2S4wJQO/mUaqGcorCuLLvyrgxMYPiVwgflF97M6Y=
+github.com/Kong/fw v0.0.0-20230201102530-6a9452dc2c37/go.mod h1:7QKrUpxphkl4z2MM296aXZQIPTjedkKR/o+LLwoGZZ4=
 github.com/cpuguy83/go-md2man/v2 v2.0.2/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
