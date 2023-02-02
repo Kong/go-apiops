@@ -16,3 +16,6 @@
 
 # the binary
 kced
+
+# any manually created test files
+kong.yaml
