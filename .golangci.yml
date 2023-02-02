@@ -1,0 +1,84 @@
+linters:
+  enable:
+  - asciicheck
+  - depguard
+  - dogsled
+  - durationcheck
+  - errcheck
+  - exhaustive
+  - exportloopref
+  - gci
+  - goconst
+  - gofmt
+  - gofumpt
+  - goimports
+  - gomodguard
+  - gosec
+  - govet
+  - importas
+  - lll
+  - megacheck
+  - misspell
+  - nakedret
+  - nilerr
+  - nolintlint
+  - predeclared
+  - revive
+  - stylecheck
+  - unconvert
+  - unparam
+  - wastedassign
+issues:
+  exclude-rules:
+  - linters:
+    - gosec
+    text:  "weak cryptographic primitive"
+    path: "state/indexers/md5Indexer.*"
+  - linters:
+    - gosec
+    text:  "weak random number generator"
+    path: _test\.go
+  - linters:
+    - errcheck
+    text:  "Error return value" # ignore err not checked in test files
+    path: _test\.go
+  - linters:
+    - gosec
+    text:  "Expect WriteFile permissions to be 0600 or less"
+    path: file/codegen/main.go
+  # ignore unused warnings in test utils files
+  - linters:
+    - unused
+    - unparam
+    path: test_.*
+  # ignore SA1019 deprecation warning
+  - linters:
+    - staticcheck
+    text:  "SA1019.*"
+  # ignore formatting warnings in cmd/root.go due to nolint statements
+  - linters:
+    - gofumpt
+    text:  "File is not `gofumpt`-ed"
+    path: cmd/root.go
+  - linters:
+    - gofmt
+    text:  "File is not `gofmt`-ed with `-s`"
+    path: cmd/root.go
+  - linters:
+    - goimports
+    text:  "File is not `goimports`-ed"
+    path: cmd/root.go
+
+linters-settings:
+  gomodguard:
+    blocked:
+      modules:
+      - github.com/ghodss/yaml:
+          recommendations:
+          - sigs.k8s.io/yaml
+      - gopkg.in/yaml.v2:
+          recommendations:
+          - sigs.k8s.io/yaml
+      - gopkg.in/yaml.v3:
+          recommendations:
+          - sigs.k8s.io/yaml
