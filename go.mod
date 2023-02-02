@@ -3,9 +3,8 @@ module github.com/Kong/kced
 go 1.19
 
 require (
-	github.com/Kong/fw v0.0.0-20230201102530-6a9452dc2c37
+	github.com/Kong/fw v0.0.0-20230202142853-b5277a361e31
 	github.com/spf13/cobra v1.6.1
-	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -21,4 +20,6 @@ require (
 	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
+	sigs.k8s.io/yaml v1.3.0 // indirect
 )
