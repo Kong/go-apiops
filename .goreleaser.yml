@@ -19,6 +19,6 @@ builds:
     flags:
       - -trimpath
     ldflags:
-      - -s -w -X github.com/kong/deck/cmd.VERSION={{ .Tag }} -X github.com/kong/deck/cmd.COMMIT={{ .ShortCommit }}
+      - -s -w -X github.com/kong/kced/cmd.VERSION={{ .Tag }} -X github.com/kong/kced/cmd.COMMIT={{ .ShortCommit }}
 snapshot:
   name_template: "{{ .Tag }}"

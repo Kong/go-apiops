@@ -1,0 +1,39 @@
+# When the request-validator is added, but there are no schema's for the parameters
+# or body, then the plugin shouldn't be added at all.
+# see https://konghq.atlassian.net/browse/FTI-4305
+
+openapi: '3.0.0'
+info:
+  description: 'OpenAPI Specification'
+  version: 1.0.1
+  title: Mock Target API
+
+servers:
+  - url: http://httpbin.org/anything
+
+x-kong-plugin-request-validator: {}
+
+paths:
+  /help:
+    get:
+      # there is nothing to validate here, so no plugin should be created
+      summary: Get help
+      operationId: getHelp
+      responses:
+        '200':
+          description: This is a success.
+
+  /user:
+    # we define content-types-allowed statically (not generated)
+    # which means the plugin should still be generated, now
+    # with an empty schema (passes everything).
+    x-kong-plugin-request-validator:
+      config:
+        allowed_content_types: ["application/xml"]
+    get:
+      summary: Get help
+      operationId: getHelp
+      responses:
+        '200':
+          description: This is a success.
+

@@ -1,0 +1,72 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "server1.com",
+      "id": "0907c4ab-d9e4-5d21-813b-c57a97eeaad9",
+      "name": "simple-api-overview",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "44777959-fdbe-5873-a5c1-beabbc822656",
+          "methods": [
+            "GET"
+          ],
+          "name": "simple-api-overview_uses-doc-defaults",
+          "paths": [
+            "~/path1$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_08-route-defaults-overrides.yaml"
+          ]
+        },
+        {
+          "id": "a8cf87ef-dae0-5948-93e4-48f579fe12a0",
+          "methods": [
+            "GET"
+          ],
+          "name": "simple-api-overview_uses-path-defaults",
+          "paths": [
+            "~/path2$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_08-route-defaults-overrides.yaml"
+          ]
+        },
+        {
+          "id": "5a98eef7-b0d2-572e-8656-4654a89c4179",
+          "methods": [
+            "POST"
+          ],
+          "name": "simple-api-overview_uses-ops-defaults",
+          "paths": [
+            "~/path2$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_08-route-defaults-overrides.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_08-route-defaults-overrides.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}

@@ -12,8 +12,8 @@ import (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "kced",
-	Short: "A temporary CLI to test a new Openapi-2-Kong implementation",
-	Long: `A temporary CLI to test a new Openapi-2-Kong implementation.
+	Short: "A temporary CLI to test a new ApiOps implementation",
+	Long: `A temporary CLI to test a new ApiOps implementation.
 
 The ApiOps tooling will be enhanced, part of this effort is
 this tool, which is a rewrite of the Inso Openapi-2-Kong npm library.`,

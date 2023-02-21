@@ -1,0 +1,52 @@
+# generating names from the specified names in x-kong-name directives
+openapi: '3.0.0'
+info:
+  title: Simple API overview
+  version: v2
+servers:
+  - url: http://backend1.com/some/path
+  - url: http://backend2.com/some/path
+# we're setting the spec name explicitly here
+x-kong-name: oas-spec-name
+paths:
+  /app1:
+    # path with an explicit name
+    x-kong-name: path-name
+    get:
+      # operation with an ID
+      operationId: opsid1
+      responses: 
+        '200':
+          description: 200 ok
+    post:
+      # operation without an ID, and without name
+      responses: 
+        '200':
+          description: 200 ok
+    put:
+      # operation without an ID, with name
+      x-kong-name: my-put-operation
+      responses: 
+        '200':
+          description: 200 ok
+  /app2:
+    # path NOT getting an explicit name
+    get:
+      # operation with an ID
+      operationId: opsid2
+      responses: 
+        '200':
+          description: 200 ok
+    post:
+      # operation without an ID
+      responses: 
+        '200':
+          description: 200 ok
+    put:
+      # operation without an ID, with name
+      x-kong-name: my-put-operation
+      responses: 
+        '200':
+          description: 200 ok
+
+

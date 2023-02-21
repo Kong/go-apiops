@@ -1,0 +1,54 @@
+# x-kong-plugin-<name> added to a spec where new service entities are
+# created on path and operation level.
+
+openapi: '3.0.0'
+info:
+  title: Simple API overview
+  version: v2
+servers:
+  - url: https://server1.com/
+
+x-kong-plugin-request-termination:
+  # name will be determined from the tag
+  # name: request-termination;
+  config:
+    status_code: 403
+    message: So long and thanks for all the fish!
+
+paths:
+  /path1:
+    get:
+      # This operation should not get a plugin, but rely on the document level
+      # service-entity based plugin
+      operationId: uses-doc-service-and-plugins
+      summary: List API versions
+      responses:
+        '200':
+          description: |-
+            200 response
+  /path2:
+    # add service defaults to force a new service entity on path-level. This service should
+    # get the same plugins as the doc-level service entity + the ones defined here
+    x-kong-service-defaults: {}
+    x-kong-plugin-some-plugin1: {}
+    get:
+      x-kong-plugin-some-plugin2: {}
+      operationId: uses-doc-plugin-on-path-service
+      summary: List API versions
+      responses:
+        '200':
+          description: |-
+            200 response
+    post:
+      # add another service on operation-level. This one should get the document level
+      # plugins, the path-level one, and the one defined here.
+      # The plugins are only applicable to a single route/operation, hence they will
+      # all be on the route, and none on the service
+      x-kong-service-defaults: {}
+      x-kong-plugin-some-plugin3: {}
+      operationId: uses-plugins-on-ops-level
+      summary: List API versions
+      responses:
+        '200':
+          description: |-
+            200 response

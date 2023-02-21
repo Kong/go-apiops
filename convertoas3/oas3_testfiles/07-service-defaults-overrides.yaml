@@ -1,0 +1,47 @@
+# x-kong-service-defaults can be specified and will be honored on each
+# level, whilst the used upstream remains the same
+
+openapi: '3.0.0'
+info:
+  title: Simple API overview
+  version: v2
+servers:
+  - url: https://server1.com/
+  - url: https://server2.com/
+x-kong-service-defaults:
+  retries: 100
+paths:
+  /path1:
+    # this should create routes attached to the document-level service
+    get:
+      operationId: uses-doc-service
+      summary: List API versions
+      responses:
+        '200':
+          description: |-
+            200 response
+  /path2:
+    # specify new defaults to force another service being created
+    # should inherit upstream from document-level, so no new upstream
+    # only a new service
+    x-kong-service-defaults:
+      retries: 200
+    get:
+      operationId: uses-path-service
+      summary: List API versions
+      responses:
+        '200':
+          description: |-
+            200 response
+    post:
+      # specify new defaults to force another service being created
+      # should inherit upstream from document-level, so no new upstream
+      # only a new service
+      x-kong-service-defaults:
+        retries: 300
+      operationId: uses-ops-service
+      summary: List API versions
+      responses:
+        '200':
+          description: |-
+            200 response

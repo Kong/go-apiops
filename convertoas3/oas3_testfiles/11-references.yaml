@@ -1,0 +1,46 @@
+# references should be enabled for; service, upstream, and route defaults, as well
+# as for plugin configurations.
+# only full entities, no sub entities.
+# location must be "#/components/x-kong/..."
+
+openapi: '3.0.0'
+info:
+  title: Simple API overview
+  version: v2
+servers:
+  - url: https://server1.com/
+
+x-kong-route-defaults:
+  "$ref": "#/components/x-kong/routes/defaults"
+x-kong-service-defaults:
+  "$ref": "#/components/x-kong/services/defaults"
+x-kong-upstream-defaults:
+  "$ref": "#/components/x-kong/upstreams/defaults"
+x-kong-plugin-file-log:
+  "$ref": "#/components/x-kong/plugins/log_to_file"
+
+paths:
+  /path1:
+    get:
+      summary: List API versions
+      responses:
+        '200':
+          description: |-
+            200 response
+
+components:
+  x-kong:
+    plugins:
+      log_to_file:
+        config:
+          path: "/dev/stderr"
+    routes:
+      defaults:
+        regex_priority: 999
+    upstreams:
+      defaults:
+        slots: 999
+    services:
+      defaults:
+        retries: 999
+

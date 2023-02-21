@@ -1,0 +1,19 @@
+# if the servers block has more than 1 url, then an upstream
+# is generated with a target for each sesrver
+
+openapi: '3.0.0'
+info:
+  title: Simple API overview
+  version: v2
+servers:
+  - url: https://server1.com/
+  - url: https://server2.com/
+paths:
+  /:
+    get:
+      operationId: OpsId
+      summary: List API versions
+      responses:
+        '200':
+          description: |-
+            200 response

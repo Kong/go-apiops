@@ -1,0 +1,71 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "httpbin.org",
+      "id": "069ec36b-308c-5cf4-8536-b7bad57907ea",
+      "name": "mock-target-api",
+      "path": "/anything",
+      "plugins": [],
+      "port": 80,
+      "protocol": "http",
+      "routes": [
+        {
+          "id": "34dc34c8-2b0e-539b-9a6c-8b0ff4cd9fbb",
+          "methods": [
+            "GET"
+          ],
+          "name": "mock-target-api_gethelp",
+          "paths": [
+            "~/help$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_14-no-request-validator-plugin.yaml"
+          ]
+        },
+        {
+          "id": "34dc34c8-2b0e-539b-9a6c-8b0ff4cd9fbb",
+          "methods": [
+            "GET"
+          ],
+          "name": "mock-target-api_gethelp",
+          "paths": [
+            "~/user$"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "allowed_content_types": [
+                  "application/xml"
+                ],
+                "body_schema": "{}",
+                "version": "draft4"
+              },
+              "id": "40037e1a-ea6d-5d78-85b2-7f502e4a60e9",
+              "name": "request-validator",
+              "tags": [
+                "OAS3_import",
+                "OAS3file_14-no-request-validator-plugin.yaml"
+              ]
+            }
+          ],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_14-no-request-validator-plugin.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_14-no-request-validator-plugin.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}

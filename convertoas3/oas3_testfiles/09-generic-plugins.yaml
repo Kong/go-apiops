@@ -1,0 +1,71 @@
+# x-kong-plugin-<name> are accepted on each level. The document level plugins
+# end up on the service. The path and operation level plugins on the route.
+#
+# if the same plugin is on a path and operation, the operation one wins (to be
+# attached to a route).
+#
+# Plugin-defaults cannot have foreign-keys to service/route entities (ignored)
+
+openapi: '3.0.0'
+info:
+  title: Simple API overview
+  version: v2
+servers:
+  - url: https://server1.com/
+
+x-kong-plugin-request-termination:
+  # name will be determined from the tag
+  # name: request-termination;
+  config:
+    status_code: 403
+    message: So long and thanks for all the fish!
+  # foreign keys to be ignored
+  service: delete-me
+  route: delete-me-to
+
+paths:
+  /path1:
+    get:
+      # This operation should not get a plugin, but rely on the document level
+      # service-entity based plugin
+      operationId: uses-doc-plugin
+      summary: List API versions
+      responses:
+        '200':
+          description: |-
+            200 response
+  /path2:
+    # This plugin gets attached to a route, overriding the document service-entity
+    # attached plugin
+    x-kong-plugin-request-termination:
+      config:
+        status_code: 403
+        message: The answer to life, the universe, and everything!
+      # foreign keys to be ignored
+      service: delete-me
+      route: delete-me-to
+    get:
+      # gets the plugin from the path-level, attached on route-entity
+      operationId: uses-path-plugin
+      summary: List API versions
+      responses:
+        '200':
+          description: |-
+            200 response
+    post:
+      # This plugin gets attached to a route, taking precedence over the path-level
+      # plugin. On the route it will override the document level service-entity
+      # attached plugin
+      x-kong-plugin-request-termination:
+        config:
+          status_code: 403
+          message: For a moment, nothing happened. Then, after a second or so, nothing continued to happen.
+        # foreign keys to be ignored
+        service: delete-me
+        route: delete-me-to
+      operationId: uses-ops-plugin
+      summary: List API versions
+      responses:
+        '200':
+          description: |-
+            200 response
