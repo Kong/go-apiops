@@ -1,0 +1,19 @@
+# servers[0].url doesn't have a trailing slash
+# if service.url is only a hostname, with no path nor
+# trailing /
+
+openapi: 3.0.3
+
+info:
+  title: Server with no trailing slash
+  version: v1
+servers:
+  - url: "https://example.com"
+
+paths:
+  /path:
+    get:
+      operationId: myId
+      responses:
+        "200":
+          description: OK

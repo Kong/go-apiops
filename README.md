@@ -20,28 +20,17 @@ You'll see that a Kong Gateway 3.0 compatible decK configuration has been genera
 
 ## Usage
 
-For CLI usage try;
+Though initially aimed at OpenAPI conversion, additional commands will be added as we go.
+
+Checkout the CLI usage on the latest release. Try;
 
 ```bash
-kced openapi2kong --help
-``` 
+kced --help
+```
 
-An extensively annotated input file describing the many features can be found [here](https://github.com/Kong/fw/blob/main/learnservice_oas.yaml).
+Online documentation and examples can be found [here](https://github.com/Kong/kced/blob/main/docs).
 
 ## Reporting issues
 
-The `kced` repo is a CLI wrapper around the `fw` library.
-
-- issues with the CLI, report them [as an issue at `kced`](https://github.com/Kong/kced/issues)
-- issues with the content generated, report them [as an issue at `fw`](https://github.com/Kong/fw/issues)
-- when in doubt use the first option; kced.
-
-## Updating the version of `fw`
-
-1. Commit your changes to the `fw` repo
-2. Run `GOPRIVATE=github.com/Kong/fw go get github.com/Kong/fw@<sha>` to update the `kced` dependency
-3. run `go mod tidy` to clean up old references
-4. Commit the changes and tag a new release of `kced` and the artifacts will be automatically be built
-
-> If you're not using `https` git URLs, you might need to run `git config --global url."git@github.com:Kong/fw".insteadOf "https://github.com/Kong/fw"` before running `go get`
+Issues using `kced` can be reported at [its Github repo](https://github.com/Kong/kced/issues).
 

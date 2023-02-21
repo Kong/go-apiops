@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Kong/fw/convertoas3"
-	"github.com/Kong/fw/filebasics"
+	"github.com/Kong/kced/convertoas3"
+	"github.com/Kong/kced/filebasics"
 	"github.com/spf13/cobra"
 )
 
@@ -79,7 +79,7 @@ var openapi2kongCmd = &cobra.Command{
 
 The example file has extensive annotations explaining the conversion
 process, as well as all supported custom annotations (x-kong-... directives).
-See: https://github.com/Kong/fw/blob/main/learnservice_oas.yaml`,
+See: https://github.com/Kong/kced/blob/main/docs/learnservice_oas.yaml`,
 	Run: execute,
 }
 

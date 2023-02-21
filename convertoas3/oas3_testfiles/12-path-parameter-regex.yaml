@@ -1,0 +1,55 @@
+# The path parameters should be converted to a regex for matching the route.
+# Including creating captures of the parameter values.
+
+openapi: 3.0.3
+info:
+  title: Path parameter test
+  version: v1
+servers:
+  - url: "https://example.com"
+
+paths:
+  # note that '-to-do' is not a valid regex capture name, hence it must be sanitized
+  # in the output.
+  /demo/{something}/else/{-to-do}/:
+    get:
+      operationId: opsid
+      parameters:
+        - in: path
+          name: something
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: todo
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  # some more complex paths, with and without parameters
+  # examples from: https://github.com/Kong/insomnia/pull/5246
+  /batchs(Material='iron',Batch='10'):
+    get:
+      responses:
+        "200":
+          description: no parameters
+      operationId: getBatchNoParams
+  /batchs(Material='{Material}',Batch='{Batch}'):
+    get:
+      parameters:
+        - in: path
+          name: Material
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: Batch
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: An echo message.
+      operationId: getBatchWithParams

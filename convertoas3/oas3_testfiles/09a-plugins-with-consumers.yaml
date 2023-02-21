@@ -1,0 +1,65 @@
+# x-kong-plugin-<name> can carry a consumer id. Those plugins must be added
+# on the top-level of the output because they have 2 foreign keys.
+#
+# the top-level plugins array should be lexically sorted by plugin-name + ID
+
+openapi: '3.0.0'
+info:
+  title: Simple API overview
+  version: v2
+servers:
+  - url: https://server1.com/
+
+x-kong-plugin-request-termination:
+  # name will be determined from the tag
+  # name: request-termination;
+  config:
+    status_code: 403
+    message: So long and thanks for all the fish!
+  # foreign keys to consumer
+  consumer: johndoe1
+
+paths:
+  /path1:
+    get:
+      # This operation should not get a plugin, but rely on the document level
+      # service-entity based plugin
+      operationId: uses-doc-plugin
+      summary: List API versions
+      responses:
+        '200':
+          description: |-
+            200 response
+  /path2:
+    # This plugin gets attached to a route, overriding the document service-entity
+    # attached plugin
+    x-kong-plugin-request-termination:
+      config:
+        status_code: 403
+        message: The answer to life, the universe, and everything!
+      # foreign keys to consumer
+      consumer: johndoe2
+    get:
+      # gets the plugin from the path-level, attached on route-entity
+      operationId: uses-path-plugin
+      summary: List API versions
+      responses:
+        '200':
+          description: |-
+            200 response
+    post:
+      # This plugin gets attached to a route, taking precedence over the path-level
+      # plugin. On the route it will override the document level service-entity
+      # attached plugin
+      x-kong-plugin-request-termination:
+        config:
+          status_code: 403
+          message: For a moment, nothing happened. Then, after a second or so, nothing continued to happen.
+        # foreign keys to consumer
+        consumer: johndoe3
+      operationId: uses-ops-plugin
+      summary: List API versions
+      responses:
+        '200':
+          description: |-
+            200 response

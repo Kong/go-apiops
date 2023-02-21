@@ -1,0 +1,32 @@
+# Some of the generated fields for services should be overridable
+# using the defaults.
+# These are the order in which we should take the values:
+# - service.protocol: x-kong-service-defaults -> servers[1].url (first entry servers block) -> default value "https"
+# - service.port: x-kong-service-defaults -> servers[1].url (first entry servers block) -> default to 80/443 based on protocol
+# - service.path: x-kong-service-defaults -> servers[1].url (first entry servers block) -> default to "/"
+# - service.host: x-kong-service-defaults -> if 1 url then servers[1].url (first entry servers block), if multiple create an upstream -> default to "localhost"
+#   Note: if a host default is specified, then no upstream should be generated
+
+openapi: '3.0.0'
+info:
+  title: Simple API overview
+  version: v2
+servers:
+  - url: https://server1.com/anything
+  - url: https://server2.com/anything
+
+x-kong-service-defaults:
+  protocol: http
+  port: 123
+  path: /something
+  host: myhost.com
+
+paths:
+  /path1:
+    get:
+      operationId: uses-doc-service
+      summary: List API versions
+      responses:
+        '200':
+          description: |-
+            200 response

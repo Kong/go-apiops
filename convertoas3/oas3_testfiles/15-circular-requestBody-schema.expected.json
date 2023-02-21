@@ -1,0 +1,57 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "some.random.url",
+      "id": "68804eaf-310b-508e-ae22-fe6a7b9ab716",
+      "name": "testing-circular",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "761badfc-6c93-585c-a5ed-cee7559aad27",
+          "methods": [
+            "POST"
+          ],
+          "name": "testing-circular_testing_post",
+          "paths": [
+            "~/testing$"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "allowed_content_types": [
+                  "application/json"
+                ],
+                "body_schema": "{\"$ref\":\"#/definitions/TestRequest\",\"definitions\":{\"CircularEnd\":{\"allOf\":[{\"$ref\":\"#/definitions/CircularStart\"}]},\"CircularStart\":{\"allOf\":[{\"$ref\":\"#/definitions/CircularEnd\"}]},\"TestRequest\":{\"allOf\":[{\"$ref\":\"#/definitions/CircularStart\"}]}}}",
+                "verbose_response": true,
+                "version": "draft4"
+              },
+              "enabled": true,
+              "id": "72eaa98a-0562-5669-9ee8-45d0fa479e7d",
+              "name": "request-validator",
+              "tags": [
+                "OAS3_import",
+                "OAS3file_15-circular-requestBody-schema.yaml"
+              ],
+              "version": "draft4"
+            }
+          ],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_15-circular-requestBody-schema.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_15-circular-requestBody-schema.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}

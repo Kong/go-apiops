@@ -1,0 +1,26 @@
+# Some of the generated fields for upstreams should be overridable
+# using the defaults.
+# These are the order in which we should take the values:
+# - upstream.targets: x-kong-upstream-defaults -> list of targets gotten from servers block -> default empty array
+
+openapi: '3.0.0'
+info:
+  title: Simple API overview
+  version: v2
+servers:
+  - url: https://server1.com/anything
+
+x-kong-upstream-defaults:
+  targets:
+    - target: 'my-server1.com:443'
+    - target: 'my-server2.com:443'
+
+paths:
+  /path1:
+    get:
+      operationId: uses-doc-service
+      summary: List API versions
+      responses:
+        '200':
+          description: |-
+            200 response

@@ -1,0 +1,38 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "example.com",
+      "id": "5434f850-a000-5ad5-8772-1a3cd10811e6",
+      "name": "server-with-no-trailing-slash",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "d44c95fe-dc1c-596c-8b4a-e18ff50607c4",
+          "methods": [
+            "GET"
+          ],
+          "name": "server-with-no-trailing-slash_myid",
+          "paths": [
+            "~/path$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_03a-server-no-trailing-slash.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_03a-server-no-trailing-slash.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}

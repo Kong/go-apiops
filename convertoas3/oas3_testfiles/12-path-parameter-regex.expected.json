@@ -1,0 +1,72 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "example.com",
+      "id": "520e4991-2d1a-59b8-bf2e-579cca0969a0",
+      "name": "path-parameter-test",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "38dcec89-d67c-5f67-ab5e-b38cc2180f77",
+          "methods": [
+            "GET"
+          ],
+          "name": "path-parameter-test_getbatchnoparams",
+          "paths": [
+            "~/batchs\\(Material='iron',Batch='10'\\)$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_12-path-parameter-regex.yaml"
+          ]
+        },
+        {
+          "id": "2af1536a-706a-5941-b3fe-2682e031edf9",
+          "methods": [
+            "GET"
+          ],
+          "name": "path-parameter-test_getbatchwithparams",
+          "paths": [
+            "~/batchs\\(Material='(?<material>[^#?/]+)',Batch='(?<batch>[^#?/]+)'\\)$"
+          ],
+          "plugins": [],
+          "regex_priority": 100,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_12-path-parameter-regex.yaml"
+          ]
+        },
+        {
+          "id": "0da1f8dc-e918-5379-b3b0-ffc061ae1691",
+          "methods": [
+            "GET"
+          ],
+          "name": "path-parameter-test_opsid",
+          "paths": [
+            "~/demo/(?<something>[^#?/]+)/else/(?<to_do>[^#?/]+)/$"
+          ],
+          "plugins": [],
+          "regex_priority": 100,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_12-path-parameter-regex.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_12-path-parameter-regex.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}

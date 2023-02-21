@@ -1,0 +1,47 @@
+# x-kong-route-defaults can be specified and will be honored on each level
+
+openapi: '3.0.0'
+info:
+  title: Simple API overview
+  version: v2
+servers:
+  - url: https://server1.com/
+x-kong-route-defaults:
+  regex_priority: 100
+  # routes cannot have a foreign key to a service (is set by the conversion)
+  service: delete-me
+paths:
+  /path1:
+    get:
+      # should get the document level defaults
+      operationId: uses-doc-defaults
+      summary: List API versions
+      responses:
+        '200':
+          description: |-
+            200 response
+  /path2:
+    # specify new defaults to override document level
+    x-kong-route-defaults:
+      regex_priority: 200
+      # routes cannot have a foreign key to a service (is set by the conversion)
+      service: delete-me
+    get:
+      operationId: uses-path-defaults
+      summary: List API versions
+      responses:
+        '200':
+          description: |-
+            200 response
+    post:
+      # specify new defaults to override path level
+      x-kong-route-defaults:
+        regex_priority: 300
+        # routes cannot have a foreign key to a service (is set by the conversion)
+        service: delete-me
+      operationId: uses-ops-defaults
+      summary: List API versions
+      responses:
+        '200':
+          description: |-
+            200 response

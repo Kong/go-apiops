@@ -1,0 +1,39 @@
+# inferring names from the document title, the path+method and/or operation id
+
+openapi: '3.0.0'
+info:
+  # document name detected from the title below
+  title: Simple API overview
+  version: v2
+servers:
+  - url: http://backend1.com/some/path
+  - url: http://backend2.com/some/path
+paths:
+  /:
+    # path with only a single '/'
+    get:
+      # operation with an ID
+      operationId: opsid1
+      responses: 
+        '200':
+          description: 200 ok
+    post:
+      # operation without an ID
+      responses: 
+        '200':
+          description: 200 ok
+  /application:
+    # non-empty path
+    get:
+      # operation with an ID
+      operationId: opsid2
+      responses: 
+        '200':
+          description: 200 ok
+    post:
+      # operation without an ID
+      responses: 
+        '200':
+          description: 200 ok
+
+

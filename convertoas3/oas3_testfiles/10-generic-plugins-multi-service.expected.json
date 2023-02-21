@@ -1,0 +1,174 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "server1.com",
+      "id": "0907c4ab-d9e4-5d21-813b-c57a97eeaad9",
+      "name": "simple-api-overview",
+      "path": "/",
+      "plugins": [
+        {
+          "config": {
+            "message": "So long and thanks for all the fish!",
+            "status_code": 403
+          },
+          "id": "ef93d30f-dc7d-581b-8b1b-3f8942a0d171",
+          "name": "request-termination",
+          "tags": [
+            "OAS3_import",
+            "OAS3file_10-generic-plugins-multi-service.yaml"
+          ]
+        }
+      ],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "ef8405d9-7cbc-5574-901e-50a8cb63fe6f",
+          "methods": [
+            "GET"
+          ],
+          "name": "simple-api-overview_uses-doc-service-and-plugins",
+          "paths": [
+            "~/path1$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_10-generic-plugins-multi-service.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_10-generic-plugins-multi-service.yaml"
+      ]
+    },
+    {
+      "host": "server1.com",
+      "id": "a79c5a8c-0924-599e-9412-39f5a4ff0c3e",
+      "name": "simple-api-overview_path2",
+      "path": "/",
+      "plugins": [
+        {
+          "config": {
+            "message": "So long and thanks for all the fish!",
+            "status_code": 403
+          },
+          "id": "e1095950-df7f-5747-afd1-36355f4510ae",
+          "name": "request-termination",
+          "tags": [
+            "OAS3_import",
+            "OAS3file_10-generic-plugins-multi-service.yaml"
+          ]
+        },
+        {
+          "id": "44b80499-0367-5fb6-b1b3-3d0e3281acad",
+          "name": "some-plugin1",
+          "tags": [
+            "OAS3_import",
+            "OAS3file_10-generic-plugins-multi-service.yaml"
+          ]
+        }
+      ],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "a065359f-f1b2-5bc3-b32a-4b97992cbd9b",
+          "methods": [
+            "GET"
+          ],
+          "name": "simple-api-overview_uses-doc-plugin-on-path-service",
+          "paths": [
+            "~/path2$"
+          ],
+          "plugins": [
+            {
+              "id": "a9ddfff9-6672-5471-84a7-bfccae5d74b2",
+              "name": "some-plugin2",
+              "tags": [
+                "OAS3_import",
+                "OAS3file_10-generic-plugins-multi-service.yaml"
+              ]
+            }
+          ],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_10-generic-plugins-multi-service.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_10-generic-plugins-multi-service.yaml"
+      ]
+    },
+    {
+      "host": "server1.com",
+      "id": "95802912-cfa1-5edf-876b-0fd23729e46e",
+      "name": "simple-api-overview_uses-plugins-on-ops-level",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "042a9169-97e8-5177-9f53-0d5067f4f139",
+          "methods": [
+            "POST"
+          ],
+          "name": "simple-api-overview_uses-plugins-on-ops-level",
+          "paths": [
+            "~/path2$"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "message": "So long and thanks for all the fish!",
+                "status_code": 403
+              },
+              "id": "4a6df652-011a-5f76-b1b4-460ab5c86da9",
+              "name": "request-termination",
+              "tags": [
+                "OAS3_import",
+                "OAS3file_10-generic-plugins-multi-service.yaml"
+              ]
+            },
+            {
+              "id": "2736254d-7317-5d57-a9e9-9b3cf1c6489e",
+              "name": "some-plugin1",
+              "tags": [
+                "OAS3_import",
+                "OAS3file_10-generic-plugins-multi-service.yaml"
+              ]
+            },
+            {
+              "id": "c8d30b7f-fc60-5791-b31a-7bf6eb83b0b3",
+              "name": "some-plugin3",
+              "tags": [
+                "OAS3_import",
+                "OAS3file_10-generic-plugins-multi-service.yaml"
+              ]
+            }
+          ],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_10-generic-plugins-multi-service.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_10-generic-plugins-multi-service.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}
