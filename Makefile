@@ -1,4 +1,4 @@
-.PHONY: check-main-dependencies all build lint test clean
+.PHONY: all check-main-dependencies check-lint-dependencies build lint test clean
 
 BINARY_NAME=kced
 
@@ -7,16 +7,18 @@ echo_pass = printf "\e[32m✔ \033\e[0m$(1)\n"
 
 check-dependency = $(if $(shell command -v $(1)),$(call echo_pass,found $(1)),$(call echo_fail,$(1) not installed);exit 1)
 
+all: check-main-dependencies check-lint-dependencies build test lint
+
 check-main-dependencies:
 	@$(call check-dependency,go)
 
-all: build test lint
+check-lint-dependencies:
+	@$(call check-dependency,golangci-lint)
 
 build: check-main-dependencies
 	go build -o ${BINARY_NAME} main.go
 
-lint:
-	@$(call check-dependency,golangci-lint)
+lint: check-lint-dependencies
 	golangci-lint run
 
 test: check-main-dependencies
