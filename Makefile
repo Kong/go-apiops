@@ -16,5 +16,6 @@ test:
 clean:
 	$(RM) ./convertoas3/oas3_testfiles/*.generated.json
 	$(RM) ./${BINARY_NAME}
+	$(RM) ./go-apiops
 	go mod tidy
 	go clean
