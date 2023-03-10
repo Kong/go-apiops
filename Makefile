@@ -15,6 +15,6 @@ test:
 
 clean:
 	$(RM) ./convertoas3/oas3_testfiles/*.generated.json
-	$(RM) ./kced
+	$(RM) ./${BINARY_NAME}
 	go mod tidy
 	go clean
