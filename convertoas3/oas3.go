@@ -801,15 +801,16 @@ func Convert(content *[]byte, opts O2kOptions) (map[string]interface{}, error) {
 			route["plugins"] = operationPluginList
 
 			// Escape path contents for regex creation
+			convertedPath := path
 			charsToEscape := []string{"(", ")", ".", "+", "?", "*", "["}
 			for _, char := range charsToEscape {
-				path = strings.ReplaceAll(path, char, "\\"+char)
+				convertedPath = strings.ReplaceAll(convertedPath, char, "\\"+char)
 			}
 
 			// convert path parameters to regex captures
 			re, _ := regexp.Compile("{([^}]+)}")
 			regexPriority := 200 // non-regexed (no params) paths have higher precedence in OAS
-			if matches := re.FindAllStringSubmatch(path, -1); matches != nil {
+			if matches := re.FindAllStringSubmatch(convertedPath, -1); matches != nil {
 				regexPriority = 100
 				for _, match := range matches {
 					varName := match[1]
@@ -817,10 +818,10 @@ func Convert(content *[]byte, opts O2kOptions) (map[string]interface{}, error) {
 					// see https://github.com/OAI/OpenAPI-Specification/issues/291#issuecomment-316593913
 					regexMatch := "(?<" + sanitizeRegexCapture(varName) + ">[^#?/]+)"
 					placeHolder := "{" + varName + "}"
-					path = strings.Replace(path, placeHolder, regexMatch, 1)
+					convertedPath = strings.Replace(convertedPath, placeHolder, regexMatch, 1)
 				}
 			}
-			route["paths"] = []string{"~" + path + "$"}
+			route["paths"] = []string{"~" + convertedPath + "$"}
 			route["id"] = uuid.NewV5(opts.UUIDNamespace, operationBaseName+".route").String()
 			route["name"] = operationBaseName
 			route["methods"] = []string{method}

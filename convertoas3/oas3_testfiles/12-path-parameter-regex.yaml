@@ -53,3 +53,20 @@ paths:
         "200":
           description: An echo message.
       operationId: getBatchWithParams
+    post:
+      # test vaildating not escaping the path twice; we have 2 methods on 1 path
+      parameters:
+        - in: path
+          name: Material
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: Batch
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: An echo message.
+      operationId: postBatchWithParams
