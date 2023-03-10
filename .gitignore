@@ -14,11 +14,15 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
+# distributions created by goreleaser
+dist/
+
 # generated test files
 convertoas3/oas3_testfiles/*.generated.json
 
 # the binary
 kced
+go-apiops
 
 # any manually created test files
 kong.yaml

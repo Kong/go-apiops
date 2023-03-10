@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Kong/kced/convertoas3"
-	"github.com/Kong/kced/filebasics"
+	"github.com/kong/go-apiops/convertoas3"
+	"github.com/kong/go-apiops/filebasics"
 	"github.com/spf13/cobra"
 )
 

@@ -1,4 +1,4 @@
-module github.com/Kong/kced
+module github.com/kong/go-apiops
 
 go 1.19
 
