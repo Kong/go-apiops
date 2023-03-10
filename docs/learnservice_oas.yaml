@@ -220,7 +220,7 @@ paths:
                   "$ref": "#/components/schemas/LearningCenterTrack"
         '400':
           description: Bad Request
-  "/tracks/{id}":
+  "/tracks/{track-id}":
     delete:
       tags:
       - learn
@@ -231,7 +231,7 @@ paths:
         # TODO: validate security generated all together!!! report about it being broken
         # See #/components/securitySchemes for the definition
       parameters:
-      - name: id
+      - name: track-id
         in: path
         description: Id of the Track to delete
         required: true
