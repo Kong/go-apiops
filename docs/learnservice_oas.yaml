@@ -77,9 +77,6 @@ x-kong-plugin-correlation-id:
 # If new Service entities are generated from "path" or "operation" objects, the plugins
 # will be copied over accordingly (for example by having "servers" objects, or Upstream or
 # Service defaults specified on those levels).
-# A consumer can be referenced by setting the "consumer" field to the consumer name or id.
-# Note: since the plugin name is in the key, only 1 instance of each plugin can be added
-# on each level.
 
 x-kong-plugin-request-validator:
   config:
@@ -223,7 +220,7 @@ paths:
                   "$ref": "#/components/schemas/LearningCenterTrack"
         '400':
           description: Bad Request
-  "/tracks/{track-id}":
+  "/tracks/{id}":
     delete:
       tags:
       - learn
@@ -234,7 +231,7 @@ paths:
         # TODO: validate security generated all together!!! report about it being broken
         # See #/components/securitySchemes for the definition
       parameters:
-      - name: track-id
+      - name: id
         in: path
         description: Id of the Track to delete
         required: true
