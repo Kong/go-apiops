@@ -1,6 +1,9 @@
 package jsonbasics
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 // ToObject returns the object, or nil+err
 func ToObject(obj interface{}) (map[string]interface{}, error) {
@@ -139,4 +142,12 @@ func GetBoolIndex(arr []interface{}, index int) (bool, error) {
 		return result, nil
 	}
 	return false, fmt.Errorf("expected index '%d' to be a boolean", index)
+}
+
+// DeepCopy implements a poor man's deepcopy by jsonify/de-jsonify
+func DeepCopy(data *map[string]interface{}) *map[string]interface{} {
+	var dataCopy map[string]interface{}
+	serialized, _ := json.Marshal(data)
+	_ = json.Unmarshal(serialized, &dataCopy)
+	return &dataCopy
 }
