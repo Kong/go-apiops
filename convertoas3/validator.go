@@ -153,7 +153,7 @@ func generateValidatorPlugin(configJSON []byte, operation *openapi3.Operation,
 	// create a new ID here based on the operation
 	pluginConfig["id"] = createPluginID(uuidNamespace, baseName, pluginConfig)
 
-	config, _ := toJSONObject(pluginConfig["config"])
+	config, _ := ToObject(pluginConfig["config"])
 	if config == nil {
 		config = make(map[string]interface{})
 		pluginConfig["config"] = config
