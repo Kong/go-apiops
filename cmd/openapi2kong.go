@@ -14,9 +14,9 @@ import (
 
 // Executes the CLI command "openapi2kong"
 func execute(cmd *cobra.Command, args []string) {
-	inputFilename, err := cmd.Flags().GetString("state")
+	inputFilename, err := cmd.Flags().GetString("spec")
 	if err != nil {
-		log.Fatalf(fmt.Sprintf("failed getting cli argument 'state'; %%w"), err)
+		log.Fatalf(fmt.Sprintf("failed getting cli argument 'spec'; %%w"), err)
 	}
 
 	outputFilename, err := cmd.Flags().GetString("output-file")
@@ -85,7 +85,7 @@ See: https://github.com/Kong/kced/blob/main/docs/learnservice_oas.yaml`,
 
 func init() {
 	rootCmd.AddCommand(openapi2kongCmd)
-	openapi2kongCmd.Flags().StringP("state", "s", "-", "state file (OAS3, json/yaml) to process. Use - to read from stdin")
+	openapi2kongCmd.Flags().StringP("spec", "s", "-", "OpenAPI spec file to process. Use - to read from stdin")
 	openapi2kongCmd.Flags().StringP("output-file", "o", "-", "output file to write. Use - to write to stdout")
 	openapi2kongCmd.Flags().StringP("format", "", "yaml", "output format: json or yaml")
 	openapi2kongCmd.Flags().StringP("uuid-base", "", "",
