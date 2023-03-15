@@ -12,11 +12,10 @@ import (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "kced",
-	Short: "A temporary CLI to test a new ApiOps implementation",
-	Long: `A temporary CLI to test a new ApiOps implementation.
+	Short: "A temporary CLI that drives the Kong go-apiops library",
+	Long: `A temporary CLI that drives the Kong go-apiops library.
 
-The ApiOps tooling will be enhanced, part of this effort is
-this tool, which is a rewrite of the Inso Openapi-2-Kong npm library.`,
+go-apiops houses an improved APIOps toolset for operating Kong Gateway deployments.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
