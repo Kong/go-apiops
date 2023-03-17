@@ -198,11 +198,17 @@ _G.ngx = old_ngx
 -------------------------------------------------------------------------------
 -- Walk the tree to find all foreign relationships
 -------------------------------------------------------------------------------
+-- print("title: ", require("pl.pretty").write(daos.routes))
+
 local output = {}
 for name, schema in pairs(daos) do
   local foreign = {}
+
+  --print(name..":", require("pl.pretty").write(schema.primary_key))
   local dao = {
     TableName = name,
+    PrimaryKey = schema.primary_key,
+    Workspaceable = schema.workspaceable,
     -- SourceFile = schema._source_file,
   }
   output[#output+1] = dao
@@ -227,6 +233,37 @@ end
 table.sort(output, function(a,b) return a.TableName < b.TableName end)
 
 
+-------------------------------------------------------------------------------
+-- Sanitize the raw table data
+-------------------------------------------------------------------------------
+
+-- These tables do not contain configuration data for deck files, so we can leave
+-- them out.
+local tables_to_skip = {
+  "tags",                       -- tags are managed separately by decK
+  "workspace_entity_counters",  -- this is generated data, not config
+  "audit_requests",             -- runtime data
+  "degraphql_routes",           -- TODO: check what this table is
+  "legacy_files",               -- TODO: sounds deprecated...
+  "graphql_ratelimiting_advanced_cost_decoration", -- TODO: check what this is, feels like runtime data
+  "clustering_data_planes",     -- TODO: check, seems runtime data
+  "keyring_meta",               -- TODO: check
+  "ratelimiting_metrics",       -- runtime data
+  "login_attempts",             -- runtime data
+  "consumer_reset_secrets",     -- TODO: what is this?
+}
+for _, tablename in ipairs(tables_to_skip) do
+  local idx
+  for i, tabledata in ipairs(output) do
+    if tabledata.TableName == tablename then
+      idx = i
+      break
+    end
+  end
+  assert(idx, "table '"..tablename.."' (to be skipped) wasn't found")
+  log("skipping table '"..tablename.."'")
+  table.remove(output, idx)
+end
 
 -------------------------------------------------------------------------------
 -- output a Go-lang codefile to stdout
