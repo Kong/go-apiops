@@ -31,7 +31,7 @@ var toFromReferences map[string]map[string]string
 var EntityTables map[string]bool
 
 // TablesSortedByForeignRefCount is an array with tables names, sorted by least foreign
-// refs ("consumers" goes first, "plugins" go last)
+// refs (eg. "consumers" (0) goes first, "plugins" (3) go last)
 var TablesSortedByForeignRefCount []string
 
 // InjectUUID will add `id` fields for all entities
@@ -57,11 +57,11 @@ func InjectUUID(dataIn interface{}) {
 			continue
 		}
 
-		handleEntityArray(listArr, breadcrumb)
+		handleEntityArray(arrayName, listArr, breadcrumb)
 	}
 }
 
-func handleEntityArray(entityArray []interface{}, breadcrumb string) {
+func handleEntityArray(tableName string, entityArray []interface{}, breadcrumb string) {
 
 }
 
