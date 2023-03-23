@@ -6,6 +6,8 @@ local getallfiles = require("pl.dir").getallfiles
 local insertvalues = require("pl.tablex").insertvalues
 local yaml = require "lyaml"
 
+-- make sure to pick up the local source tree when "require"'ing modules
+package.path = "./?.lua;./?/init.lua;"..package.path
 
 -- this goes to stderr, where "print" goes to stdout
 local function log(...)
@@ -156,8 +158,10 @@ end
 
 function require(name)  -- luacheck: ignore
   if name == "kong.db.schema.typedefs" or
+     name == "kong.db.schema" or
      name == "kong.enterprise_edition.db.typedefs" then
-    return typedefs
+    --return typedefs
+    return old_require(name)
   end
   return exectable()
 end

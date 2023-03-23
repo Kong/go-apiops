@@ -1,0 +1,4896 @@
+{
+  "acls": {
+    "dao": "kong.plugins.acl.acls",
+    "name": "acls",
+    "new_subschema": "function: 0x7f9194879b10",
+    "workspaceable": true,
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "acls",
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "tags": {
+        "elements": {
+          "type": "string",
+          "required": true,
+          "custom_validator": "function: 0x7f9194682160"
+        },
+        "type": "set"
+      },
+      "consumer": {
+        "on_delete": "cascade",
+        "reference": "consumers",
+        "required": true,
+        "type": "foreign"
+      },
+      "group": {
+        "required": true,
+        "type": "string"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    },
+    "cache_key": [
+      "consumer",
+      "group"
+    ],
+    "cache_key_set": {
+      "consumer": true,
+      "group": true
+    }
+  },
+  "tags": {
+    "endpoint_key": "tag",
+    "name": "tags",
+    "primary_key": [
+      "tag"
+    ],
+    "table_name": "tags",
+    "new_subschema": "function: 0x7f9194879b10",
+    "dao": "kong.db.dao.tags",
+    "db_export": false,
+    "fields": {
+      "entity_name": {
+        "required": true,
+        "type": "string"
+      },
+      "tag": {
+        "type": "string",
+        "required": true,
+        "custom_validator": "function: 0x7f9194682160"
+      },
+      "entity_id": {
+        "auto": true,
+        "uuid": true,
+        "required": true,
+        "type": "string"
+      }
+    }
+  },
+  "key_sets": {
+    "dao": "kong.db.dao.key_sets",
+    "name": "key_sets",
+    "new_subschema": "function: 0x7f9194879b10",
+    "workspaceable": true,
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "key_sets",
+    "endpoint_key": "name",
+    "admin_api_name": "key-sets",
+    "ttl": false,
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "name": {
+        "required": false,
+        "type": "string",
+        "indexed": true,
+        "unique": true
+      },
+      "tags": {
+        "elements": {
+          "type": "string",
+          "required": true,
+          "custom_validator": "function: 0x7f9194682160"
+        },
+        "type": "set"
+      },
+      "updated_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "oauth2_credentials": {
+    "endpoint_key": "client_id",
+    "name": "oauth2_credentials",
+    "new_subschema": "function: 0x7f9194879b10",
+    "transformations": [
+      {
+        "needs": [
+          "client_secret"
+        ],
+        "input": [
+          "hash_secret"
+        ],
+        "on_write": "function: 0x7f9193e3e4f0"
+      },
+      {
+        "on_read": "function: 0x7f919175ec68",
+        "input": [
+          "client_secret"
+        ],
+        "on_write": "function: 0x7f919175bdc8"
+      }
+    ],
+    "workspaceable": true,
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "oauth2_credentials",
+    "cache_key_set": {
+      "client_id": true
+    },
+    "cache_key": [
+      "client_id"
+    ],
+    "admin_api_name": "oauth2",
+    "fields": {
+      "name": {
+        "required": true,
+        "type": "string"
+      },
+      "tags": {
+        "elements": {
+          "type": "string",
+          "required": true,
+          "custom_validator": "function: 0x7f9194682160"
+        },
+        "type": "set"
+      },
+      "client_id": {
+        "auto": true,
+        "type": "string",
+        "required": false,
+        "unique": true
+      },
+      "consumer": {
+        "type": "foreign",
+        "on_delete": "cascade",
+        "required": true,
+        "reference": "consumers"
+      },
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "client_secret": {
+        "auto": true,
+        "type": "string",
+        "required": false,
+        "encrypted": true
+      },
+      "client_type": {
+        "one_of": [
+          "confidential",
+          "public"
+        ],
+        "type": "string",
+        "required": true,
+        "default": "confidential"
+      },
+      "redirect_uris": {
+        "type": "array",
+        "required": false,
+        "elements": {
+          "type": "string",
+          "custom_validator": "function: 0x7f9193e3d610"
+        }
+      },
+      "hash_secret": {
+        "type": "boolean",
+        "required": true,
+        "default": false
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "mtls_auth_credentials": {
+    "new_subschema": "function: 0x7f9194879b10",
+    "name": "mtls_auth_credentials",
+    "cache_key": [
+      "subject_name",
+      "ca_certificate"
+    ],
+    "table_name": "mtls_auth_credentials",
+    "cache_key_set": {
+      "ca_certificate": true,
+      "subject_name": true
+    },
+    "workspaceable": true,
+    "primary_key": [
+      "id"
+    ],
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "subject_name": {
+        "required": true,
+        "type": "string"
+      },
+      "tags": {
+        "elements": {
+          "type": "string",
+          "required": true,
+          "custom_validator": "function: 0x7f9194682160"
+        },
+        "type": "set"
+      },
+      "ca_certificate": {
+        "default": null,
+        "reference": "ca_certificates",
+        "on_delete": "cascade",
+        "type": "foreign"
+      },
+      "consumer": {
+        "type": "foreign",
+        "reference": "consumers",
+        "on_delete": "cascade"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "consumer_groups": {
+    "endpoint_key": "name",
+    "name": "consumer_groups",
+    "new_subschema": "function: 0x7f9194879b10",
+    "workspaceable": true,
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "consumer_groups",
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "name": {
+        "required": true,
+        "type": "string",
+        "indexed": true,
+        "unique": true
+      },
+      "tags": {
+        "elements": {
+          "type": "string",
+          "required": true,
+          "custom_validator": "function: 0x7f9194682160"
+        },
+        "type": "set"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    },
+    "cache_key": [
+      "name"
+    ],
+    "cache_key_set": {
+      "name": true
+    }
+  },
+  "jwt_signer_jwks": {
+    "endpoint_key": "name",
+    "name": "jwt_signer_jwks",
+    "new_subschema": "function: 0x7f9194879b10",
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "jwt_signer_jwks",
+    "generate_admin_api": false,
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "unique": true
+      },
+      "previous": {
+        "type": "array",
+        "required": false,
+        "elements": {
+          "type": "record",
+          "required": false,
+          "fields": {}
+        }
+      },
+      "keys": {
+        "type": "array",
+        "required": true,
+        "elements": {
+          "type": "record",
+          "required": false,
+          "fields": {}
+        }
+      },
+      "updated_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    },
+    "cache_key": [
+      "name"
+    ],
+    "cache_key_set": {
+      "name": true
+    }
+  },
+  "konnect_applications": {
+    "new_subschema": "function: 0x7f9194879b10",
+    "name": "konnect_applications",
+    "cache_key": [
+      "client_id"
+    ],
+    "table_name": "konnect_applications",
+    "cache_key_set": {
+      "client_id": true
+    },
+    "workspaceable": true,
+    "primary_key": [
+      "id"
+    ],
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "tags": {
+        "elements": {
+          "type": "string",
+          "required": true,
+          "custom_validator": "function: 0x7f9194682160"
+        },
+        "type": "set"
+      },
+      "scopes": {
+        "elements": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "client_id": {
+        "type": "string",
+        "required": true,
+        "unique": true
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "hmacauth_credentials": {
+    "endpoint_key": "username",
+    "name": "hmacauth_credentials",
+    "new_subschema": "function: 0x7f9194879b10",
+    "workspaceable": true,
+    "cache_key_set": {
+      "username": true
+    },
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "hmacauth_credentials",
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "username": {
+        "type": "string",
+        "required": true,
+        "unique": true
+      },
+      "tags": {
+        "elements": {
+          "type": "string",
+          "required": true,
+          "custom_validator": "function: 0x7f9194682160"
+        },
+        "type": "set"
+      },
+      "secret": {
+        "auto": true,
+        "type": "string"
+      },
+      "consumer": {
+        "type": "foreign",
+        "on_delete": "cascade",
+        "required": true,
+        "reference": "consumers"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    },
+    "cache_key": [
+      "username"
+    ],
+    "admin_api_name": "hmac-auths",
+    "admin_api_nested_name": "hmac-auth"
+  },
+  "sessions": {
+    "endpoint_key": "session_id",
+    "name": "sessions",
+    "new_subschema": "function: 0x7f9194879b10",
+    "cache_key_set": {
+      "session_id": true
+    },
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "sessions",
+    "cache_key": [
+      "session_id"
+    ],
+    "db_export": false,
+    "ttl": true,
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "data": {
+        "type": "string"
+      },
+      "expires": {
+        "type": "integer"
+      },
+      "session_id": {
+        "type": "string",
+        "required": true,
+        "unique": true
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "routes": {
+    "endpoint_key": "name",
+    "name": "routes",
+    "new_subschema": "function: 0x7f9194879b10",
+    "subschemas": {
+      "ws": {
+        "name": "ws",
+        "fields": {
+          "destinations": {
+            "err": "cannot set 'destinations' when 'protocols' is 'ws' or 'wss'",
+            "type": "set",
+            "elements": {
+              "type": "record",
+              "fields": {}
+            },
+            "eq": null
+          },
+          "methods": {
+            "err": "cannot set 'methods' when 'protocols' is 'ws' or 'wss'",
+            "type": "set",
+            "elements": {
+              "type": "string",
+              "match": "^%u+$"
+            },
+            "eq": null
+          },
+          "sources": {
+            "err": "cannot set 'sources' when 'protocols' is 'ws' or 'wss'",
+            "type": "set",
+            "elements": {
+              "type": "record",
+              "fields": {}
+            },
+            "eq": null
+          }
+        }
+      },
+      "tls": {
+        "name": "tcp",
+        "fields": {
+          "methods": {
+            "err": "cannot set 'methods' when 'protocols' is 'tcp', 'tls', 'tls_passthrough' or 'udp'",
+            "type": "set",
+            "elements": {
+              "type": "string",
+              "match": "^%u+$"
+            },
+            "eq": null
+          },
+          "headers": {
+            "err": "cannot set 'headers' when 'protocols' is 'tcp', 'tls', 'tls_passthrough' or 'udp'",
+            "values": {
+              "elements": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "keys": {
+              "type": "string",
+              "custom_validator": "function: 0x7f9194a542d0"
+            },
+            "eq": null,
+            "type": "map"
+          },
+          "paths": {
+            "err": "cannot set 'paths' when 'protocols' is 'tcp', 'tls', 'tls_passthrough' or 'udp'",
+            "type": "array",
+            "elements": {
+              "match_none": [
+                {
+                  "pattern": "//",
+                  "err": "must not have empty segments"
+                }
+              ],
+              "type": "string",
+              "match_any": {
+                "patterns": [
+                  "^/",
+                  "^~/"
+                ],
+                "err": "should start with: / (fixed path) or ~/ (regex path)"
+              },
+              "custom_validator": "function: 0x7f91946853a0"
+            },
+            "eq": null
+          },
+          "hosts": {
+            "err": "cannot set 'hosts' when 'protocols' is 'tcp', 'tls', 'tls_passthrough' or 'udp'",
+            "type": "array",
+            "elements": {
+              "match_all": [
+                {
+                  "pattern": "^[^*]*%*?[^*]*$",
+                  "err": "invalid wildcard: must have at most one wildcard"
+                }
+              ],
+              "type": "string",
+              "match_any": {
+                "patterns": [
+                  "^%*%.",
+                  "%.%*$",
+                  "^[^*]*$"
+                ],
+                "err": "invalid wildcard: must be placed at leftmost or rightmost label"
+              },
+              "custom_validator": "function: 0x7f9194685330"
+            },
+            "eq": null
+          }
+        }
+      },
+      "http": {
+        "name": "http",
+        "fields": {
+          "destinations": {
+            "err": "cannot set 'destinations' when 'protocols' is 'http' or 'https'",
+            "type": "set",
+            "elements": {
+              "type": "record",
+              "fields": {}
+            },
+            "eq": null
+          },
+          "sources": {
+            "err": "cannot set 'sources' when 'protocols' is 'http' or 'https'",
+            "type": "set",
+            "elements": {
+              "type": "record",
+              "fields": {}
+            },
+            "eq": null
+          }
+        }
+      },
+      "tls_passthrough": {
+        "name": "tcp",
+        "fields": {
+          "methods": {
+            "err": "cannot set 'methods' when 'protocols' is 'tcp', 'tls', 'tls_passthrough' or 'udp'",
+            "type": "set",
+            "elements": {
+              "type": "string",
+              "match": "^%u+$"
+            },
+            "eq": null
+          },
+          "headers": {
+            "err": "cannot set 'headers' when 'protocols' is 'tcp', 'tls', 'tls_passthrough' or 'udp'",
+            "values": {
+              "elements": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "keys": {
+              "type": "string",
+              "custom_validator": "function: 0x7f9194a542d0"
+            },
+            "eq": null,
+            "type": "map"
+          },
+          "paths": {
+            "err": "cannot set 'paths' when 'protocols' is 'tcp', 'tls', 'tls_passthrough' or 'udp'",
+            "type": "array",
+            "elements": {
+              "match_none": [
+                {
+                  "pattern": "//",
+                  "err": "must not have empty segments"
+                }
+              ],
+              "type": "string",
+              "match_any": {
+                "patterns": [
+                  "^/",
+                  "^~/"
+                ],
+                "err": "should start with: / (fixed path) or ~/ (regex path)"
+              },
+              "custom_validator": "function: 0x7f91946853a0"
+            },
+            "eq": null
+          },
+          "hosts": {
+            "err": "cannot set 'hosts' when 'protocols' is 'tcp', 'tls', 'tls_passthrough' or 'udp'",
+            "type": "array",
+            "elements": {
+              "match_all": [
+                {
+                  "pattern": "^[^*]*%*?[^*]*$",
+                  "err": "invalid wildcard: must have at most one wildcard"
+                }
+              ],
+              "type": "string",
+              "match_any": {
+                "patterns": [
+                  "^%*%.",
+                  "%.%*$",
+                  "^[^*]*$"
+                ],
+                "err": "invalid wildcard: must be placed at leftmost or rightmost label"
+              },
+              "custom_validator": "function: 0x7f9194685330"
+            },
+            "eq": null
+          }
+        }
+      },
+      "grpc": {
+        "name": "grpc",
+        "fields": {
+          "strip_path": {
+            "ne": true,
+            "err": "cannot set 'strip_path' when 'protocols' is 'grpc' or 'grpcs'",
+            "default": false,
+            "type": "boolean",
+            "required": true
+          },
+          "destinations": {
+            "err": "cannot set 'destinations' when 'protocols' is 'grpc' or 'grpcs'",
+            "type": "set",
+            "elements": {
+              "type": "record",
+              "fields": {}
+            },
+            "eq": null
+          },
+          "sources": {
+            "err": "cannot set 'sources' when 'protocols' is 'grpc' or 'grpcs'",
+            "type": "set",
+            "elements": {
+              "type": "record",
+              "fields": {}
+            },
+            "eq": null
+          },
+          "methods": {
+            "err": "cannot set 'methods' when 'protocols' is 'grpc' or 'grpcs'",
+            "type": "set",
+            "elements": {
+              "type": "string",
+              "match": "^%u+$"
+            },
+            "eq": null
+          }
+        }
+      },
+      "grpcs": {
+        "name": "grpc",
+        "fields": {
+          "strip_path": {
+            "ne": true,
+            "err": "cannot set 'strip_path' when 'protocols' is 'grpc' or 'grpcs'",
+            "default": false,
+            "type": "boolean",
+            "required": true
+          },
+          "destinations": {
+            "err": "cannot set 'destinations' when 'protocols' is 'grpc' or 'grpcs'",
+            "type": "set",
+            "elements": {
+              "type": "record",
+              "fields": {}
+            },
+            "eq": null
+          },
+          "sources": {
+            "err": "cannot set 'sources' when 'protocols' is 'grpc' or 'grpcs'",
+            "type": "set",
+            "elements": {
+              "type": "record",
+              "fields": {}
+            },
+            "eq": null
+          },
+          "methods": {
+            "err": "cannot set 'methods' when 'protocols' is 'grpc' or 'grpcs'",
+            "type": "set",
+            "elements": {
+              "type": "string",
+              "match": "^%u+$"
+            },
+            "eq": null
+          }
+        }
+      },
+      "wss": {
+        "name": "ws",
+        "fields": {
+          "destinations": {
+            "err": "cannot set 'destinations' when 'protocols' is 'ws' or 'wss'",
+            "type": "set",
+            "elements": {
+              "type": "record",
+              "fields": {}
+            },
+            "eq": null
+          },
+          "methods": {
+            "err": "cannot set 'methods' when 'protocols' is 'ws' or 'wss'",
+            "type": "set",
+            "elements": {
+              "type": "string",
+              "match": "^%u+$"
+            },
+            "eq": null
+          },
+          "sources": {
+            "err": "cannot set 'sources' when 'protocols' is 'ws' or 'wss'",
+            "type": "set",
+            "elements": {
+              "type": "record",
+              "fields": {}
+            },
+            "eq": null
+          }
+        }
+      },
+      "udp": {
+        "name": "tcp",
+        "fields": {
+          "methods": {
+            "err": "cannot set 'methods' when 'protocols' is 'tcp', 'tls', 'tls_passthrough' or 'udp'",
+            "type": "set",
+            "elements": {
+              "type": "string",
+              "match": "^%u+$"
+            },
+            "eq": null
+          },
+          "headers": {
+            "err": "cannot set 'headers' when 'protocols' is 'tcp', 'tls', 'tls_passthrough' or 'udp'",
+            "values": {
+              "elements": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "keys": {
+              "type": "string",
+              "custom_validator": "function: 0x7f9194a542d0"
+            },
+            "eq": null,
+            "type": "map"
+          },
+          "paths": {
+            "err": "cannot set 'paths' when 'protocols' is 'tcp', 'tls', 'tls_passthrough' or 'udp'",
+            "type": "array",
+            "elements": {
+              "match_none": [
+                {
+                  "pattern": "//",
+                  "err": "must not have empty segments"
+                }
+              ],
+              "type": "string",
+              "match_any": {
+                "patterns": [
+                  "^/",
+                  "^~/"
+                ],
+                "err": "should start with: / (fixed path) or ~/ (regex path)"
+              },
+              "custom_validator": "function: 0x7f91946853a0"
+            },
+            "eq": null
+          },
+          "hosts": {
+            "err": "cannot set 'hosts' when 'protocols' is 'tcp', 'tls', 'tls_passthrough' or 'udp'",
+            "type": "array",
+            "elements": {
+              "match_all": [
+                {
+                  "pattern": "^[^*]*%*?[^*]*$",
+                  "err": "invalid wildcard: must have at most one wildcard"
+                }
+              ],
+              "type": "string",
+              "match_any": {
+                "patterns": [
+                  "^%*%.",
+                  "%.%*$",
+                  "^[^*]*$"
+                ],
+                "err": "invalid wildcard: must be placed at leftmost or rightmost label"
+              },
+              "custom_validator": "function: 0x7f9194685330"
+            },
+            "eq": null
+          }
+        }
+      },
+      "tcp": {
+        "name": "tcp",
+        "fields": {
+          "methods": {
+            "err": "cannot set 'methods' when 'protocols' is 'tcp', 'tls', 'tls_passthrough' or 'udp'",
+            "type": "set",
+            "elements": {
+              "type": "string",
+              "match": "^%u+$"
+            },
+            "eq": null
+          },
+          "headers": {
+            "err": "cannot set 'headers' when 'protocols' is 'tcp', 'tls', 'tls_passthrough' or 'udp'",
+            "values": {
+              "elements": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "keys": {
+              "type": "string",
+              "custom_validator": "function: 0x7f9194a542d0"
+            },
+            "eq": null,
+            "type": "map"
+          },
+          "paths": {
+            "err": "cannot set 'paths' when 'protocols' is 'tcp', 'tls', 'tls_passthrough' or 'udp'",
+            "type": "array",
+            "elements": {
+              "match_none": [
+                {
+                  "pattern": "//",
+                  "err": "must not have empty segments"
+                }
+              ],
+              "type": "string",
+              "match_any": {
+                "patterns": [
+                  "^/",
+                  "^~/"
+                ],
+                "err": "should start with: / (fixed path) or ~/ (regex path)"
+              },
+              "custom_validator": "function: 0x7f91946853a0"
+            },
+            "eq": null
+          },
+          "hosts": {
+            "err": "cannot set 'hosts' when 'protocols' is 'tcp', 'tls', 'tls_passthrough' or 'udp'",
+            "type": "array",
+            "elements": {
+              "match_all": [
+                {
+                  "pattern": "^[^*]*%*?[^*]*$",
+                  "err": "invalid wildcard: must have at most one wildcard"
+                }
+              ],
+              "type": "string",
+              "match_any": {
+                "patterns": [
+                  "^%*%.",
+                  "%.%*$",
+                  "^[^*]*$"
+                ],
+                "err": "invalid wildcard: must be placed at leftmost or rightmost label"
+              },
+              "custom_validator": "function: 0x7f9194685330"
+            },
+            "eq": null
+          }
+        }
+      },
+      "https": {
+        "name": "http",
+        "fields": {
+          "destinations": {
+            "err": "cannot set 'destinations' when 'protocols' is 'http' or 'https'",
+            "type": "set",
+            "elements": {
+              "type": "record",
+              "fields": {}
+            },
+            "eq": null
+          },
+          "sources": {
+            "err": "cannot set 'sources' when 'protocols' is 'http' or 'https'",
+            "type": "set",
+            "elements": {
+              "type": "record",
+              "fields": {}
+            },
+            "eq": null
+          }
+        }
+      }
+    },
+    "workspaceable": true,
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "routes",
+    "subschema_key": "protocols",
+    "dao": "kong.db.dao.routes",
+    "fields": {
+      "updated_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      },
+      "tags": {
+        "elements": {
+          "type": "string",
+          "required": true,
+          "custom_validator": "function: 0x7f9194682160"
+        },
+        "type": "set"
+      },
+      "regex_priority": {
+        "type": "integer",
+        "default": 0
+      },
+      "path_handling": {
+        "one_of": [
+          "v0",
+          "v1"
+        ],
+        "type": "string",
+        "default": "v0"
+      },
+      "headers": {
+        "values": {
+          "elements": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "keys": {
+          "type": "string",
+          "match_none": [
+            {
+              "pattern": "^[Hh][Oo][Ss][Tt]$",
+              "err": "cannot contain 'host' header, which must be specified in the 'hosts' attribute"
+            }
+          ],
+          "custom_validator": "function: 0x7f9194a542d0"
+        },
+        "type": "map"
+      },
+      "service": {
+        "type": "foreign",
+        "reference": "services"
+      },
+      "name": {
+        "custom_validator": "function: 0x7f91946821d8",
+        "type": "string",
+        "indexed": true,
+        "unique": true
+      },
+      "preserve_host": {
+        "type": "boolean",
+        "required": true,
+        "default": false
+      },
+      "sources": {
+        "elements": {
+          "type": "record",
+          "fields": {}
+        },
+        "type": "set"
+      },
+      "destinations": {
+        "elements": {
+          "type": "record",
+          "fields": {}
+        },
+        "type": "set"
+      },
+      "protocols": {
+        "mutually_exclusive_subsets": [
+          [
+            "http",
+            "https"
+          ],
+          [
+            "tcp",
+            "tls",
+            "udp"
+          ],
+          [
+            "tls_passthrough"
+          ],
+          [
+            "grpc",
+            "grpcs"
+          ],
+          [
+            "ws",
+            "wss"
+          ]
+        ],
+        "indexed": true,
+        "len_min": 1,
+        "default": [
+          "http",
+          "https"
+        ],
+        "type": "set",
+        "required": true,
+        "elements": {
+          "one_of": [
+            "grpc",
+            "grpcs",
+            "http",
+            "https",
+            "tcp",
+            "tls",
+            "tls_passthrough",
+            "udp",
+            "ws",
+            "wss"
+          ],
+          "type": "string"
+        }
+      },
+      "snis": {
+        "elements": {
+          "type": "string",
+          "custom_validator": "function: 0x7f9194682218"
+        },
+        "type": "set"
+      },
+      "methods": {
+        "type": "set",
+        "indexed": true,
+        "elements": {
+          "type": "string",
+          "match": "^%u+$"
+        }
+      },
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "hosts": {
+        "type": "array",
+        "indexed": true,
+        "elements": {
+          "match_all": [
+            {
+              "pattern": "^[^*]*%*?[^*]*$",
+              "err": "invalid wildcard: must have at most one wildcard"
+            }
+          ],
+          "type": "string",
+          "match_any": {
+            "patterns": [
+              "^%*%.",
+              "%.%*$",
+              "^[^*]*$"
+            ],
+            "err": "invalid wildcard: must be placed at leftmost or rightmost label"
+          },
+          "custom_validator": "function: 0x7f9194685330"
+        }
+      },
+      "paths": {
+        "type": "array",
+        "indexed": true,
+        "elements": {
+          "match_none": [
+            {
+              "pattern": "//",
+              "err": "must not have empty segments"
+            }
+          ],
+          "type": "string",
+          "match_any": {
+            "patterns": [
+              "^/",
+              "^~/"
+            ],
+            "err": "should start with: / (fixed path) or ~/ (regex path)"
+          },
+          "custom_validator": "function: 0x7f91946853a0"
+        }
+      },
+      "https_redirect_status_code": {
+        "one_of": [
+          426,
+          301,
+          302,
+          307,
+          308
+        ],
+        "type": "integer",
+        "required": true,
+        "default": 426
+      },
+      "strip_path": {
+        "type": "boolean",
+        "required": true,
+        "default": true
+      },
+      "request_buffering": {
+        "type": "boolean",
+        "required": true,
+        "default": true
+      },
+      "response_buffering": {
+        "type": "boolean",
+        "required": true,
+        "default": true
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "plugins": {
+    "dao": "kong.db.dao.plugins",
+    "name": "plugins",
+    "workspaceable": true,
+    "cache_key_set": {
+      "service": true,
+      "name": true,
+      "consumer": true,
+      "route": true
+    },
+    "endpoint_key": "instance_name",
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "plugins",
+    "cache_key": [
+      "name",
+      "route",
+      "service",
+      "consumer"
+    ],
+    "fields": {
+      "name": {
+        "type": "string",
+        "required": true,
+        "indexed": true
+      },
+      "tags": {
+        "elements": {
+          "type": "string",
+          "required": true,
+          "custom_validator": "function: 0x7f9194682160"
+        },
+        "type": "set"
+      },
+      "config": {
+        "abstract": true,
+        "type": "record"
+      },
+      "protocols": {
+        "required": true,
+        "type": "set",
+        "elements": {
+          "one_of": [
+            "grpc",
+            "grpcs",
+            "http",
+            "https",
+            "tcp",
+            "tls",
+            "tls_passthrough",
+            "udp",
+            "ws",
+            "wss"
+          ],
+          "type": "string"
+        },
+        "default": [
+          "grpc",
+          "grpcs",
+          "http",
+          "https"
+        ]
+      },
+      "consumer": {
+        "default": null,
+        "on_delete": "cascade",
+        "type": "foreign",
+        "reference": "consumers"
+      },
+      "instance_name": {
+        "custom_validator": "function: 0x7f91946821d8",
+        "type": "string",
+        "unique": true
+      },
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "ordering": {
+        "values": {
+          "values": {
+            "elements": {
+              "custom_validator": "function: 0x7f91946874f0",
+              "type": "string",
+              "unique": true
+            },
+            "type": "array"
+          },
+          "keys": {
+            "one_of": [
+              "access"
+            ],
+            "type": "string"
+          },
+          "type": "map"
+        },
+        "keys": {
+          "one_of": [
+            "before",
+            "after"
+          ],
+          "type": "string"
+        },
+        "type": "map"
+      },
+      "route": {
+        "default": null,
+        "on_delete": "cascade",
+        "type": "foreign",
+        "reference": "routes"
+      },
+      "service": {
+        "default": null,
+        "on_delete": "cascade",
+        "type": "foreign",
+        "reference": "services"
+      },
+      "enabled": {
+        "required": true,
+        "type": "boolean",
+        "indexed": true,
+        "default": true
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "keys": {
+    "dao": "kong.db.dao.keys",
+    "name": "keys",
+    "new_subschema": "function: 0x7f9194879b10",
+    "transformations": [
+      {
+        "on_read": "function: 0x7f9192049498",
+        "input": [
+          "jwk"
+        ],
+        "on_write": "function: 0x7f9192049418"
+      }
+    ],
+    "workspaceable": true,
+    "cache_key_set": {
+      "kid": true,
+      "set": true
+    },
+    "cache_key": [
+      "kid",
+      "set"
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "keys",
+    "ttl": false,
+    "endpoint_key": "name",
+    "fields": {
+      "updated_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      },
+      "name": {
+        "required": false,
+        "type": "string",
+        "indexed": true,
+        "unique": true
+      },
+      "tags": {
+        "elements": {
+          "type": "string",
+          "required": true,
+          "custom_validator": "function: 0x7f9194682160"
+        },
+        "type": "set"
+      },
+      "kid": {
+        "type": "string",
+        "required": true,
+        "unique": false
+      },
+      "set": {
+        "on_delete": "cascade",
+        "reference": "key_sets",
+        "required": false,
+        "type": "foreign"
+      },
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "jwk": {
+        "referenceable": true,
+        "encrypted": true,
+        "type": "string"
+      },
+      "pem": {
+        "custom_validator": "function: 0x7f91946875d8",
+        "type": "record",
+        "required": false,
+        "fields": {
+          "private_key": {
+            "referenceable": true,
+            "type": "string",
+            "encrypted": true,
+            "required": false
+          },
+          "public_key": {
+            "referenceable": true,
+            "required": false,
+            "type": "string"
+          }
+        }
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "basicauth_credentials": {
+    "endpoint_key": "username",
+    "name": "basicauth_credentials",
+    "new_subschema": "function: 0x7f9194879b10",
+    "transformations": [
+      {
+        "needs": [
+          "consumer.id"
+        ],
+        "input": [
+          "password"
+        ],
+        "on_write": "function: 0x7f9193e08550"
+      },
+      {
+        "on_read": "function: 0x7f9193461418",
+        "input": [
+          "password"
+        ],
+        "on_write": "function: 0x7f91934613d0"
+      }
+    ],
+    "workspaceable": true,
+    "cache_key_set": {
+      "username": true
+    },
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "basicauth_credentials",
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "username": {
+        "type": "string",
+        "required": true,
+        "unique": true
+      },
+      "tags": {
+        "elements": {
+          "type": "string",
+          "required": true,
+          "custom_validator": "function: 0x7f9194682160"
+        },
+        "type": "set"
+      },
+      "password": {
+        "type": "string",
+        "encrypted": true,
+        "required": true
+      },
+      "consumer": {
+        "on_delete": "cascade",
+        "type": "foreign",
+        "required": true,
+        "reference": "consumers"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    },
+    "cache_key": [
+      "username"
+    ],
+    "admin_api_name": "basic-auths",
+    "admin_api_nested_name": "basic-auth"
+  },
+  "vault_auth_vaults": {
+    "endpoint_key": "name",
+    "name": "vault_auth_vaults",
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "vault_auth_vaults",
+    "new_subschema": "function: 0x7f9194879b10",
+    "transformations": [
+      {
+        "on_read": "function: 0x7f919326a760",
+        "input": [
+          "vault_token"
+        ],
+        "on_write": "function: 0x7f919326a6e0"
+      }
+    ],
+    "admin_api_name": "vault-auth",
+    "fields": {
+      "updated_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      },
+      "name": {
+        "custom_validator": "function: 0x7f91946820f0",
+        "type": "string",
+        "unique": true
+      },
+      "protocol": {
+        "one_of": [
+          "http",
+          "https"
+        ],
+        "type": "string",
+        "default": "http"
+      },
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "port": {
+        "between": [
+          0,
+          65535
+        ],
+        "type": "integer",
+        "required": true,
+        "default": 8200
+      },
+      "host": {
+        "custom_validator": "function: 0x7f9194681eb0",
+        "required": true,
+        "type": "string"
+      },
+      "kv": {
+        "one_of": [
+          "v1",
+          "v2"
+        ],
+        "type": "string",
+        "required": false,
+        "default": "v1"
+      },
+      "vault_token": {
+        "referenceable": true,
+        "type": "string",
+        "required": true,
+        "encrypted": true
+      },
+      "mount": {
+        "required": true,
+        "type": "string"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "files": {
+    "endpoint_key": "path",
+    "name": "files",
+    "new_subschema": "function: 0x7f9194879b10",
+    "workspaceable": true,
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "files",
+    "dao": "kong.db.dao.files",
+    "db_export": false,
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "contents": {
+        "type": "string",
+        "required": true,
+        "len_min": 0
+      },
+      "checksum": {
+        "type": "string",
+        "len_min": 0
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      },
+      "path": {
+        "custom_validator": "function: 0x7f9193f686a0",
+        "type": "string",
+        "required": true,
+        "unique": true
+      }
+    }
+  },
+  "legacy_files": {
+    "endpoint_key": "name",
+    "name": "legacy_files",
+    "new_subschema": "function: 0x7f9194879b10",
+    "workspaceable": false,
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "legacy_files",
+    "generate_admin_api": false,
+    "db_export": false,
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "unique": true
+      },
+      "contents": {
+        "type": "string",
+        "required": true,
+        "len_min": 0
+      },
+      "type": {
+        "one_of": [
+          "page",
+          "partial",
+          "spec"
+        ],
+        "type": "string"
+      },
+      "auth": {
+        "type": "boolean",
+        "default": true
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "workspace_entity_counters": {
+    "name": "workspace_entity_counters",
+    "primary_key": [
+      "workspace_id",
+      "entity_type"
+    ],
+    "table_name": "workspace_entity_counters",
+    "generate_admin_api": false,
+    "new_subschema": "function: 0x7f9194879b10",
+    "db_export": false,
+    "fields": {
+      "count": {
+        "type": "integer"
+      },
+      "workspace_id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "entity_type": {
+        "required": true,
+        "type": "string"
+      }
+    }
+  },
+  "consumer_reset_secrets": {
+    "name": "consumer_reset_secrets",
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "consumer_reset_secrets",
+    "generate_admin_api": false,
+    "new_subschema": "function: 0x7f9194879b10",
+    "db_export": false,
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "client_addr": {
+        "required": true,
+        "type": "string"
+      },
+      "status": {
+        "between": [
+          1,
+          3
+        ],
+        "type": "integer",
+        "required": true,
+        "default": 1
+      },
+      "secret": {
+        "auto": true,
+        "type": "string",
+        "required": true
+      },
+      "updated_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      },
+      "consumer": {
+        "on_delete": "cascade",
+        "type": "foreign",
+        "required": true,
+        "reference": "consumers"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "document_objects": {
+    "endpoint_key": "path",
+    "name": "document_objects",
+    "new_subschema": "function: 0x7f9194879b10",
+    "workspaceable": true,
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "document_objects",
+    "dao": "kong.db.dao.document_objects",
+    "db_export": false,
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "service": {
+        "type": "foreign",
+        "reference": "services"
+      },
+      "path": {
+        "type": "string",
+        "required": true,
+        "unique": true
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "jwt_secrets": {
+    "endpoint_key": "key",
+    "name": "jwt_secrets",
+    "new_subschema": "function: 0x7f9194879b10",
+    "workspaceable": true,
+    "cache_key_set": {
+      "key": true
+    },
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "tags": {
+        "elements": {
+          "type": "string",
+          "required": true,
+          "custom_validator": "function: 0x7f9194682160"
+        },
+        "type": "set"
+      },
+      "algorithm": {
+        "one_of": [
+          "HS256",
+          "HS384",
+          "HS512",
+          "RS256",
+          "RS384",
+          "RS512",
+          "ES256",
+          "ES384"
+        ],
+        "type": "string",
+        "default": "HS256"
+      },
+      "key": {
+        "auto": true,
+        "type": "string",
+        "required": false,
+        "unique": true
+      },
+      "rsa_public_key": {
+        "type": "string"
+      },
+      "secret": {
+        "auto": true,
+        "type": "string"
+      },
+      "consumer": {
+        "type": "foreign",
+        "on_delete": "cascade",
+        "required": true,
+        "reference": "consumers"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    },
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "jwt_secrets",
+    "admin_api_name": "jwts",
+    "cache_key": [
+      "key"
+    ],
+    "admin_api_nested_name": "jwt"
+  },
+  "graphql_ratelimiting_advanced_cost_decoration": {
+    "endpoint_key": "type_path",
+    "name": "graphql_ratelimiting_advanced_cost_decoration",
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "graphql_ratelimiting_advanced_cost_decoration",
+    "new_subschema": "function: 0x7f9194879b10",
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "mul_constant": {
+        "type": "number",
+        "default": 1
+      },
+      "mul_arguments": {
+        "type": "array",
+        "elements": {
+          "type": "string"
+        },
+        "default": {}
+      },
+      "add_constant": {
+        "type": "number",
+        "default": 1
+      },
+      "add_arguments": {
+        "type": "array",
+        "elements": {
+          "type": "string"
+        },
+        "default": {}
+      },
+      "service": {
+        "type": "foreign",
+        "reference": "services"
+      },
+      "type_path": {
+        "required": true,
+        "type": "string"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "workspaces": {
+    "endpoint_key": "name",
+    "name": "workspaces",
+    "new_subschema": "function: 0x7f9194879b10",
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "workspaces",
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "name": {
+        "type": "string",
+        "not_one_of": [
+          "workspaces",
+          "consumers",
+          "certificates",
+          "services",
+          "routes",
+          "snis",
+          "upstreams",
+          "targets",
+          "plugins",
+          "tags",
+          "ca_certificates",
+          "clustering_data_planes",
+          "parameters",
+          "vaults",
+          "key_sets",
+          "keys",
+          "files",
+          "legacy_files",
+          "workspace_entity_counters",
+          "consumer_reset_secrets",
+          "credentials",
+          "audit_requests",
+          "audit_objects",
+          "rbac_users",
+          "rbac_roles",
+          "rbac_user_roles",
+          "rbac_role_entities",
+          "rbac_role_endpoints",
+          "admins",
+          "developers",
+          "document_objects",
+          "applications",
+          "application_instances",
+          "groups",
+          "group_rbac_roles",
+          "login_attempts",
+          "keyring_meta",
+          "keyring_keys",
+          "event_hooks",
+          "licenses",
+          "consumer_groups",
+          "consumer_group_plugins",
+          "consumer_group_consumers"
+        ],
+        "custom_validator": "function: 0x7f91946821d8",
+        "required": true,
+        "unique": true
+      },
+      "config": {
+        "type": "record",
+        "required": true,
+        "fields": {
+          "portal_cors_origins": {
+            "elements": {
+              "type": "string",
+              "custom_validator": "function: 0x7f9194398a30"
+            },
+            "type": "array"
+          },
+          "portal_reset_success_email": {
+            "type": "boolean"
+          },
+          "portal_application_request_email": {
+            "type": "boolean"
+          },
+          "portal_developer_meta_fields": {
+            "type": "string",
+            "default": "[{\"label\":\"Full Name\",\"title\":\"full_name\",\"validator\":{\"required\":true,\"type\":\"string\"}}]"
+          },
+          "portal": {
+            "type": "boolean",
+            "required": true,
+            "default": false
+          },
+          "portal_reset_email": {
+            "type": "boolean"
+          },
+          "meta": {
+            "values": {
+              "type": "string"
+            },
+            "keys": {
+              "type": "string"
+            },
+            "type": "map"
+          },
+          "portal_is_legacy": {
+            "type": "boolean"
+          },
+          "portal_approved_email": {
+            "type": "boolean"
+          },
+          "portal_access_request_email": {
+            "type": "boolean"
+          },
+          "portal_invite_email": {
+            "type": "boolean"
+          },
+          "portal_token_exp": {
+            "gt": -1,
+            "type": "integer"
+          },
+          "portal_auto_approve": {
+            "type": "boolean"
+          },
+          "portal_auth_conf": {
+            "type": "string"
+          },
+          "portal_auth": {
+            "custom_validator": "function: 0x7f91943f8c40",
+            "type": "string",
+            "len_min": 0
+          },
+          "portal_session_conf": {
+            "type": "string"
+          },
+          "portal_smtp_admin_emails": {
+            "elements": {
+              "type": "string",
+              "custom_validator": "function: 0x7f91943989c0"
+            },
+            "type": "array"
+          },
+          "portal_emails_reply_to": {
+            "type": "string",
+            "custom_validator": "function: 0x7f91943989c0"
+          },
+          "portal_application_status_email": {
+            "type": "boolean"
+          },
+          "portal_emails_from": {
+            "type": "string",
+            "custom_validator": "function: 0x7f91943989c0"
+          }
+        }
+      },
+      "meta": {
+        "type": "record",
+        "required": true,
+        "fields": {
+          "thumbnail": {
+            "type": "string",
+            "custom_validator": "function: 0x7f91942babd0"
+          },
+          "color": {
+            "type": "string",
+            "custom_validator": "function: 0x7f919431afe0"
+          }
+        }
+      },
+      "comment": {
+        "type": "string"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    },
+    "dao": "kong.db.dao.workspaces",
+    "cache_key": [
+      "name"
+    ],
+    "cache_key_set": {
+      "name": true
+    }
+  },
+  "oauth2_authorization_codes": {
+    "name": "oauth2_authorization_codes",
+    "new_subschema": "function: 0x7f9194879b10",
+    "workspaceable": true,
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "oauth2_authorization_codes",
+    "generate_admin_api": false,
+    "ttl": true,
+    "db_export": false,
+    "fields": {
+      "challenge_method": {
+        "one_of": [
+          "S256"
+        ],
+        "type": "string",
+        "required": false
+      },
+      "challenge": {
+        "required": false,
+        "type": "string"
+      },
+      "scope": {
+        "type": "string"
+      },
+      "authenticated_userid": {
+        "required": false,
+        "type": "string"
+      },
+      "code": {
+        "auto": true,
+        "type": "string",
+        "required": false,
+        "unique": true
+      },
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "service": {
+        "default": null,
+        "on_delete": "cascade",
+        "type": "foreign",
+        "reference": "services"
+      },
+      "credential": {
+        "type": "foreign",
+        "on_delete": "cascade",
+        "required": true,
+        "reference": "oauth2_credentials"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "degraphql_routes": {
+    "endpoint_key": "id",
+    "name": "degraphql_routes",
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "degraphql_routes",
+    "new_subschema": "function: 0x7f9194879b10",
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "updated_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      },
+      "query": {
+        "required": true,
+        "type": "string"
+      },
+      "service": {
+        "reference": "services",
+        "type": "foreign"
+      },
+      "uri": {
+        "required": true,
+        "type": "string"
+      },
+      "methods": {
+        "type": "set",
+        "elements": {
+          "type": "string",
+          "match": "^%u+$"
+        },
+        "default": [
+          "GET"
+        ]
+      }
+    }
+  },
+  "acme_storage": {
+    "new_subschema": "function: 0x7f9194879b10",
+    "name": "acme_storage",
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "acme_storage",
+    "cache_key_set": {
+      "key": true
+    },
+    "cache_key": [
+      "key"
+    ],
+    "ttl": true,
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      },
+      "value": {
+        "auto": true,
+        "type": "string",
+        "required": true
+      },
+      "key": {
+        "auto": true,
+        "type": "string",
+        "required": true,
+        "unique": true
+      }
+    }
+  },
+  "developers": {
+    "endpoint_key": "email",
+    "name": "developers",
+    "new_subschema": "function: 0x7f9194879b10",
+    "workspaceable": true,
+    "cache_key_set": {
+      "email": true
+    },
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "developers",
+    "dao": "kong.db.dao.developers",
+    "cache_key": [
+      "email"
+    ],
+    "db_export": true,
+    "fields": {
+      "updated_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      },
+      "rbac_user": {
+        "type": "foreign",
+        "reference": "rbac_users"
+      },
+      "custom_id": {
+        "type": "string",
+        "unique": true
+      },
+      "email": {
+        "custom_validator": "function: 0x7f9194680a48",
+        "type": "string",
+        "required": true,
+        "unique": true
+      },
+      "consumer": {
+        "type": "foreign",
+        "reference": "consumers"
+      },
+      "meta": {
+        "type": "string"
+      },
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "status": {
+        "between": [
+          0,
+          5
+        ],
+        "type": "integer",
+        "default": 5
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "keyauth_enc_credentials": {
+    "endpoint_key": "key",
+    "name": "keyauth_enc_credentials",
+    "new_subschema": "function: 0x7f9194879b10",
+    "transformations": [
+      {
+        "on_read": "function: 0x7f9191774f20",
+        "input": [
+          "key"
+        ],
+        "on_write": "function: 0x7f9191774ea0"
+      }
+    ],
+    "workspaceable": true,
+    "admin_api_nested_name": "key-auth-enc",
+    "admin_api_name": "key-auths-enc",
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "keyauth_enc_credentials",
+    "ttl": true,
+    "dao": "kong.plugins.key-auth-enc.keyauth_enc_credentials",
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "tags": {
+        "elements": {
+          "type": "string",
+          "required": true,
+          "custom_validator": "function: 0x7f9194682160"
+        },
+        "type": "set"
+      },
+      "key": {
+        "auto": true,
+        "required": false,
+        "type": "string",
+        "encrypted": true,
+        "unique": true
+      },
+      "consumer": {
+        "type": "foreign",
+        "on_delete": "cascade",
+        "required": true,
+        "reference": "consumers"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "credentials": {
+    "name": "credentials",
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "credentials",
+    "generate_admin_api": false,
+    "new_subschema": "function: 0x7f9194879b10",
+    "db_export": false,
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "plugin": {
+        "required": true,
+        "type": "string"
+      },
+      "credential_data": {
+        "type": "string"
+      },
+      "consumer_type": {
+        "custom_validator": "function: 0x7f9194375888",
+        "type": "integer",
+        "required": true,
+        "default": 0
+      },
+      "consumer": {
+        "type": "foreign",
+        "reference": "consumers"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "vaults": {
+    "endpoint_key": "prefix",
+    "name": "vaults",
+    "new_subschema": "function: 0x7f9194879b10",
+    "cache_key_set": {
+      "prefix": true
+    },
+    "dao": "kong.db.dao.vaults",
+    "workspaceable": true,
+    "admin_api_name": "vaults",
+    "primary_key": [
+      "id"
+    ],
+    "cache_key": [
+      "prefix"
+    ],
+    "table_name": "sm_vaults",
+    "subschema_key": "name",
+    "subschema_error": "vault '%s' is not installed",
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "prefix": {
+        "indexed": true,
+        "unique_across_ws": true,
+        "match": "^[a-z][a-z%d-]-[a-z%d]+$",
+        "type": "string",
+        "not_one_of": [
+          "hcv",
+          "env",
+          "aws",
+          "gcp"
+        ],
+        "required": true,
+        "unique": true
+      },
+      "tags": {
+        "elements": {
+          "type": "string",
+          "required": true,
+          "custom_validator": "function: 0x7f9194682160"
+        },
+        "type": "set"
+      },
+      "updated_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      },
+      "config": {
+        "abstract": true,
+        "type": "record"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "indexed": true
+      },
+      "description": {
+        "type": "string"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "consumers": {
+    "endpoint_key": "username",
+    "name": "consumers",
+    "new_subschema": "function: 0x7f9194879b10",
+    "workspaceable": true,
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "consumers",
+    "dao": "kong.db.dao.consumers",
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "username": {
+        "type": "string",
+        "indexed": true,
+        "unique": true
+      },
+      "username_lower": {
+        "prefix_ws": true,
+        "db_export": false,
+        "type": "string"
+      },
+      "custom_id": {
+        "type": "string",
+        "indexed": true,
+        "unique": true
+      },
+      "type": {
+        "indexed": true,
+        "default": 0,
+        "custom_validator": "function: 0x7f9194375888",
+        "required": true,
+        "type": "integer"
+      },
+      "tags": {
+        "elements": {
+          "type": "string",
+          "required": true,
+          "custom_validator": "function: 0x7f9194682160"
+        },
+        "type": "set"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "oic_jwks": {
+    "dao": "kong.plugins.openid-connect.daos.jwks",
+    "name": "oic_jwks",
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "oic_jwks",
+    "generate_admin_api": false,
+    "new_subschema": "function: 0x7f9194879b10",
+    "fields": {
+      "id": {
+        "auto": false,
+        "uuid": true,
+        "default": "c3cfba2d-1617-453f-a416-52e6edb5f9a0",
+        "type": "string",
+        "eq": "c3cfba2d-1617-453f-a416-52e6edb5f9a0"
+      },
+      "jwks": {
+        "type": "record",
+        "required": true,
+        "fields": {
+          "keys": {
+            "type": "array",
+            "required": true,
+            "elements": {
+              "type": "record",
+              "required": false,
+              "fields": {}
+            }
+          }
+        }
+      }
+    }
+  },
+  "services": {
+    "endpoint_key": "name",
+    "name": "services",
+    "new_subschema": "function: 0x7f9194879b10",
+    "workspaceable": true,
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "services",
+    "dao": "kong.db.dao.services",
+    "shorthand_fields": [
+      {
+        "url": {
+          "type": "string",
+          "func": "function: 0x7f9194419df8"
+        }
+      }
+    ],
+    "fields": {
+      "updated_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      },
+      "tags": {
+        "elements": {
+          "type": "string",
+          "required": true,
+          "custom_validator": "function: 0x7f9194682160"
+        },
+        "type": "set"
+      },
+      "ca_certificates": {
+        "elements": {
+          "type": "string",
+          "uuid": true
+        },
+        "type": "array"
+      },
+      "write_timeout": {
+        "between": [
+          1,
+          2147483646
+        ],
+        "type": "integer",
+        "default": 60000
+      },
+      "enabled": {
+        "required": true,
+        "type": "boolean",
+        "indexed": true,
+        "default": true
+      },
+      "name": {
+        "custom_validator": "function: 0x7f91946821d8",
+        "type": "string",
+        "indexed": true,
+        "unique": true
+      },
+      "client_certificate": {
+        "type": "foreign",
+        "reference": "certificates"
+      },
+      "protocol": {
+        "indexed": true,
+        "default": "http",
+        "one_of": [
+          "grpc",
+          "grpcs",
+          "http",
+          "https",
+          "tcp",
+          "tls",
+          "tls_passthrough",
+          "udp",
+          "ws",
+          "wss"
+        ],
+        "type": "string",
+        "required": true
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      },
+      "tls_verify": {
+        "type": "boolean"
+      },
+      "tls_verify_depth": {
+        "between": [
+          0,
+          64
+        ],
+        "type": "integer",
+        "default": null
+      },
+      "retries": {
+        "between": [
+          0,
+          32767
+        ],
+        "type": "integer",
+        "default": 5
+      },
+      "port": {
+        "indexed": true,
+        "default": 80,
+        "between": [
+          0,
+          65535
+        ],
+        "type": "integer",
+        "required": true
+      },
+      "connect_timeout": {
+        "between": [
+          1,
+          2147483646
+        ],
+        "type": "integer",
+        "default": 60000
+      },
+      "host": {
+        "indexed": true,
+        "custom_validator": "function: 0x7f9194681eb0",
+        "required": true,
+        "type": "string"
+      },
+      "read_timeout": {
+        "between": [
+          1,
+          2147483646
+        ],
+        "type": "integer",
+        "default": 60000
+      },
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "path": {
+        "match_none": [
+          {
+            "pattern": "//",
+            "err": "must not have empty segments"
+          }
+        ],
+        "indexed": true,
+        "starts_with": "/",
+        "custom_validator": "function: 0x7f9194682040",
+        "type": "string"
+      }
+    }
+  },
+  "oic_issuers": {
+    "endpoint_key": "issuer",
+    "name": "oic_issuers",
+    "new_subschema": "function: 0x7f9194879b10",
+    "transformations": [
+      {
+        "on_read": "function: 0x7f9192f33bb0",
+        "input": [
+          "secret"
+        ],
+        "on_write": "function: 0x7f9192f340f8"
+      }
+    ],
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "oic_issuers",
+    "generate_admin_api": false,
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      },
+      "secret": {
+        "required": true,
+        "type": "string",
+        "encrypted": true,
+        "referenceable": true
+      },
+      "issuer": {
+        "type": "string",
+        "custom_validator": "function: 0x7f9194682298",
+        "required": true,
+        "unique": true
+      },
+      "keys": {
+        "required": true,
+        "type": "string"
+      },
+      "configuration": {
+        "required": true,
+        "type": "string"
+      }
+    },
+    "cache_key": [
+      "issuer"
+    ],
+    "cache_key_set": {
+      "issuer": true
+    }
+  },
+  "snis": {
+    "endpoint_key": "name",
+    "name": "snis",
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "snis",
+    "new_subschema": "function: 0x7f9194879b10",
+    "workspaceable": true,
+    "dao": "kong.db.dao.snis",
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "name": {
+        "indexed": true,
+        "type": "string",
+        "unique_across_ws": true,
+        "custom_validator": "function: 0x7f9194682258",
+        "required": true,
+        "unique": true
+      },
+      "tags": {
+        "elements": {
+          "type": "string",
+          "required": true,
+          "custom_validator": "function: 0x7f9194682160"
+        },
+        "type": "set"
+      },
+      "certificate": {
+        "reference": "certificates",
+        "required": true,
+        "type": "foreign"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "upstreams": {
+    "endpoint_key": "name",
+    "name": "upstreams",
+    "new_subschema": "function: 0x7f9194879b10",
+    "workspaceable": true,
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "upstreams",
+    "shorthand_fields": [
+      {
+        "algorithm": {
+          "type": "string",
+          "func": "function: 0x7f9193fb0718"
+        }
+      },
+      {
+        "hash_on": {
+          "type": "string",
+          "func": "function: 0x7f9193fb0888"
+        }
+      }
+    ],
+    "fields": {
+      "slots": {
+        "between": [
+          10,
+          65536
+        ],
+        "type": "integer",
+        "default": 10000
+      },
+      "tags": {
+        "elements": {
+          "type": "string",
+          "required": true,
+          "custom_validator": "function: 0x7f9194682160"
+        },
+        "type": "set"
+      },
+      "host_header": {
+        "type": "string",
+        "custom_validator": "function: 0x7f9194681f60"
+      },
+      "hash_on": {
+        "one_of": [
+          "none",
+          "consumer",
+          "ip",
+          "header",
+          "cookie",
+          "path",
+          "query_arg",
+          "uri_capture"
+        ],
+        "type": "string",
+        "default": "none"
+      },
+      "hash_on_cookie": {
+        "type": "string",
+        "custom_validator": "function: 0x7f9194a54340"
+      },
+      "name": {
+        "indexed": true,
+        "custom_validator": "function: 0x7f9193fa9308",
+        "type": "string",
+        "required": true,
+        "unique": true
+      },
+      "algorithm": {
+        "one_of": [
+          "consistent-hashing",
+          "least-connections",
+          "round-robin",
+          "latency"
+        ],
+        "type": "string",
+        "default": "round-robin"
+      },
+      "hash_on_query_arg": {
+        "type": "string",
+        "len_min": 1
+      },
+      "use_srv_name": {
+        "type": "boolean",
+        "default": false
+      },
+      "hash_on_uri_capture": {
+        "type": "string",
+        "len_min": 1
+      },
+      "healthchecks": {
+        "default": {
+          "active": {
+            "https_verify_certificate": true,
+            "concurrency": 10,
+            "timeout": 1,
+            "type": "http",
+            "http_path": "/",
+            "healthy": {
+              "successes": 0,
+              "interval": 0,
+              "http_statuses": [
+                200,
+                302
+              ]
+            },
+            "unhealthy": {
+              "timeouts": 0,
+              "http_failures": 0,
+              "interval": 0,
+              "http_statuses": [
+                429,
+                404,
+                500,
+                501,
+                502,
+                503,
+                504,
+                505
+              ],
+              "tcp_failures": 0
+            }
+          },
+          "passive": {
+            "type": "http",
+            "healthy": {
+              "successes": 0,
+              "http_statuses": [
+                200,
+                201,
+                202,
+                203,
+                204,
+                205,
+                206,
+                207,
+                208,
+                226,
+                300,
+                301,
+                302,
+                303,
+                304,
+                305,
+                306,
+                307,
+                308
+              ]
+            },
+            "unhealthy": {
+              "timeouts": 0,
+              "http_failures": 0,
+              "tcp_failures": 0,
+              "http_statuses": [
+                429,
+                500,
+                503
+              ]
+            }
+          }
+        },
+        "type": "record",
+        "required": true,
+        "fields": {
+          "active": {
+            "fields": {
+              "timeout": {
+                "between": [
+                  0,
+                  65535
+                ],
+                "type": "number",
+                "default": 1
+              },
+              "healthy": {
+                "fields": {
+                  "successes": {
+                    "between": [
+                      0,
+                      255
+                    ],
+                    "type": "integer",
+                    "default": 0
+                  },
+                  "interval": {
+                    "between": [
+                      0,
+                      65535
+                    ],
+                    "type": "number",
+                    "default": 0
+                  },
+                  "http_statuses": {
+                    "type": "array",
+                    "elements": {
+                      "between": [
+                        100,
+                        999
+                      ],
+                      "type": "integer"
+                    },
+                    "default": [
+                      200,
+                      302
+                    ]
+                  }
+                },
+                "type": "record",
+                "required": true,
+                "default": {
+                  "successes": 0,
+                  "interval": 0,
+                  "http_statuses": [
+                    200,
+                    302
+                  ]
+                }
+              },
+              "unhealthy": {
+                "fields": {
+                  "timeouts": {
+                    "between": [
+                      0,
+                      255
+                    ],
+                    "type": "integer",
+                    "default": 0
+                  },
+                  "http_failures": {
+                    "between": [
+                      0,
+                      255
+                    ],
+                    "type": "integer",
+                    "default": 0
+                  },
+                  "interval": {
+                    "between": [
+                      0,
+                      65535
+                    ],
+                    "type": "number",
+                    "default": 0
+                  },
+                  "http_statuses": {
+                    "type": "array",
+                    "elements": {
+                      "between": [
+                        100,
+                        999
+                      ],
+                      "type": "integer"
+                    },
+                    "default": [
+                      429,
+                      404,
+                      500,
+                      501,
+                      502,
+                      503,
+                      504,
+                      505
+                    ]
+                  },
+                  "tcp_failures": {
+                    "between": [
+                      0,
+                      255
+                    ],
+                    "type": "integer",
+                    "default": 0
+                  }
+                },
+                "type": "record",
+                "required": true,
+                "default": {
+                  "timeouts": 0,
+                  "http_failures": 0,
+                  "interval": 0,
+                  "http_statuses": [
+                    429,
+                    404,
+                    500,
+                    501,
+                    502,
+                    503,
+                    504,
+                    505
+                  ],
+                  "tcp_failures": 0
+                }
+              },
+              "headers": {
+                "values": {
+                  "elements": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "keys": {
+                  "type": "string",
+                  "custom_validator": "function: 0x7f9194a542d0"
+                },
+                "required": false,
+                "type": "map"
+              },
+              "concurrency": {
+                "between": [
+                  1,
+                  2147483648
+                ],
+                "type": "integer",
+                "default": 10
+              },
+              "http_path": {
+                "match_none": [
+                  {
+                    "pattern": "//",
+                    "err": "must not have empty segments"
+                  }
+                ],
+                "starts_with": "/",
+                "custom_validator": "function: 0x7f9194682040",
+                "type": "string",
+                "default": "/"
+              },
+              "type": {
+                "one_of": [
+                  "tcp",
+                  "http",
+                  "https",
+                  "grpc",
+                  "grpcs"
+                ],
+                "type": "string",
+                "default": "http"
+              },
+              "https_sni": {
+                "custom_validator": "function: 0x7f9194682218",
+                "required": false,
+                "type": "string"
+              },
+              "https_verify_certificate": {
+                "type": "boolean",
+                "required": true,
+                "default": true
+              }
+            },
+            "type": "record",
+            "required": true,
+            "default": {
+              "https_verify_certificate": true,
+              "concurrency": 10,
+              "timeout": 1,
+              "type": "http",
+              "http_path": "/",
+              "healthy": {
+                "successes": 0,
+                "interval": 0,
+                "http_statuses": [
+                  200,
+                  302
+                ]
+              },
+              "unhealthy": {
+                "timeouts": 0,
+                "http_failures": 0,
+                "interval": 0,
+                "http_statuses": [
+                  429,
+                  404,
+                  500,
+                  501,
+                  502,
+                  503,
+                  504,
+                  505
+                ],
+                "tcp_failures": 0
+              }
+            }
+          },
+          "passive": {
+            "fields": {
+              "type": {
+                "one_of": [
+                  "tcp",
+                  "http",
+                  "https",
+                  "grpc",
+                  "grpcs"
+                ],
+                "type": "string",
+                "default": "http"
+              },
+              "healthy": {
+                "fields": {
+                  "successes": {
+                    "between": [
+                      0,
+                      255
+                    ],
+                    "type": "integer",
+                    "default": 0
+                  },
+                  "http_statuses": {
+                    "type": "array",
+                    "elements": {
+                      "between": [
+                        100,
+                        999
+                      ],
+                      "type": "integer"
+                    },
+                    "default": [
+                      200,
+                      201,
+                      202,
+                      203,
+                      204,
+                      205,
+                      206,
+                      207,
+                      208,
+                      226,
+                      300,
+                      301,
+                      302,
+                      303,
+                      304,
+                      305,
+                      306,
+                      307,
+                      308
+                    ]
+                  }
+                },
+                "type": "record",
+                "required": true,
+                "default": {
+                  "successes": 0,
+                  "http_statuses": [
+                    200,
+                    201,
+                    202,
+                    203,
+                    204,
+                    205,
+                    206,
+                    207,
+                    208,
+                    226,
+                    300,
+                    301,
+                    302,
+                    303,
+                    304,
+                    305,
+                    306,
+                    307,
+                    308
+                  ]
+                }
+              },
+              "unhealthy": {
+                "fields": {
+                  "timeouts": {
+                    "between": [
+                      0,
+                      255
+                    ],
+                    "type": "integer",
+                    "default": 0
+                  },
+                  "http_failures": {
+                    "between": [
+                      0,
+                      255
+                    ],
+                    "type": "integer",
+                    "default": 0
+                  },
+                  "tcp_failures": {
+                    "between": [
+                      0,
+                      255
+                    ],
+                    "type": "integer",
+                    "default": 0
+                  },
+                  "http_statuses": {
+                    "type": "array",
+                    "elements": {
+                      "between": [
+                        100,
+                        999
+                      ],
+                      "type": "integer"
+                    },
+                    "default": [
+                      429,
+                      500,
+                      503
+                    ]
+                  }
+                },
+                "type": "record",
+                "required": true,
+                "default": {
+                  "timeouts": 0,
+                  "http_failures": 0,
+                  "tcp_failures": 0,
+                  "http_statuses": [
+                    429,
+                    500,
+                    503
+                  ]
+                }
+              }
+            },
+            "type": "record",
+            "required": true,
+            "default": {
+              "type": "http",
+              "healthy": {
+                "successes": 0,
+                "http_statuses": [
+                  200,
+                  201,
+                  202,
+                  203,
+                  204,
+                  205,
+                  206,
+                  207,
+                  208,
+                  226,
+                  300,
+                  301,
+                  302,
+                  303,
+                  304,
+                  305,
+                  306,
+                  307,
+                  308
+                ]
+              },
+              "unhealthy": {
+                "timeouts": 0,
+                "http_failures": 0,
+                "tcp_failures": 0,
+                "http_statuses": [
+                  429,
+                  500,
+                  503
+                ]
+              }
+            }
+          },
+          "threshold": {
+            "between": [
+              0,
+              100
+            ],
+            "type": "number",
+            "default": 0
+          }
+        }
+      },
+      "client_certificate": {
+        "type": "foreign",
+        "reference": "certificates"
+      },
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "hash_fallback_header": {
+        "type": "string",
+        "custom_validator": "function: 0x7f9194a542d0"
+      },
+      "hash_fallback_query_arg": {
+        "type": "string",
+        "len_min": 1
+      },
+      "hash_fallback_uri_capture": {
+        "type": "string",
+        "len_min": 1
+      },
+      "hash_on_cookie_path": {
+        "match_none": [
+          {
+            "pattern": "//",
+            "err": "must not have empty segments"
+          }
+        ],
+        "starts_with": "/",
+        "custom_validator": "function: 0x7f9194682040",
+        "type": "string",
+        "default": "/"
+      },
+      "hash_fallback": {
+        "one_of": [
+          "none",
+          "consumer",
+          "ip",
+          "header",
+          "cookie",
+          "path",
+          "query_arg",
+          "uri_capture"
+        ],
+        "type": "string",
+        "default": "none"
+      },
+      "hash_on_header": {
+        "type": "string",
+        "custom_validator": "function: 0x7f9194a542d0"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "targets": {
+    "dao": "kong.db.dao.targets",
+    "name": "targets",
+    "new_subschema": "function: 0x7f9194879b10",
+    "workspaceable": true,
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "targets",
+    "cache_key_set": {
+      "target": true,
+      "upstream": true
+    },
+    "endpoint_key": "target",
+    "cache_key": [
+      "upstream",
+      "target"
+    ],
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "tags": {
+        "elements": {
+          "type": "string",
+          "required": true,
+          "custom_validator": "function: 0x7f9194682160"
+        },
+        "type": "set"
+      },
+      "weight": {
+        "between": [
+          0,
+          65535
+        ],
+        "type": "integer",
+        "default": 100
+      },
+      "upstream": {
+        "on_delete": "cascade",
+        "type": "foreign",
+        "required": true,
+        "reference": "upstreams"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "number",
+        "timestamp": true
+      },
+      "target": {
+        "type": "string",
+        "required": true,
+        "custom_validator": "function: 0x7f9193f83d60"
+      }
+    }
+  },
+  "ca_certificates": {
+    "name": "ca_certificates",
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "ca_certificates",
+    "new_subschema": "function: 0x7f9194879b10",
+    "transformations": [
+      {
+        "input": [
+          "cert"
+        ],
+        "on_write": "function: 0x7f91946fd6c0"
+      }
+    ],
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "tags": {
+        "elements": {
+          "type": "string",
+          "required": true,
+          "custom_validator": "function: 0x7f9194682160"
+        },
+        "type": "set"
+      },
+      "cert_digest": {
+        "type": "string",
+        "unique": true
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      },
+      "cert": {
+        "custom_validator": "function: 0x7f9194682308",
+        "required": true,
+        "type": "string"
+      }
+    }
+  },
+  "clustering_data_planes": {
+    "name": "clustering_data_planes",
+    "new_subschema": "function: 0x7f9194879b10",
+    "db_export": false,
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "clustering_data_planes",
+    "generate_admin_api": false,
+    "admin_api_name": "clustering/data-planes",
+    "ttl": true,
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "required": true,
+        "type": "string"
+      },
+      "sync_status": {
+        "one_of": [
+          "unknown",
+          "normal",
+          "kong_version_incompatible",
+          "plugin_set_incompatible",
+          "plugin_version_incompatible",
+          "plugin_config_incompatible"
+        ],
+        "type": "string",
+        "required": true,
+        "default": "unknown"
+      },
+      "last_seen": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      },
+      "config_hash": {
+        "len_eq": 32,
+        "type": "string"
+      },
+      "hostname": {
+        "custom_validator": "function: 0x7f9194681eb0",
+        "required": true,
+        "type": "string"
+      },
+      "version": {
+        "type": "string",
+        "match_any": {
+          "patterns": [
+            "^%d+[%.%d]*$",
+            "^%d+[%.%d]*%-?.*$"
+          ],
+          "err": "invalid version number: must be in format of X.Y.Z"
+        },
+        "match_none": [
+          {
+            "pattern": "%.%.",
+            "err": "must not have empty version segments"
+          }
+        ]
+      },
+      "ip": {
+        "custom_validator": "function: 0x7f9194681f98",
+        "required": true,
+        "type": "string"
+      }
+    }
+  },
+  "parameters": {
+    "name": "parameters",
+    "new_subschema": "function: 0x7f9194879b10",
+    "workspaceable": false,
+    "primary_key": [
+      "key"
+    ],
+    "table_name": "parameters",
+    "generate_admin_api": false,
+    "fields": {
+      "value": {
+        "required": true,
+        "type": "string"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      },
+      "key": {
+        "type": "string",
+        "required": true,
+        "unique": true
+      }
+    },
+    "cache_key": [
+      "key"
+    ],
+    "cache_key_set": {
+      "key": true
+    }
+  },
+  "audit_requests": {
+    "name": "audit_requests",
+    "new_subschema": "function: 0x7f9194879b10",
+    "workspaceable": false,
+    "ttl": true,
+    "primary_key": [
+      "request_id"
+    ],
+    "table_name": "audit_requests",
+    "generate_admin_api": false,
+    "admin_api_name": "audit/requests",
+    "db_export": false,
+    "fields": {
+      "request_id": {
+        "type": "string"
+      },
+      "workspace": {
+        "type": "string",
+        "uuid": true
+      },
+      "signature": {
+        "type": "string"
+      },
+      "rbac_user_name": {
+        "type": "string"
+      },
+      "rbac_user_id": {
+        "type": "string",
+        "uuid": true
+      },
+      "method": {
+        "required": true,
+        "type": "string"
+      },
+      "request_timestamp": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      },
+      "removed_from_payload": {
+        "type": "string"
+      },
+      "status": {
+        "required": true,
+        "type": "integer"
+      },
+      "client_ip": {
+        "required": true,
+        "type": "string"
+      },
+      "payload": {
+        "type": "string"
+      },
+      "request_source": {
+        "type": "string"
+      },
+      "path": {
+        "required": true,
+        "type": "string"
+      }
+    }
+  },
+  "audit_objects": {
+    "name": "audit_objects",
+    "new_subschema": "function: 0x7f9194879b10",
+    "workspaceable": false,
+    "ttl": true,
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "audit_objects",
+    "generate_admin_api": false,
+    "admin_api_name": "audit/objects",
+    "db_export": false,
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "required": true,
+        "type": "string"
+      },
+      "signature": {
+        "type": "string"
+      },
+      "entity": {
+        "type": "string"
+      },
+      "rbac_user_id": {
+        "type": "string",
+        "uuid": true
+      },
+      "operation": {
+        "one_of": [
+          "create",
+          "update",
+          "delete"
+        ],
+        "type": "string",
+        "required": true
+      },
+      "dao_name": {
+        "required": true,
+        "type": "string"
+      },
+      "request_id": {
+        "type": "string"
+      },
+      "entity_key": {
+        "type": "string",
+        "uuid": true
+      }
+    }
+  },
+  "rbac_users": {
+    "dao": "kong.db.dao.rbac_users",
+    "name": "rbac_users",
+    "new_subschema": "function: 0x7f9194879b10",
+    "transformations": [
+      {
+        "input": [
+          "user_token"
+        ],
+        "on_write": "function: 0x7f9193fc8148"
+      }
+    ],
+    "workspaceable": true,
+    "endpoint_key": "name",
+    "db_export": false,
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "rbac_users",
+    "generate_admin_api": false,
+    "admin_api_name": "rbac/users",
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "unique": true
+      },
+      "enabled": {
+        "type": "boolean",
+        "required": true,
+        "default": true
+      },
+      "comment": {
+        "type": "string"
+      },
+      "user_token_ident": {
+        "type": "string"
+      },
+      "user_token": {
+        "unique_across_ws": true,
+        "type": "string",
+        "custom_validator": "function: 0x7f9194682128",
+        "required": true,
+        "unique": true
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "rbac_roles": {
+    "dao": "kong.db.dao.rbac_roles",
+    "name": "rbac_roles",
+    "new_subschema": "function: 0x7f9194879b10",
+    "workspaceable": true,
+    "endpoint_key": "name",
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "rbac_roles",
+    "generate_admin_api": false,
+    "db_export": false,
+    "admin_api_name": "rbac/roles",
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "unique": true
+      },
+      "is_default": {
+        "type": "boolean",
+        "required": true,
+        "default": false
+      },
+      "comment": {
+        "type": "string"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "rbac_user_roles": {
+    "name": "rbac_user_roles",
+    "primary_key": [
+      "user",
+      "role"
+    ],
+    "table_name": "rbac_user_roles",
+    "generate_admin_api": false,
+    "new_subschema": "function: 0x7f9194879b10",
+    "db_export": false,
+    "fields": {
+      "user": {
+        "on_delete": "cascade",
+        "reference": "rbac_users",
+        "required": true,
+        "type": "foreign"
+      },
+      "role": {
+        "on_delete": "cascade",
+        "reference": "rbac_roles",
+        "required": true,
+        "type": "foreign"
+      }
+    }
+  },
+  "rbac_role_entities": {
+    "dao": "kong.db.dao.rbac_role_entities",
+    "name": "rbac_role_entities",
+    "new_subschema": "function: 0x7f9194879b10",
+    "primary_key": [
+      "role",
+      "entity_id"
+    ],
+    "table_name": "rbac_role_entities",
+    "generate_admin_api": false,
+    "fields": {
+      "role": {
+        "on_delete": "cascade",
+        "reference": "rbac_roles",
+        "required": true,
+        "type": "foreign"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      },
+      "entity_id": {
+        "required": true,
+        "type": "string"
+      },
+      "actions": {
+        "required": true,
+        "type": "integer"
+      },
+      "comment": {
+        "type": "string"
+      },
+      "negative": {
+        "type": "boolean",
+        "required": true,
+        "default": false
+      },
+      "entity_type": {
+        "required": true,
+        "type": "string"
+      }
+    },
+    "db_export": false,
+    "admin_api_nested_name": "entities"
+  },
+  "rbac_role_endpoints": {
+    "dao": "kong.db.dao.rbac_role_endpoints",
+    "name": "rbac_role_endpoints",
+    "new_subschema": "function: 0x7f9194879b10",
+    "primary_key": [
+      "role",
+      "workspace",
+      "endpoint"
+    ],
+    "table_name": "rbac_role_endpoints",
+    "generate_admin_api": false,
+    "fields": {
+      "role": {
+        "on_delete": "cascade",
+        "reference": "rbac_roles",
+        "required": true,
+        "type": "foreign"
+      },
+      "workspace": {
+        "type": "string",
+        "required": true,
+        "default": "default"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      },
+      "actions": {
+        "required": true,
+        "type": "integer"
+      },
+      "comment": {
+        "type": "string"
+      },
+      "endpoint": {
+        "required": true,
+        "type": "string"
+      },
+      "negative": {
+        "type": "boolean",
+        "required": true,
+        "default": false
+      }
+    },
+    "db_export": false,
+    "admin_api_nested_name": "endpoints"
+  },
+  "admins": {
+    "endpoint_key": "username",
+    "name": "admins",
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "admins",
+    "new_subschema": "function: 0x7f9194879b10",
+    "dao": "kong.db.dao.admins",
+    "db_export": false,
+    "fields": {
+      "updated_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      },
+      "username_lower": {
+        "type": "string"
+      },
+      "custom_id": {
+        "type": "string",
+        "unique": true
+      },
+      "email": {
+        "type": "string",
+        "custom_validator": "function: 0x7f91943756f0",
+        "unique": true
+      },
+      "consumer": {
+        "reference": "consumers",
+        "required": true,
+        "type": "foreign"
+      },
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "username": {
+        "type": "string",
+        "required": true,
+        "unique": true
+      },
+      "status": {
+        "custom_validator": "function: 0x7f9194375818",
+        "type": "integer",
+        "required": true,
+        "default": 4
+      },
+      "rbac_user": {
+        "reference": "rbac_users",
+        "required": true,
+        "type": "foreign"
+      },
+      "rbac_token_enabled": {
+        "type": "boolean",
+        "required": true,
+        "default": true
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "ratelimiting_metrics": {
+    "new_subschema": "function: 0x7f9194879b10",
+    "name": "ratelimiting_metrics",
+    "primary_key": [
+      "identifier",
+      "period",
+      "period_date",
+      "service_id",
+      "route_id"
+    ],
+    "table_name": "ratelimiting_metrics",
+    "generate_admin_api": false,
+    "ttl": true,
+    "db_export": false,
+    "fields": {
+      "identifier": {
+        "type": "string",
+        "required": true,
+        "len_min": 0
+      },
+      "service_id": {
+        "uuid": true,
+        "required": true,
+        "type": "string"
+      },
+      "value": {
+        "required": true,
+        "type": "integer"
+      },
+      "route_id": {
+        "uuid": true,
+        "required": true,
+        "type": "string"
+      },
+      "period_date": {
+        "type": "integer",
+        "timestamp": true,
+        "required": true
+      },
+      "period": {
+        "required": true,
+        "type": "string"
+      }
+    }
+  },
+  "oauth2_tokens": {
+    "dao": "kong.plugins.oauth2.daos.oauth2_tokens",
+    "name": "oauth2_tokens",
+    "new_subschema": "function: 0x7f9194879b10",
+    "workspaceable": true,
+    "cache_key_set": {
+      "access_token": true
+    },
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "oauth2_tokens",
+    "cache_key": [
+      "access_token"
+    ],
+    "endpoint_key": "access_token",
+    "ttl": true,
+    "fields": {
+      "scope": {
+        "type": "string"
+      },
+      "authenticated_userid": {
+        "required": false,
+        "type": "string"
+      },
+      "credential": {
+        "type": "foreign",
+        "on_delete": "cascade",
+        "required": true,
+        "reference": "oauth2_credentials"
+      },
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "service": {
+        "default": null,
+        "on_delete": "cascade",
+        "type": "foreign",
+        "reference": "services"
+      },
+      "refresh_token": {
+        "type": "string",
+        "required": false,
+        "unique": true
+      },
+      "access_token": {
+        "auto": true,
+        "type": "string",
+        "required": false,
+        "unique": true
+      },
+      "expires_in": {
+        "required": true,
+        "type": "integer"
+      },
+      "token_type": {
+        "one_of": [
+          "bearer"
+        ],
+        "type": "string",
+        "required": true,
+        "default": "bearer"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "applications": {
+    "dao": "kong.db.dao.applications",
+    "name": "applications",
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "applications",
+    "new_subschema": "function: 0x7f9194879b10",
+    "workspaceable": true,
+    "db_export": false,
+    "fields": {
+      "updated_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      },
+      "name": {
+        "required": true,
+        "type": "string"
+      },
+      "custom_id": {
+        "type": "string",
+        "unique": true
+      },
+      "consumer": {
+        "reference": "consumers",
+        "required": true,
+        "type": "foreign"
+      },
+      "meta": {
+        "type": "string"
+      },
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "developer": {
+        "reference": "developers",
+        "required": true,
+        "type": "foreign"
+      },
+      "redirect_uri": {
+        "type": "string",
+        "custom_validator": "function: 0x7f9194682298"
+      },
+      "description": {
+        "type": "string"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "application_instances": {
+    "dao": "kong.db.dao.application_instances",
+    "name": "application_instances",
+    "new_subschema": "function: 0x7f9194879b10",
+    "workspaceable": true,
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "application_instances",
+    "generate_admin_api": false,
+    "db_export": false,
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "status": {
+        "between": [
+          0,
+          5
+        ],
+        "type": "integer",
+        "default": 5
+      },
+      "composite_id": {
+        "type": "string",
+        "unique": true
+      },
+      "suspended": {
+        "type": "boolean",
+        "default": false
+      },
+      "updated_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      },
+      "service": {
+        "reference": "services",
+        "required": true,
+        "type": "foreign"
+      },
+      "application": {
+        "reference": "applications",
+        "required": true,
+        "type": "foreign"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "groups": {
+    "endpoint_key": "name",
+    "name": "groups",
+    "new_subschema": "function: 0x7f9194879b10",
+    "workspaceable": false,
+    "cache_key_set": {
+      "name": true
+    },
+    "primary_key": [
+      "id"
+    ],
+    "cache_key": [
+      "name"
+    ],
+    "table_name": "groups",
+    "generate_admin_api": false,
+    "db_export": false,
+    "admin_api_name": "groups",
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "name": {
+        "type": "string",
+        "required": true,
+        "unique": true
+      },
+      "comment": {
+        "type": "string"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "group_rbac_roles": {
+    "new_subschema": "function: 0x7f9194879b10",
+    "name": "group_rbac_roles",
+    "primary_key": [
+      "group",
+      "rbac_role"
+    ],
+    "table_name": "group_rbac_roles",
+    "generate_admin_api": false,
+    "admin_api_nested_name": "roles",
+    "db_export": false,
+    "fields": {
+      "workspace": {
+        "on_delete": "cascade",
+        "reference": "workspaces",
+        "required": true,
+        "type": "foreign"
+      },
+      "rbac_role": {
+        "on_delete": "cascade",
+        "reference": "rbac_roles",
+        "required": true,
+        "type": "foreign"
+      },
+      "group": {
+        "on_delete": "cascade",
+        "reference": "groups",
+        "required": true,
+        "type": "foreign"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "login_attempts": {
+    "name": "login_attempts",
+    "primary_key": [
+      "consumer"
+    ],
+    "table_name": "login_attempts",
+    "new_subschema": "function: 0x7f9194879b10",
+    "db_export": false,
+    "ttl": true,
+    "fields": {
+      "attempts": {
+        "values": {
+          "type": "integer"
+        },
+        "type": "map",
+        "required": true,
+        "keys": {
+          "type": "string",
+          "custom_validator": "function: 0x7f9194681f98"
+        }
+      },
+      "consumer": {
+        "reference": "consumers",
+        "required": true,
+        "type": "foreign"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "keyring_meta": {
+    "dao": "kong.db.dao.keyring_meta",
+    "name": "keyring_meta",
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "keyring_meta",
+    "generate_admin_api": false,
+    "new_subschema": "function: 0x7f9194879b10",
+    "fields": {
+      "id": {
+        "required": true,
+        "type": "string"
+      },
+      "state": {
+        "one_of": [
+          "active",
+          "alive",
+          "tombstoned"
+        ],
+        "type": "string",
+        "required": true,
+        "default": "alive"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "keyring_keys": {
+    "name": "keyring_keys",
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "keyring_keys",
+    "generate_admin_api": false,
+    "new_subschema": "function: 0x7f9194879b10",
+    "fields": {
+      "id": {
+        "required": true,
+        "type": "string"
+      },
+      "updated_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      },
+      "recovery_key_id": {
+        "required": true,
+        "type": "string"
+      },
+      "key_encrypted": {
+        "required": true,
+        "type": "string"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "event_hooks": {
+    "endpoint_key": "id",
+    "name": "event_hooks",
+    "new_subschema": "function: 0x7f9194879b10",
+    "subschemas": {
+      "webhook-custom": {
+        "fields": {
+          "config": {
+            "type": "record",
+            "required": true,
+            "fields": {
+              "headers_format": {
+                "type": "boolean",
+                "default": false
+              },
+              "body_format": {
+                "type": "boolean",
+                "default": true
+              },
+              "payload_format": {
+                "type": "boolean",
+                "default": true
+              },
+              "url": {
+                "custom_validator": "function: 0x7f9194682298",
+                "required": true,
+                "type": "string"
+              },
+              "method": {
+                "type": "string",
+                "required": true,
+                "match": "^%u+$"
+              },
+              "headers": {
+                "values": {
+                  "type": "string"
+                },
+                "keys": {
+                  "type": "string"
+                },
+                "type": "map",
+                "default": {}
+              },
+              "body": {
+                "type": "string",
+                "required": false,
+                "len_min": 0
+              },
+              "payload": {
+                "values": {
+                  "type": "string"
+                },
+                "keys": {
+                  "type": "string"
+                },
+                "required": false,
+                "type": "map"
+              },
+              "ssl_verify": {
+                "type": "boolean",
+                "default": false
+              },
+              "secret": {
+                "required": false,
+                "type": "string"
+              }
+            }
+          }
+        },
+        "name": "webhook-custom"
+      },
+      "lambda": {
+        "fields": {
+          "config": {
+            "type": "record",
+            "required": true,
+            "fields": {
+              "functions": {
+                "type": "array",
+                "required": true,
+                "elements": {
+                  "type": "string",
+                  "custom_validator": "function: 0x7f91947887b8"
+                }
+              }
+            }
+          }
+        },
+        "name": "lambda"
+      },
+      "log": {
+        "fields": {
+          "config": {
+            "type": "record",
+            "required": true,
+            "fields": {}
+          }
+        },
+        "name": "log"
+      },
+      "webhook": {
+        "fields": {
+          "config": {
+            "type": "record",
+            "required": true,
+            "fields": {
+              "secret": {
+                "required": false,
+                "type": "string"
+              },
+              "headers": {
+                "values": {
+                  "type": "string"
+                },
+                "keys": {
+                  "type": "string"
+                },
+                "type": "map",
+                "default": {}
+              },
+              "ssl_verify": {
+                "type": "boolean",
+                "default": false
+              },
+              "url": {
+                "custom_validator": "function: 0x7f9194682298",
+                "required": true,
+                "type": "string"
+              }
+            }
+          }
+        },
+        "name": "webhook"
+      }
+    },
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "event_hooks",
+    "generate_admin_api": false,
+    "subschema_key": "handler",
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "handler": {
+        "required": true,
+        "type": "string"
+      },
+      "event": {
+        "type": "string"
+      },
+      "snooze": {
+        "type": "integer"
+      },
+      "config": {
+        "abstract": true,
+        "type": "record",
+        "required": true
+      },
+      "source": {
+        "required": true,
+        "type": "string"
+      },
+      "on_change": {
+        "type": "boolean"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "licenses": {
+    "name": "licenses",
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "licenses",
+    "new_subschema": "function: 0x7f9194879b10",
+    "workspaceable": false,
+    "db_export": true,
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "payload": {
+        "custom_validator": "function: 0x7f91947a4c78",
+        "type": "string",
+        "required": true,
+        "unique": true
+      },
+      "updated_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "keyauth_credentials": {
+    "endpoint_key": "key",
+    "name": "keyauth_credentials",
+    "new_subschema": "function: 0x7f9194879b10",
+    "workspaceable": true,
+    "cache_key_set": {
+      "key": true
+    },
+    "admin_api_nested_name": "key-auth",
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "keyauth_credentials",
+    "admin_api_name": "key-auths",
+    "cache_key": [
+      "key"
+    ],
+    "ttl": true,
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "tags": {
+        "elements": {
+          "type": "string",
+          "required": true,
+          "custom_validator": "function: 0x7f9194682160"
+        },
+        "type": "set"
+      },
+      "key": {
+        "auto": true,
+        "type": "string",
+        "required": false,
+        "unique": true
+      },
+      "consumer": {
+        "on_delete": "cascade",
+        "reference": "consumers",
+        "required": true,
+        "type": "foreign"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    }
+  },
+  "consumer_group_plugins": {
+    "endpoint_key": "name",
+    "name": "consumer_group_plugins",
+    "new_subschema": "function: 0x7f9194879b10",
+    "workspaceable": true,
+    "cache_key_set": {
+      "consumer_group": true,
+      "name": true
+    },
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "name": {
+        "required": true,
+        "type": "string"
+      },
+      "consumer_group": {
+        "on_delete": "cascade",
+        "reference": "consumer_groups",
+        "required": true,
+        "type": "foreign"
+      },
+      "config": {
+        "type": "record",
+        "required": true,
+        "fields": {
+          "retry_after_jitter_max": {
+            "type": "number",
+            "default": 0
+          },
+          "window_size": {
+            "type": "array",
+            "elements": {
+              "type": "number"
+            },
+            "required": true
+          },
+          "window_type": {
+            "one_of": [
+              "fixed",
+              "sliding"
+            ],
+            "type": "string",
+            "default": "sliding"
+          },
+          "limit": {
+            "type": "array",
+            "elements": {
+              "type": "number"
+            },
+            "required": true
+          }
+        }
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    },
+    "cache_key": [
+      "consumer_group",
+      "name"
+    ],
+    "table_name": "consumer_group_plugins",
+    "generate_admin_api": false,
+    "primary_key": [
+      "id"
+    ],
+    "admin_api_nested_name": "plugins"
+  },
+  "consumer_group_consumers": {
+    "dao": "kong.db.dao.consumer_group_consumers",
+    "name": "consumer_group_consumers",
+    "new_subschema": "function: 0x7f9194879b10",
+    "primary_key": [
+      "consumer_group",
+      "consumer"
+    ],
+    "table_name": "consumer_group_consumers",
+    "generate_admin_api": false,
+    "fields": {
+      "consumer_group": {
+        "on_delete": "cascade",
+        "reference": "consumer_groups",
+        "required": true,
+        "type": "foreign"
+      },
+      "consumer": {
+        "on_delete": "cascade",
+        "reference": "consumers",
+        "required": true,
+        "type": "foreign"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      }
+    },
+    "cache_key": [
+      "consumer_group",
+      "consumer"
+    ],
+    "cache_key_set": {
+      "consumer_group": true,
+      "consumer": true
+    }
+  },
+  "certificates": {
+    "dao": "kong.db.dao.certificates",
+    "name": "certificates",
+    "new_subschema": "function: 0x7f9194879b10",
+    "transformations": [
+      {
+        "on_read": "function: 0x7f9192704718",
+        "input": [
+          "key"
+        ],
+        "on_write": "function: 0x7f9192704698"
+      },
+      {
+        "on_read": "function: 0x7f9192704910",
+        "input": [
+          "key_alt"
+        ],
+        "on_write": "function: 0x7f9192704890"
+      }
+    ],
+    "workspaceable": true,
+    "primary_key": [
+      "id"
+    ],
+    "table_name": "certificates",
+    "fields": {
+      "id": {
+        "auto": true,
+        "uuid": true,
+        "type": "string"
+      },
+      "tags": {
+        "elements": {
+          "type": "string",
+          "required": true,
+          "custom_validator": "function: 0x7f9194682160"
+        },
+        "type": "set"
+      },
+      "key": {
+        "referenceable": true,
+        "custom_validator": "function: 0x7f9194682378",
+        "type": "string",
+        "required": true,
+        "encrypted": true
+      },
+      "key_alt": {
+        "referenceable": true,
+        "custom_validator": "function: 0x7f9194682378",
+        "type": "string",
+        "required": false,
+        "encrypted": true
+      },
+      "cert_alt": {
+        "custom_validator": "function: 0x7f9194682308",
+        "referenceable": true,
+        "required": false,
+        "type": "string"
+      },
+      "created_at": {
+        "auto": true,
+        "type": "integer",
+        "timestamp": true
+      },
+      "cert": {
+        "custom_validator": "function: 0x7f9194682308",
+        "referenceable": true,
+        "required": true,
+        "type": "string"
+      }
+    }
+  }
+}

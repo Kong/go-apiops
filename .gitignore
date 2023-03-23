@@ -30,3 +30,6 @@ kong.yaml
 # environment and log files, which might come from something like kong quickstart scripts
 *.env
 *.log
+
+# generic stuff
+.DS_Store
