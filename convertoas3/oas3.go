@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/kong/go-apiops/jsonbasics"
 	"github.com/mozillazg/go-slugify"
 	uuid "github.com/satori/go.uuid"
 )
@@ -151,15 +152,6 @@ func dereferenceJSONObject(
 	return *result, nil
 }
 
-func toJSONObject(object interface{}) (map[string]interface{}, error) {
-	switch result := object.(type) {
-	case map[string]interface{}:
-		return result, nil
-	default:
-		return nil, fmt.Errorf("not a Json object")
-	}
-}
-
 // getXKongObject returns specified 'key' from the extension properties if available.
 // returns nil if it wasn't found, an error if it wasn't an object or couldn't be
 // dereferenced. The returned object will be json encoded again.
@@ -167,7 +159,7 @@ func getXKongObject(props openapi3.ExtensionProps, key string, components *map[s
 	if props.Extensions != nil && props.Extensions[key] != nil {
 		var jsonBlob interface{}
 		_ = json.Unmarshal(props.Extensions[key].(json.RawMessage), &jsonBlob)
-		jsonObject, err := toJSONObject(jsonBlob)
+		jsonObject, err := jsonbasics.ToObject(jsonBlob)
 		if err != nil {
 			return nil, fmt.Errorf("expected '%s' to be a JSON object", key)
 		}
@@ -247,11 +239,7 @@ func getPluginsList(
 	if pluginsToInclude != nil {
 		for _, config := range *pluginsToInclude {
 			pluginName := (*config)["name"].(string) // safe because it was previously parsed
-
-			// serialize/deserialize to create a deep-copy
-			var configCopy map[string]interface{}
-			jConf, _ := json.Marshal(config)
-			_ = json.Unmarshal(jConf, &configCopy)
+			configCopy := *(jsonbasics.DeepCopy(config))
 
 			// generate a new ID, for a new plugin, based on new basename
 			configCopy["id"] = createPluginID(uuidNamespace, baseName, configCopy)
