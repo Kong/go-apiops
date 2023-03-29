@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/kong/go-apiops/jsonbasics"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -153,7 +154,7 @@ func generateValidatorPlugin(configJSON []byte, operation *openapi3.Operation,
 	// create a new ID here based on the operation
 	pluginConfig["id"] = createPluginID(uuidNamespace, baseName, pluginConfig)
 
-	config, _ := toJSONObject(pluginConfig["config"])
+	config, _ := jsonbasics.ToObject(pluginConfig["config"])
 	if config == nil {
 		config = make(map[string]interface{})
 		pluginConfig["config"] = config
