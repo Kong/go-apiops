@@ -126,6 +126,8 @@ func GetStringIndex(arr []interface{}, index int) (string, error) {
 	return "", fmt.Errorf("expected index '%d' to be a string, got %t", index, value)
 }
 
+// GetBoolField returns a boolean from an object field. Returns an error if the field
+// is not a boolean, or is not found.
 func GetBoolField(object map[string]interface{}, fieldName string) (bool, error) {
 	value := object[fieldName]
 	switch result := value.(type) {

@@ -2,6 +2,7 @@ package filebasics
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -14,9 +15,9 @@ const (
 	defaultJSONIndent = "  "
 )
 
-// MustReadFile reads file contents. Will panic if reading fails.
+// ReadFile reads file contents.
 // Reads from stdin if filename == "-"
-func MustReadFile(filename string) *[]byte {
+func ReadFile(filename string) (*[]byte, error) {
 	var (
 		body []byte
 		err  error
@@ -29,9 +30,20 @@ func MustReadFile(filename string) *[]byte {
 	}
 
 	if err != nil {
+		return nil, err
+	}
+	return &body, nil
+}
+
+// MustReadFile reads file contents. Will panic if reading fails.
+// Reads from stdin if filename == "-"
+func MustReadFile(filename string) *[]byte {
+	body, err := ReadFile(filename)
+	if err != nil {
 		log.Fatalf("unable to read file: %v", err)
 	}
-	return &body
+
+	return body
 }
 
 // MustWriteFile writes the output to a file. Will panic if writing fails.
@@ -80,32 +92,55 @@ func MustSerialize(content map[string]interface{}, asYaml bool) *[]byte {
 	return &str
 }
 
-// MustDeserialize will deserialize data as a JSON or YAML object. Will panic
-// if deserializing fails or if it isn't an object. Will never return nil.
-func MustDeserialize(data *[]byte) map[string]interface{} {
+// Deserialize will deserialize data as a JSON or YAML object. Will return an error
+// if deserializing fails or if it isn't an object.
+func Deserialize(data *[]byte) (map[string]interface{}, error) {
 	var output interface{}
 
 	err1 := json.Unmarshal(*data, &output)
 	if err1 != nil {
 		err2 := yaml.Unmarshal(*data, &output)
 		if err2 != nil {
-			log.Fatal("failed deserializing data as JSON (%w) and as YAML (%w)", err1, err2)
+			return nil, fmt.Errorf("failed deserializing data as JSON (%w) and as YAML (%w)", err1, err2)
 		}
 	}
 
 	switch output := output.(type) {
 	case map[string]interface{}:
-		return output
+		return output, nil
 	}
 
-	log.Fatal("Expected the data to be an Object")
-	return nil // will never happen, unreachable.
+	return nil, errors.New("expected the data to be an Object")
+}
+
+// MustDeserialize will deserialize data as a JSON or YAML object. Will panic
+// if deserializing fails or if it isn't an object. Will never return nil.
+func MustDeserialize(data *[]byte) map[string]interface{} {
+	jsondata, err := Deserialize(data)
+	if err != nil {
+		log.Fatal("%w", err)
+	}
+	return jsondata
 }
 
 // MustWriteSerializedFile will serialize the data and write it to a file. Will
 // panic if it fails. Writes to stdout if filename == "-"
 func MustWriteSerializedFile(filename string, content map[string]interface{}, asYaml bool) {
 	MustWriteFile(filename, MustSerialize(content, asYaml))
+}
+
+// DeserializeFile will read a JSON or YAML file and return the top-level object. Will return an
+// error if it fails reading or the content isn't an object. Reads from stdin if filename == "-".
+func DeserializeFile(filename string) (map[string]interface{}, error) {
+	bytedata, err := ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	data, err := Deserialize(bytedata)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 
 // MustDeserializeFile will read a JSON or YAML file and return the top-level object. Will

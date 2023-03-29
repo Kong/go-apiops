@@ -13,7 +13,7 @@ import (
 )
 
 // Executes the CLI command "openapi2kong"
-func execute(cmd *cobra.Command, _ []string) {
+func executeOpenapi2Kong(cmd *cobra.Command, _ []string) {
 	inputFilename, err := cmd.Flags().GetString("state")
 	if err != nil {
 		log.Fatalf(fmt.Sprintf("failed getting cli argument 'spec'; %%w"), err)
@@ -80,7 +80,7 @@ var openapi2kongCmd = &cobra.Command{
 The example file has extensive annotations explaining the conversion
 process, as well as all supported custom annotations (x-kong-... directives).
 See: https://github.com/Kong/kced/blob/main/docs/learnservice_oas.yaml`,
-	Run: execute,
+	Run: executeOpenapi2Kong,
 }
 
 func init() {

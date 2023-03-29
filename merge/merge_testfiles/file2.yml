@@ -1,0 +1,15 @@
+_comment: this is file2
+
+# different minor version
+_format_version: "3.1"
+#_transform: true  this should default to true if omitted
+
+services:
+- name: file2-service-1
+  url: http://example.com
+- name: file2-service-2
+  url: https://example.org
+
+routes:
+- name: file2-route-1
+  hosts: ["hello.com"]
