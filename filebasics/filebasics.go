@@ -101,7 +101,7 @@ func Deserialize(data *[]byte) (map[string]interface{}, error) {
 	if err1 != nil {
 		err2 := yaml.Unmarshal(*data, &output)
 		if err2 != nil {
-			return nil, fmt.Errorf("failed deserializing data as JSON (%w) and as YAML (%w)", err1, err2)
+			return nil, errors.New("failed deserializing data as JSON and as YAML")
 		}
 	}
 

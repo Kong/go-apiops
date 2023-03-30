@@ -1,0 +1,31 @@
+{
+  "_comment": "this is file2",
+  "_format_version":"3.1",
+  "_transform":true,
+  "routes":[
+    {
+      "hosts": ["hello.com"],
+      "name": "file3-route-1"
+    }, {
+      "hosts": ["hello.com"],
+      "name": "file1-route-1"
+    }, {
+      "hosts": ["hello.com"],
+      "name": "file2-route-1"
+    }
+  ],
+  "services":[
+    {"name":"file3-service-1", "url":"http://example.com"},
+    {"name":"file3-service-2", "url":"https://example.org"},
+    { "name":"file1-service-1",
+      "url":"http://example.com",
+      "routes": [{
+        "name": "my_route",
+        "paths": ["/path"]
+      }]
+    },
+    {"name":"file1-service-2", "url":"https://example.org"},
+    {"name":"file2-service-1", "url":"http://example.com"},
+    {"name":"file2-service-2", "url":"https://example.org"}
+  ]
+}

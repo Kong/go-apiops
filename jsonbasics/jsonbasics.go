@@ -42,9 +42,9 @@ func GetObjectArrayField(object map[string]interface{}, fieldName string) ([]map
 	result := make([]map[string]interface{}, 0, len(arr))
 	j := 0
 	for _, expectedObject := range arr {
-		service, err := ToObject(expectedObject)
+		obj, err := ToObject(expectedObject)
 		if err == nil {
-			result[j] = service
+			result[j] = obj
 			j++
 		}
 	}

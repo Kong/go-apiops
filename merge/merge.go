@@ -106,7 +106,6 @@ func Files(filenames []string) (map[string]interface{}, error) {
 
 	// traverse all files
 	for _, fileEntry := range ordered {
-		println(fileEntry.filename)
 		if err := deckformat.CompatibleFile(result, fileEntry.data); err != nil {
 			return nil, fmt.Errorf("failed to merge %s: %w", fileEntry.filename, err)
 		}
