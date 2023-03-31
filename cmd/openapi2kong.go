@@ -4,7 +4,6 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/kong/go-apiops/convertoas3"
@@ -16,24 +15,24 @@ import (
 func executeOpenapi2Kong(cmd *cobra.Command, _ []string) {
 	inputFilename, err := cmd.Flags().GetString("spec")
 	if err != nil {
-		log.Fatalf(fmt.Sprintf("failed getting cli argument 'spec'; %%w"), err)
+		log.Fatalf("failed getting cli argument 'spec'; %s", err)
 	}
 
 	outputFilename, err := cmd.Flags().GetString("output-file")
 	if err != nil {
-		log.Fatalf(fmt.Sprintf("failed getting cli argument 'output-file'; %%w"), err)
+		log.Fatalf("failed getting cli argument 'output-file'; %s", err)
 	}
 
 	docName, err := cmd.Flags().GetString("uuid-base")
 	if err != nil {
-		log.Fatalf(fmt.Sprintf("failed getting cli argument 'uuid-base'; %%w"), err)
+		log.Fatalf("failed getting cli argument 'uuid-base'; %s", err)
 	}
 
 	var entityTags *[]string
 	{
 		tags, err := cmd.Flags().GetStringSlice("select-tag")
 		if err != nil {
-			log.Fatalf(fmt.Sprintf("failed getting cli argument 'select-tag'; %%w"), err)
+			log.Fatalf("failed getting cli argument 'select-tag'; %s", err)
 		}
 		entityTags = &tags
 		if len(*entityTags) == 0 {
@@ -45,7 +44,7 @@ func executeOpenapi2Kong(cmd *cobra.Command, _ []string) {
 	{
 		outputFormat, err := cmd.Flags().GetString("format")
 		if err != nil {
-			log.Fatalf(fmt.Sprintf("failed getting cli argument 'format'; %%w"), err)
+			log.Fatalf("failed getting cli argument 'format'; %s", err)
 		}
 		if outputFormat == "yaml" {
 			asYaml = true

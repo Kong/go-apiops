@@ -4,7 +4,6 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/kong/go-apiops/filebasics"
@@ -16,14 +15,14 @@ import (
 func executeMerge(cmd *cobra.Command, args []string) {
 	outputFilename, err := cmd.Flags().GetString("output-file")
 	if err != nil {
-		log.Fatalf(fmt.Sprintf("failed getting cli argument 'output-file'; %%w"), err)
+		log.Fatalf("failed getting cli argument 'output-file'; %s", err)
 	}
 
 	var asYaml bool
 	{
 		outputFormat, err := cmd.Flags().GetString("format")
 		if err != nil {
-			log.Fatalf(fmt.Sprintf("failed getting cli argument 'format'; %%w"), err)
+			log.Fatalf("failed getting cli argument 'format'; %s", err)
 		}
 		if outputFormat == "yaml" {
 			asYaml = true
@@ -40,7 +39,7 @@ func executeMerge(cmd *cobra.Command, args []string) {
 
 //
 //
-// Define the CLI data for the openapi2kong command
+// Define the CLI data for the merge command
 //
 //
 
