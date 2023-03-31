@@ -22,7 +22,8 @@ lint: check-lint-dependencies
 	golangci-lint run
 
 test: check-main-dependencies
-	go test -v ./...
+	#go test -v ./...
+	ginkgo -r
 
 clean: check-main-dependencies
 	$(RM) ./convertoas3/oas3_testfiles/*.generated.json

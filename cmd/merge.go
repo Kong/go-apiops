@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Executes the CLI command "openapi2kong"
+// Executes the CLI command "merge"
 func executeMerge(cmd *cobra.Command, args []string) {
 	outputFilename, err := cmd.Flags().GetString("output-file")
 	if err != nil {
@@ -24,12 +24,13 @@ func executeMerge(cmd *cobra.Command, args []string) {
 		if err != nil {
 			log.Fatalf("failed getting cli argument 'format'; %s", err)
 		}
-		if outputFormat == "yaml" {
+		if outputFormat == outputFormatYaml {
 			asYaml = true
-		} else if outputFormat == "json" {
+		} else if outputFormat == outputFormatJSON {
 			asYaml = false
 		} else {
-			log.Fatalf("expected '--format' to be either 'yaml' or 'json', got: '%s'", outputFormat)
+			log.Fatalf("expected '--format' to be either '"+outputFormatYaml+
+				"' or '"+outputFormatJSON+"', got: '%s'", outputFormat)
 		}
 	}
 
@@ -61,5 +62,5 @@ determined by the '_transform' and '_format_version' fields.`,
 func init() {
 	rootCmd.AddCommand(mergeCmd)
 	mergeCmd.Flags().StringP("output-file", "o", "-", "output file to write. Use - to write to stdout")
-	mergeCmd.Flags().StringP("format", "", "yaml", "output format: json or yaml")
+	mergeCmd.Flags().StringP("format", "", outputFormatYaml, "output format: "+outputFormatJSON+" or "+outputFormatYaml)
 }

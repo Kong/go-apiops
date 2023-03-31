@@ -46,12 +46,13 @@ func executeOpenapi2Kong(cmd *cobra.Command, _ []string) {
 		if err != nil {
 			log.Fatalf("failed getting cli argument 'format'; %s", err)
 		}
-		if outputFormat == "yaml" {
+		if outputFormat == outputFormatYaml {
 			asYaml = true
-		} else if outputFormat == "json" {
+		} else if outputFormat == outputFormatJSON {
 			asYaml = false
 		} else {
-			log.Fatalf("expected '--format' to be either 'yaml' or 'json', got: '%s'", outputFormat)
+			log.Fatalf("expected '--format' to be either '"+outputFormatYaml+
+				"' or '"+outputFormatJSON+"', got: '%s'", outputFormat)
 		}
 	}
 
@@ -86,7 +87,8 @@ func init() {
 	rootCmd.AddCommand(openapi2kongCmd)
 	openapi2kongCmd.Flags().StringP("spec", "s", "-", "OpenAPI spec file to process. Use - to read from stdin")
 	openapi2kongCmd.Flags().StringP("output-file", "o", "-", "output file to write. Use - to write to stdout")
-	openapi2kongCmd.Flags().StringP("format", "", "yaml", "output format: json or yaml")
+	openapi2kongCmd.Flags().StringP("format", "", outputFormatYaml, "output format: "+
+		outputFormatJSON+" or "+outputFormatYaml)
 	openapi2kongCmd.Flags().StringP("uuid-base", "", "",
 		`the unique base-string for uuid-v5 generation of enity id's (if omitted
 will use the root-level "x-kong-name" directive, or fall back to 'info.title')`)
