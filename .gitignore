@@ -19,6 +19,7 @@ dist/
 
 # generated test files
 convertoas3/oas3_testfiles/*.generated.json
+merge/merge_testfiles/*_generated.json
 
 # the binary
 kced

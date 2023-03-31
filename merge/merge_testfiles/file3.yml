@@ -1,0 +1,17 @@
+_comment: this is file3
+
+# If omitted, defaults to "0.0" in the order, but compatible with all versions.
+# Officially this is a required field.
+#_format_version: "3.0"
+
+_transform: true
+
+services:
+- name: file3-service-1
+  url: http://example.com
+- name: file3-service-2
+  url: https://example.org
+
+routes:
+- name: file3-route-1
+  hosts: ["hello.com"]
