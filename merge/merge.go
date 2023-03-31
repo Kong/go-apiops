@@ -39,7 +39,7 @@ func merge2Files(data1 map[string]interface{}, data2 map[string]interface{}) map
 	return mergedData
 }
 
-// MustFiles is identical to `Files` except that it will panic instead of return
+// MustFiles is identical to `Files` except that it will panic instead of returning
 // an error.
 func MustFiles(filenames []string) map[string]interface{} {
 	result, err := Files(filenames)
