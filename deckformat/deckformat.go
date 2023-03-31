@@ -47,8 +47,7 @@ func CompatibleTransform(data1 map[string]interface{}, data2 map[string]interfac
 }
 
 // CompatibleVersion checks if 2 files are compatible, by '_format_version'. Version is compatible
-// if they are the same major, and 'data2' has a greater or equal minor version. Missing
-// versions are assumed to be compatible.
+// if they are the same major. Missing versions are assumed to be compatible.
 // Returns nil if compatible, and error otherwise.
 func CompatibleVersion(data1 map[string]interface{}, data2 map[string]interface{}) error {
 	if data1 == nil {
@@ -86,11 +85,6 @@ func CompatibleVersion(data1 map[string]interface{}, data2 map[string]interface{
 
 	if major1 != major2 {
 		return fmt.Errorf("major versions are incompatible; %d.%d and %d.%d", major1, minor1, major2, minor2)
-	}
-	if minor2 < minor1 {
-		return fmt.Errorf(
-			"expected minor version to be greater than or equal to the original minor version; %d.%d and %d.%d",
-			major1, minor1, major2, minor2)
 	}
 
 	return nil

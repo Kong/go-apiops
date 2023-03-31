@@ -23,7 +23,7 @@ func Test_Merge_Files_Good(t *testing.T) {
 			"./merge_testfiles/file3.yml",
 			"./merge_testfiles/file2.yml",
 			"./merge_testfiles/file1.yml",
-		}, "test1_expected.json"},
+		}, "test2_expected.json"},
 	}
 
 	for _, tdata := range testSet {
@@ -50,12 +50,12 @@ func Test_Merge_Files_Bad(t *testing.T) {
 		{[]string{
 			"./merge_testfiles/file1.yml",
 			"./merge_testfiles/badversion.yml",
-		}, "failed to merge ./merge_testfiles/file1.yml: files are incompatible; " +
-			"major versions are incompatible; 1.0 and 3.0"},
+		}, "failed to merge ./merge_testfiles/badversion.yml: files are incompatible; " +
+			"major versions are incompatible; 3.0 and 1.0"},
 		{[]string{
 			"./merge_testfiles/file1.yml",
 			"./merge_testfiles/transform_false.yml",
-		}, "failed to merge ./merge_testfiles/file1.yml: files are incompatible; " +
+		}, "failed to merge ./merge_testfiles/transform_false.yml: files are incompatible; " +
 			"files with '_transform: true' (default) and '_transform: false' are not compatible"},
 	}
 

@@ -2,7 +2,6 @@ package merge
 
 import (
 	"fmt"
-	"sort"
 
 	"github.com/kong/go-apiops/deckformat"
 	"github.com/kong/go-apiops/filebasics"
@@ -53,64 +52,59 @@ func MustFiles(filenames []string) map[string]interface{} {
 
 // MergeFiles reads and merges files. Will merge all top-level arrays by simply
 // concatenating them. Any other keys will be copied. The files will be processed
-// in order of the '_format_version' field in the file (an omitted version defaults
-// to "0.0"). An error will be returned if files are incompatible.
+// in order provided. An error will be returned if files are incompatible.
 // There are no checks on duplicates, etc... garbage-in-garbage-out.
 func Files(filenames []string) (map[string]interface{}, error) {
 	if len(filenames) == 0 {
 		panic("no filenames provided")
 	}
 
-	// sort files by version to ensure compatibility
-	type torder struct {
-		filename string
-		data     map[string]interface{}
-		order    int
-	}
-	ordered := make([]torder, len(filenames))
+	var result map[string]interface{}
+	minorVersion := 0
 
-	for i, filename := range filenames {
+	// traverse all files
+	for _, filename := range filenames {
+		// read the file
 		data, err := filebasics.DeserializeFile(filename)
 		if err != nil {
 			return nil, err
 		}
 
-		// omitted versions are considered to be "0.0"
-		major, minor := 0, 0
-		if data[deckformat.VersionKey] != nil {
-			major, minor, err = deckformat.ParseFormatVersion(data)
-			if err != nil {
-				return nil, fmt.Errorf("failed to merge %s: %w", filename, err)
+		if result == nil {
+			// set up initial map, ensure it is "compatible" with first entry
+			result = make(map[string]interface{})
+			if data[deckformat.TransformKey] != nil {
+				result[deckformat.TransformKey] = data[deckformat.TransformKey]
+			}
+			if data[deckformat.VersionKey] != nil {
+				result[deckformat.VersionKey] = data[deckformat.VersionKey]
 			}
 		}
 
-		ordered[i] = torder{
-			filename: filename,
-			order:    major*1000*1000 + minor*1000 + i,
-			data:     data,
-		}
-	}
-
-	sort.Slice(ordered, func(i1, i2 int) bool {
-		return ordered[i1].order < ordered[i2].order
-	})
-
-	// set up initial map, ensure it is "compatible" with first entry
-	result := make(map[string]interface{})
-	if ordered[0].data[deckformat.TransformKey] != nil {
-		result[deckformat.TransformKey] = ordered[0].data[deckformat.TransformKey]
-	}
-	if ordered[0].data[deckformat.VersionKey] != nil {
-		result[deckformat.VersionKey] = ordered[0].data[deckformat.VersionKey]
-	}
-
-	// traverse all files
-	for _, fileEntry := range ordered {
-		if err := deckformat.CompatibleFile(result, fileEntry.data); err != nil {
-			return nil, fmt.Errorf("failed to merge %s: %w", fileEntry.filename, err)
+		// check compatibility
+		if err := deckformat.CompatibleFile(result, data); err != nil {
+			return nil, fmt.Errorf("failed to merge %s: %w", filename, err)
 		}
 
-		result = merge2Files(result, fileEntry.data)
+		// record minor version
+		_, m, _ := deckformat.ParseFormatVersion(data)
+		if m > minorVersion {
+			// we only track minor version, because majors must be the same to pass the
+			// compatibility check above
+			minorVersion = m
+		}
+
+		result = merge2Files(result, data)
+	}
+
+	// set final resulting format version
+	if result[deckformat.VersionKey] != nil {
+		ma, _, _ := deckformat.ParseFormatVersion(result)
+		if ma == 0 {
+			delete(result, deckformat.VersionKey)
+		} else {
+			result[deckformat.VersionKey] = fmt.Sprint(ma, ".", minorVersion)
+		}
 	}
 
 	return result, nil

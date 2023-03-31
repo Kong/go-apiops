@@ -50,10 +50,11 @@ var mergeCmd = &cobra.Command{
 	Long: `Merges multiple decK files into one.
 
 The files can be either json or yaml format. Will merge all top-level arrays by simply
-concatenating them. Any other keys will be copied. The files will be processed in order
-of the '_format_version' field in the file (an omitted version defaults to "0.0"). An error
-will be returned if files are incompatible.
-There are no checks on duplicates, etc... garbage-in-garbage-out.`,
+concatenating them. Any other keys will be copied. The files will be processed in the order
+provided. No checks on content will be done, eg. duplicates, nor any validations.
+
+If the input files are not compatible an error will be returned. Compatibility is
+determined by the '_transform' and '_format_version' fields.`,
 	Run:  executeMerge,
 	Args: cobra.MinimumNArgs(1),
 }
