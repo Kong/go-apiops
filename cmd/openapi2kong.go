@@ -14,7 +14,7 @@ import (
 
 // Executes the CLI command "openapi2kong"
 func executeOpenapi2Kong(cmd *cobra.Command, _ []string) {
-	inputFilename, err := cmd.Flags().GetString("state")
+	inputFilename, err := cmd.Flags().GetString("spec")
 	if err != nil {
 		log.Fatalf(fmt.Sprintf("failed getting cli argument 'spec'; %%w"), err)
 	}
