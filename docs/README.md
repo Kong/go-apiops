@@ -8,9 +8,10 @@ This document contains usage and examples for the current set of tools available
 
 ## Commands
 
+---
 ### `openapi2kong`
 
-Convert an OpenAPI Specification (OAS) to a Kong declarative configuration which can be further used with `deck` to configure a Kong Gateway. [OpenAPI Specifications](https://swagger.io/specification/) allow you to define language-agnostic interfaces to your services. The `openapi2kong` tool allows conversion of those specifications directly into Kong Gateway declarative configurations and includes support for Kong extensions (`x-kong`). For details on the format and conversion features, see the included [annotated example file](learnservice_oas.yml).
+The `openapi2kong` transformation is used to convert an OpenAPI Specification (OAS) to a Kong declarative configuration which can be further used with `deck` to configure a Kong Gateway. [OpenAPI Specifications](https://swagger.io/specification/) allow you to define language-agnostic interfaces to your services. The `openapi2kong` tool allows conversion of those specifications directly into Kong Gateway declarative configurations and includes support for Kong extensions (`x-kong`). For details on the format and conversion features, see the included [annotated example file](learnservice_oas.yml).
 
 For full usage instructions, see the the command help:
 
@@ -23,10 +24,10 @@ The general pattern for this command is to provide an OAS file and output to a d
 ```
 ./kced openapi2kong --spec <input-oas-file> --output-file <output-deck-file>
 ```
-
+---
 ### `merge`
 
-Merge 2 or more Kong Declarative configurations into a single output.
+The `merge` transformation will merge 2 or more Kong Declarative configurations into a single output.
 
 For full usage instructions, see the the command help:
 
@@ -71,12 +72,10 @@ d:
 - 6
 ```
 
-
+---
 ### `patch`
 
-Update values in a Kong Declarative configuration using a JSONPath selector syntax.
-
-An example of where this might be useful is when you have a
+The `patch` transformation is used to apply a partial update to a Kong Declarative configuration using a [JSONPath](https://goessner.net/articles/JsonPath/) selector syntax. There are many useful use cases for `patch`. One example might be when you have a central team responsible for applying standards to Kong Gateway configurations, independent of "upstream" developer teams. The developer teams provide the OAS, and the central team "patches" the gateway configuration with company standard security plugins.
 
 For usage instructions, see the the command help:
 
@@ -84,7 +83,14 @@ For usage instructions, see the the command help:
 kced patch --help
 ```
 
+For example, to update the `read_timeout` for _all_ services in a given configuration, you could use the following command:
+```
+./kced patch --state <deck-file> --selector '$..services[*]' --value 'read_timeout: 30000'
+```
+---
 ## Example Workflow
+
+### Transform Pipeline
 
 The following example commands assume you are running the CLI from the root of the `go-apiops` project folder.
 
@@ -99,16 +105,21 @@ The `./docs/mock-a-rena-kong.yml` file now contains a Kong declarative configura
 Now, merge the resulting file with the provided sample Kong declarative configuration file:
 
 ```
-kced merge ./docs/mock-a-rena-kong.yml ./docs/patch
+kced merge ./docs/mock-a-rena-kong.yml ./docs/summertime-kong.yml -o ./docs/kong-combined.yml
 ```
 
+In a seperate step, let's update the `read_timeout` configuration for all the services in the combined file:
 ```
-kced patch
+kced patch -s ./docs/kong-combined.yml --selector '$..services[*]' --value 'read_timeout:30000' --output-file ./docs/kong.yml
 ```
 
-## Sync to Kong Gateway
+### Sync to Kong Gateway
 
-The files produced by the commands above can be sync'd to Kong using `deck`. Continuing the above example:
+To continue with the example you will need:
+* `deck`: the Kong declarative management tool: [installation](https://docs.konghq.com/deck/latest/installation/).
+* Docker: To run a local Kong Gateway instance: [installation](https://docs.docker.com/get-docker/)
+
+The `./docs/kong.yml` file produced from the pipeline of commands above can be sync'd to Kong using `deck`. Continuing the above example:
 
 Run a new Kong Gateway in Docker with:
 
@@ -119,6 +130,30 @@ curl -Ls get.konghq.com/quickstart | bash
 Then sync the file from the previous `patch` step with:
 
 ```bash
-deck sync -s kong.yml
+deck sync -s ./docs/kong.yml
 ```
 
+`deck` reports the status of the sync operation:
+```
+creating service summer-time
+creating service mock-a-rena
+creating route summer-time_get
+creating route mock-a-rena_mock
+creating route mock-a-rena_a-rena
+Summary:
+  Created: 5
+  Updated: 0
+  Deleted: 0
+```
+
+And you can test the entire workflow by routing requests to the local configured gateway:
+
+```
+curl -s localhost:8000/mock
+```
+```
+curl -s localhost:8000/a-rena
+```
+```
+curl -s localhost:8000/summer-time
+```
