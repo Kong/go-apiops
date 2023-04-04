@@ -18,17 +18,9 @@ This library is a public preview project under an [Apache 2.0 license](LICENSE).
 
 ## Usage
 
-The library is under heavy development, and we do not provide API reference documentation. For testing and example usage, the library is released in a temporary CLI named `kced`. The latest release of the CLI can be downloaded for your OS from the [releases page](https://github.com/Kong/go-apiops/releases).
+The library is under heavy development, and we do not provide API reference documentation. For testing and example usage, the library is released in a temporary CLI named `kced`. The latest release of the CLI can be downloaded for your OS from the [releases page](https://github.com/Kong/go-apiops/releases) Downloaded and extract the release archive to install.
 
-Once you've downloaded and extracted release archive, try running the following:
-
-```bash
-cat /path/to/openapi.yaml | kced openapi2kong
-```
-
-`kced` will print a Kong Gateway 3.0 compatible decK configuration to `STDOUT`.
-
-An example OAS file is provided at [docs/learnservice_oas.yaml](docs/learnservice_oas.yaml). More documentation and examples will be added in the future.
+The [Documentation](./docs/README.md) page provides examples and command details.
 
 ## Reporting issues
 
