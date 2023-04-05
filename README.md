@@ -10,7 +10,7 @@ See the [Kong Blog](https://konghq.com/blog/tag/apiops) for more information on 
 
 ## What is this library?
 
-Currently, this library contains functions to convert [OpenAPI Specifications](https://swagger.io/specification/) (OAS) to Kong Gateway deployment formats, including the configuration of Kong Gateway plugins. In the future, this library will contain additional functions to operate over gateway configurations in support of advanced automation workflows. The aim is to provide a library that contains a set of building blocks that can be used to assemble advanced and fully custom automated Kong Gateway deployment pipelines.
+The [go-apiops](https://github.com/Kong/go-apiops) library provides a set of tools (validation and transformation) for working with API specifications and [Kong Gateway](https://docs.konghq.com/gateway/latest/) declarative configurations. Conceptually, these tools are intended to be organized into a pipeline of individual steps configured for a particular users needs. The overall purpose of the library is to enable users to build a CI/CD workflow which deliver APIs from specification to deployment. This pipeline design allows users to customize the delivery of APIs based on their specific needs.
 
 ## What is the current status of this library?
 
