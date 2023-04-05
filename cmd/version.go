@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/kong/go-apiops/deckformat"
 	"github.com/spf13/cobra"
 )
 
@@ -25,5 +26,6 @@ commit hash of the source tree.`,
 }
 
 func init() {
+	deckformat.ToolVersionSet("kceD", VERSION, COMMIT)
 	rootCmd.AddCommand(versionCmd)
 }

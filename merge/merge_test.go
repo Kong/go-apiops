@@ -11,9 +11,9 @@ import (
 )
 
 var _ = Describe("Merge", func() {
-	validateMerge := func(filenames []string, expected string, expectError bool) {
+	validateMerge := func(filenames []string, expected string, expectError bool, expectedHistory []interface{}) {
 		GinkgoHelper()
-		res, err := merge.Files(filenames)
+		res, hist, err := merge.Files(filenames)
 		if err != nil {
 			if expectError {
 				// 'expected' is an error string to match
@@ -38,6 +38,8 @@ var _ = Describe("Merge", func() {
 				Expect(*result).To(MatchJSON(*expectedResult))
 			}
 		}
+
+		Expect(hist).To(BeEquivalentTo(expectedHistory))
 	}
 
 	Describe("merges files", func() {
@@ -51,8 +53,19 @@ var _ = Describe("Merge", func() {
 			}
 			expected := "test1_expected.json"
 			expectErr := false
+			expectedHist := []interface{}{
+				map[string]interface{}{
+					"filename": "./merge_testfiles/file1.yml",
+				},
+				map[string]interface{}{
+					"filename": "./merge_testfiles/file2.yml",
+				},
+				map[string]interface{}{
+					"filename": "./merge_testfiles/file3.yml",
+				},
+			}
 
-			validateMerge(fileList, expected, expectErr)
+			validateMerge(fileList, expected, expectErr, expectedHist)
 		})
 
 		It("attempt 2: same files, different order", func() {
@@ -65,8 +78,19 @@ var _ = Describe("Merge", func() {
 			}
 			expected := "test2_expected.json"
 			expectErr := false
+			expectedHist := []interface{}{
+				map[string]interface{}{
+					"filename": "./merge_testfiles/file3.yml",
+				},
+				map[string]interface{}{
+					"filename": "./merge_testfiles/file2.yml",
+				},
+				map[string]interface{}{
+					"filename": "./merge_testfiles/file1.yml",
+				},
+			}
 
-			validateMerge(fileList, expected, expectErr)
+			validateMerge(fileList, expected, expectErr, expectedHist)
 		})
 
 		It("with incompatible versions errors", func() {
@@ -78,7 +102,7 @@ var _ = Describe("Merge", func() {
 				"major versions are incompatible; 3.0 and 1.0"
 			expectErr := true
 
-			validateMerge(fileList, expected, expectErr)
+			validateMerge(fileList, expected, expectErr, nil)
 		})
 
 		It("with incompatible '_transform' errors", func() {
@@ -90,7 +114,7 @@ var _ = Describe("Merge", func() {
 				"files with '_transform: true' (default) and '_transform: false' are not compatible"
 			expectErr := true
 
-			validateMerge(fileList, expected, expectErr)
+			validateMerge(fileList, expected, expectErr, nil)
 		})
 	})
 })
