@@ -239,7 +239,7 @@ func getPluginsList(
 	if pluginsToInclude != nil {
 		for _, config := range *pluginsToInclude {
 			pluginName := (*config)["name"].(string) // safe because it was previously parsed
-			configCopy := *(jsonbasics.DeepCopy(config))
+			configCopy := *(jsonbasics.DeepCopyObject(config))
 
 			// generate a new ID, for a new plugin, based on new basename
 			configCopy["id"] = createPluginID(uuidNamespace, baseName, configCopy)

@@ -144,9 +144,17 @@ func GetBoolIndex(arr []interface{}, index int) (bool, error) {
 	return false, fmt.Errorf("expected index '%d' to be a boolean", index)
 }
 
-// DeepCopy implements a poor man's deepcopy by jsonify/de-jsonify
-func DeepCopy(data *map[string]interface{}) *map[string]interface{} {
+// DeepCopyObject implements a poor man's deepcopy by jsonify/de-jsonify
+func DeepCopyObject(data *map[string]interface{}) *map[string]interface{} {
 	var dataCopy map[string]interface{}
+	serialized, _ := json.Marshal(data)
+	_ = json.Unmarshal(serialized, &dataCopy)
+	return &dataCopy
+}
+
+// DeepCopyArray implements a poor man's deepcopy by jsonify/de-jsonify
+func DeepCopyarray(data *[]interface{}) *[]interface{} {
+	var dataCopy []interface{}
 	serialized, _ := json.Marshal(data)
 	_ = json.Unmarshal(serialized, &dataCopy)
 	return &dataCopy

@@ -12,7 +12,50 @@ import (
 const (
 	VersionKey   = "_format_version"
 	TransformKey = "_transform"
+	HistoryKey   = "_ignore" // the top-level key in deck files for storing history info
 )
+
+//
+//
+//  Keeping track of the tool/binary version info (set once at startup)
+//
+//
+
+var toolInfo = struct {
+	name    string
+	version string
+	commit  string
+}{}
+
+// ToolVersionSet can be called once to set the tool info that is reported in the history.
+func ToolVersionSet(name string, version string, commit string) {
+	if toolInfo.name != "" || name == "" || version == "" || commit == "" {
+		panic("the tool information was already set, or cannot be set to an empty string")
+	}
+	toolInfo.name = name
+	toolInfo.version = version
+	toolInfo.commit = commit
+}
+
+// ToolVersionGet returns the individual components of the info
+func ToolVersionGet() (name string, version string, commit string) {
+	if toolInfo.name == "" {
+		panic("the tool information wasn't set, call ToolVersionSet first")
+	}
+	return toolInfo.name, toolInfo.version, toolInfo.commit
+}
+
+// ToolVersionString returns the info in a single formatted string. eg. "decK 1.2 (123abc)"
+func ToolVersionString() string {
+	n, v, c := ToolVersionGet()
+	return fmt.Sprintf("%s %s (%s)", n, v, c)
+}
+
+//
+//
+//  section on compatibility and versioning between deckfiles
+//
+//
 
 // CompatibleTransform checks if 2 files are compatible, by '_transform' keys.
 // Returns nil if compatible, and error otherwise.
@@ -131,4 +174,67 @@ func ParseFormatVersion(data map[string]interface{}) (int, int, error) {
 	}
 
 	return majorVersion, minorVersion, nil
+}
+
+//
+//
+//  Section for tracking history of the file
+//
+//
+
+// HistoryGet returns a copy of the history info array. If there is none, it will create one.
+func HistoryGet(filedata map[string]interface{}) (historyArray *[]interface{}) {
+	if filedata == nil || filedata[HistoryKey] == nil {
+		historyInfo := make([]interface{}, 0)
+		return &historyInfo
+	}
+
+	trackInfo, err := jsonbasics.ToArray(filedata[HistoryKey])
+	if err != nil {
+		// the entry wasn't an array, so wrap it in one
+		trackInfo = []interface{}{filedata[HistoryKey]}
+	}
+
+	// Return a copy
+	return jsonbasics.DeepCopyarray(&trackInfo)
+}
+
+// HistorySet sets the history info array. The one provided is set (not a copy). If 'newEntry'
+// is non-nil it will be appended to the array before setting it.
+func HistorySet(filedata map[string]interface{}, historyArray *[]interface{}, newEntry interface{}) {
+	if filedata == nil {
+		panic("data cannot be nil")
+	}
+
+	// append the given entry
+	if newEntry != nil {
+		var h []interface{}
+		if historyArray == nil {
+			h = []interface{}{newEntry}
+		} else {
+			h = append(*historyArray, newEntry)
+		}
+		historyArray = &h
+	}
+
+	filedata[HistoryKey] = *historyArray
+}
+
+// HistoryAppend appends an entry (if non-nil) to the history info array. If there is
+// no array, it will create one.
+func HistoryAppend(filedata map[string]interface{}, newEntry interface{}) {
+	if newEntry == nil {
+		return
+	}
+	HistorySet(filedata, HistoryGet(filedata), newEntry)
+}
+
+// HistoryNewEntry returns a new JSONobject with tool version and command keys set.
+func HistoryNewEntry(cmd string) map[string]interface{} {
+	return map[string]interface{}{
+		"version": ToolVersionString(),
+		"command": cmd,
+		// For now: no timestamps in git-ops!
+		// "time":    time.Now().UTC().Format("2006-01-02T15:04:05.000Z"), // ISO8601 format
+	}
 }

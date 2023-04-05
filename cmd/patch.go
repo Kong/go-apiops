@@ -6,6 +6,7 @@ package cmd
 import (
 	"log"
 
+	"github.com/kong/go-apiops/deckformat"
 	"github.com/kong/go-apiops/filebasics"
 	"github.com/kong/go-apiops/patch"
 	"github.com/spf13/cobra"
@@ -60,8 +61,15 @@ func executePatch(cmd *cobra.Command, args []string) {
 		selector = s
 	}
 
+	trackInfo := deckformat.HistoryNewEntry("patch")
+	trackInfo["input"] = inputFilename
+	trackInfo["output"] = outputFilename
+	trackInfo["selector"] = selector
+	trackInfo["values"] = valuesMap
+
 	// do the work; read/patch/write
 	data := filebasics.MustDeserializeFile(inputFilename)
+	deckformat.HistoryAppend(data, trackInfo) // add before patching, so patch can operate on it
 	if len(valuesMap) > 0 {
 		// apply selector + value flags
 		data = patch.MustApplyValues(data, selector, valuesMap)

@@ -6,6 +6,7 @@ package cmd
 import (
 	"log"
 
+	"github.com/kong/go-apiops/deckformat"
 	"github.com/kong/go-apiops/filebasics"
 	"github.com/kong/go-apiops/merge"
 	"github.com/spf13/cobra"
@@ -34,8 +35,15 @@ func executeMerge(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	trackInfo := deckformat.HistoryNewEntry("merge")
+	trackInfo["output"] = outputFilename
+
 	// do the work: read/merge
-	filebasics.MustWriteSerializedFile(outputFilename, merge.MustFiles(args), asYaml)
+	merged, info := merge.MustFiles(args)
+	trackInfo["files"] = info
+	deckformat.HistorySet(merged, nil, trackInfo)
+
+	filebasics.MustWriteSerializedFile(outputFilename, merged, asYaml)
 }
 
 //
