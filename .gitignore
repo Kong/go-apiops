@@ -27,6 +27,7 @@ go-apiops
 
 # any manually created test files
 kong.yaml
+kong.yml
 
 # environment and log files, which might come from something like kong quickstart scripts
 *.env

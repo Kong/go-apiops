@@ -228,17 +228,17 @@ var _ = Describe("Patch", func() {
 
 		It("doesn't insert 'null' when deleting a non-existing key", func() {
 			data := []byte(`{
-				"routes": [
+				"upstreams": [
 					{	"name": "my name" }
 				]
 			}`)
-			selector := "$..routes[*]"
+			selector := "$..upstreams[*]"
 			valueFlags := []string{
 				"foobar:", // no value specified, so nil value, and hence delete it
 			}
 
 			Expect(applyUpdates(data, selector, valueFlags)).To(MatchJSON(`{
-				"routes": [
+				"upstreams": [
 					{ "name": "my name" }
 				]
 			}`))
@@ -246,17 +246,17 @@ var _ = Describe("Patch", func() {
 
 		It("can set 'null' if specified", func() {
 			data := []byte(`{
-				"routes": [
+				"upstreams": [
 					{	"name": "my name" }
 				]
 			}`)
-			selector := "$..routes[*]"
+			selector := "$..upstreams[*]"
 			valueFlags := []string{
 				"name:null",
 			}
 
 			Expect(applyUpdates(data, selector, valueFlags)).To(MatchJSON(`{
-				"routes": [
+				"upstreams": [
 					{ "name": null }
 				]
 			}`))
