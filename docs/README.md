@@ -1,6 +1,6 @@
 # Kong go-apiops documentation
 
-The [go-apiops](https://github.com/Kong/go-apiops) library provides a set of tools (validation and transformation) for working with API specifications and [Kong Gateway](https://docs.konghq.com/gateway/latest/) declarative configurations. Conceptually, these tools are intended to be organized into a pipeline of individual steps configured for a particular users needs. The overall purpose of the library is to enable users to build a CICD workflow which deliver APIs from specification to deployment. This pipline design allows users to customize the delivery of APIs based on their specific needs.
+The [go-apiops](https://github.com/Kong/go-apiops) library provides a set of tools (validation and transformation) for working with API specifications and [Kong Gateway](https://docs.konghq.com/gateway/latest/) declarative configurations. Conceptually, these tools are intended to be organized into a pipeline of individual steps configured for a particular users needs. The overall purpose of the library is to enable users to build a CI/CD workflow which deliver APIs from specification to deployment. This pipeline design allows users to customize the delivery of APIs based on their specific needs.
 
 This project is currently in a public beta preview state. As a result, the tools are available in a temporary command line named `kced`. For installation instructions for the `kced` CLI, see the main [README](../README.md). Before these tools are available in a general release, the tools will be integrated into Kong's declarative management CLI, [deck](https://docs.konghq.com/deck/latest/) and the temporary CLI will be deprecated.
 
@@ -13,7 +13,7 @@ This document contains usage and examples for the current set of tools available
 
 The `openapi2kong` transformation is used to convert an OpenAPI Specification (OAS) to a Kong declarative configuration which can be further used with `deck` to configure a Kong Gateway. [OpenAPI Specifications](https://swagger.io/specification/) allow you to define language-agnostic interfaces to your services. The `openapi2kong` tool allows conversion of those specifications directly into Kong Gateway declarative configurations and includes support for Kong extensions (`x-kong`). For details on the format and conversion features, see the included [annotated example file](learnservice_oas.yml).
 
-For full usage instructions, see the the command help:
+For full usage instructions, see the command help:
 
 ```
 kced openapi2kong --help
