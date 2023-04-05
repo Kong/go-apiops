@@ -2,7 +2,7 @@
 
 The [go-apiops](https://github.com/Kong/go-apiops) library provides a set of tools (validation and transformation) for working with API specifications and [Kong Gateway](https://docs.konghq.com/gateway/latest/) declarative configurations. Conceptually, these tools are intended to be organized into a pipeline of individual steps configured for a particular users needs. The overall purpose of the library is to enable users to build a CI/CD workflow which deliver APIs from specification to deployment. This pipeline design allows users to customize the delivery of APIs based on their specific needs.
 
-This project is currently in a public beta preview state. As a result, the tools are available in a temporary command line named `kced`. For installation instructions for the `kced` CLI, see the main [README](../README.md). Before these tools are available in a general release, the tools will be integrated into Kong's declarative management CLI, [deck](https://docs.konghq.com/deck/latest/) and the temporary CLI will be deprecated.
+This project is currently in a public beta preview state. As a result, the tools are available in a temporary command line tool named `kced`. For installation instructions for the `kced` CLI, see the main [README](../README.md). Before these tools are available in a general release, the tools will be integrated into Kong's declarative management CLI, [deck](https://docs.konghq.com/deck/latest/) and the temporary CLI will be deprecated.
 
 This document contains usage and examples for the current set of tools available, however, Kong will be expanding the library of available tools leading up to a GA release.
 
