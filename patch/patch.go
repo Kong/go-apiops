@@ -10,9 +10,14 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var (
+	temp         = make(map[int]int)
+	DeleteMarker = interface{}(&temp)
+)
+
 // ValidateValuesFlags parses the CLI '--values' keys formatted 'key:json-string', into
-// a map. The map will hold the parsed JSON value by the key. If the value is 'nil' then
-// the key is supposed to be deleted from the target object.
+// a map. The map will hold the parsed JSON value by the key. If the value is 'patch.DeleteMarker'
+// then the key is supposed to be deleted from the target object.
 // Returns an error is value is not a valid JSON string. Important: strings
 // must be quoted;
 //
@@ -32,7 +37,10 @@ func ValidateValuesFlags(values []string) (map[string]interface{}, error) {
 		val := strings.TrimSpace(subs[1])
 
 		var value interface{}
-		if val != "" {
+		if val == "" {
+			// this is a delete-instruction, so inject the delete marker
+			value = DeleteMarker
+		} else {
 			err := json.Unmarshal([]byte(val), &value)
 			if err != nil {
 				return nil, fmt.Errorf("expected '--value' entry to have format 'key:json-string', "+
@@ -128,6 +136,10 @@ func MustApplyValues(data map[string]interface{}, selector string, values map[st
 	return result
 }
 
+// ApplyValues applies new values on the given JSON document. The items will be selected by the
+// 'selector' which is a JSONpath selector. From the array of nodes found, only the object will be
+// used. The 'values' will be applied on each of the JSONobjects. If the value for any key in 'values'
+// is 'nil' then the key will be removed from the object.
 func ApplyValues(data map[string]interface{}, selector string, values map[string]interface{},
 ) (map[string]interface{}, error) {
 	// first validat the JSONpath, since all others have been validated
@@ -160,7 +172,7 @@ func ApplyValues(data map[string]interface{}, selector string, values map[string
 
 				newData, found := values[key]
 				if found {
-					if newData != nil {
+					if newData != DeleteMarker {
 						// we have an updated value for this key, set it
 						node.Content[i+1] = convertToYamlNode(newData)
 						i = i + 2 // move pointer forward
@@ -178,7 +190,7 @@ func ApplyValues(data map[string]interface{}, selector string, values map[string
 
 			// update any field not handled yet (wasn't in the original object)
 			for fieldName, newValue := range values {
-				if !handledFields[fieldName] {
+				if !handledFields[fieldName] && newValue != DeleteMarker {
 					keyNode := yaml.Node{
 						Kind:  yaml.ScalarNode,
 						Value: fieldName,

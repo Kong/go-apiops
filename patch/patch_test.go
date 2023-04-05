@@ -66,8 +66,8 @@ var _ = Describe("Patch", func() {
 
 			Expect(err).To(BeNil())
 			Expect(val).To(BeEquivalentTo(map[string]interface{}{
-				"key1": nil,
-				"key2": nil,
+				"key1": patch.DeleteMarker,
+				"key2": patch.DeleteMarker,
 			}))
 		})
 
@@ -208,7 +208,7 @@ var _ = Describe("Patch", func() {
 			}`))
 		})
 
-		It("deletes a key if the value is nil", func() {
+		It("deletes an existing key if the value is nil", func() {
 			data := []byte(`{
 				"routes": [
 					{	"name": "new name" }
@@ -222,6 +222,42 @@ var _ = Describe("Patch", func() {
 			Expect(applyUpdates(data, selector, valueFlags)).To(MatchJSON(`{
 				"routes": [
 					{}
+				]
+			}`))
+		})
+
+		It("doesn't insert 'null' when deleting a non-existing key", func() {
+			data := []byte(`{
+				"routes": [
+					{	"name": "my name" }
+				]
+			}`)
+			selector := "$..routes[*]"
+			valueFlags := []string{
+				"foobar:", // no value specified, so nil value, and hence delete it
+			}
+
+			Expect(applyUpdates(data, selector, valueFlags)).To(MatchJSON(`{
+				"routes": [
+					{ "name": "my name" }
+				]
+			}`))
+		})
+
+		It("can set 'null' if specified", func() {
+			data := []byte(`{
+				"routes": [
+					{	"name": "my name" }
+				]
+			}`)
+			selector := "$..routes[*]"
+			valueFlags := []string{
+				"name:null",
+			}
+
+			Expect(applyUpdates(data, selector, valueFlags)).To(MatchJSON(`{
+				"routes": [
+					{ "name": null }
 				]
 			}`))
 		})
