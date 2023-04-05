@@ -92,10 +92,21 @@ var patchCmd = &cobra.Command{
 	Long: `Applies patches on top of a decK file.
 
 The input file will be read, the patches will be applied, and if successful, written
-to the output file.
+to the output file. The patches can be specified by a '--selector' and one or more
+'--value' tags, or via patch-files.
 
-The patches can be specified by a '--selector' and one or more '--value' tags, or via
-patch-files.`,
+When using '--selector' and '--values', the items will be selected by the 'selector' which is
+a JSONpath query. From the array of nodes found, only the objects will be updated.
+The 'values' will be applied on each of the JSONobjects returned by the 'selector'.
+
+The value part must be a valid JSON snippet, so make sure to use single/double quotes
+appropriately. If the value is empty, the field will be removed from the object.
+Examples:
+  --selector="$..services[*]" --value="read_timeout:10000"
+  --selector="$..services[*]" --value='_comment:"comment injected by patching"'
+  --selector="$..services[*]" --value='_ignore:["ignore1","ignore2"]'
+  --selector="$..services[*]" --value='_ignore:' --value='_comment:'
+`,
 	Run: executePatch,
 }
 
