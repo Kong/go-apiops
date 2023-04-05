@@ -65,9 +65,10 @@ func MustApplyPatches(data map[string]interface{}, patchFiles []string) map[stri
 }
 
 func ApplyPatches(data map[string]interface{}, patchFiles []string) (map[string]interface{}, error) {
-	println(patchFiles)
-	println(data)
-	return nil, nil
+	if data != nil || patchFiles != nil {
+		panic("Patches are not yet implemented for now use '--selector' and '--value'")
+	}
+	return data, nil
 }
 
 //

@@ -60,24 +60,17 @@ func executePatch(cmd *cobra.Command, args []string) {
 		selector = s
 	}
 
-	if len(args) == 0 && len(valuesMap) == 0 {
-		log.Fatal("expected at least one patch-file or '--value' flag")
-	} else if len(args) > 0 && len(valuesMap) > 0 {
-		log.Fatal("patch-files and '--value' flags are mutually exclusive")
-	}
-
 	// do the work; read/patch/write
-	if len(args) == 0 {
+	data := filebasics.MustDeserializeFile(inputFilename)
+	if len(valuesMap) > 0 {
 		// apply selector + value flags
-		data := filebasics.MustDeserializeFile(inputFilename)
-		updated := patch.MustApplyValues(data, selector, valuesMap)
-		filebasics.MustWriteSerializedFile(outputFilename, updated, asYaml)
-	} else {
-		// apply patch files
-		data := filebasics.MustDeserializeFile(inputFilename)
-		updated := patch.MustApplyPatches(data, args)
-		filebasics.MustWriteSerializedFile(outputFilename, updated, asYaml)
+		data = patch.MustApplyValues(data, selector, valuesMap)
 	}
+	if len(args) > 0 {
+		// apply patch files
+		data = patch.MustApplyPatches(data, args)
+	}
+	filebasics.MustWriteSerializedFile(outputFilename, data, asYaml)
 }
 
 //
