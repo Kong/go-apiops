@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// ToObject returns the object, or nil+err
+// ToObject returns the object, if it was one, or nil+err.
 func ToObject(obj interface{}) (map[string]interface{}, error) {
 	switch result := obj.(type) {
 	case map[string]interface{}:
@@ -24,7 +24,7 @@ func ToArray(arr interface{}) ([]interface{}, error) {
 	return nil, fmt.Errorf("not an array, but %t", arr)
 }
 
-// GetObjectArrayField returns a new slice containing all objects in the referenced field.
+// GetObjectArrayField returns a new slice containing all objects from the array referenced by fieldName.
 // If the field is not an array, it returns an error.
 // If the field doesn't exist it returns an empty array.
 // Any entry in the array that is not an object will be omitted from the returned slice.
@@ -40,16 +40,14 @@ func GetObjectArrayField(object map[string]interface{}, fieldName string) ([]map
 	}
 
 	result := make([]map[string]interface{}, 0, len(arr))
-	j := 0
 	for _, expectedObject := range arr {
 		obj, err := ToObject(expectedObject)
 		if err == nil {
-			result[j] = obj
-			j++
+			result = append(result, obj)
 		}
 	}
 
-	return result[:j], nil
+	return result, nil
 }
 
 // RemoveObjectFromArrayByFieldValue returns a slice in which objects that
