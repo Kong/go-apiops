@@ -10,7 +10,7 @@ See the [Kong Blog](https://konghq.com/blog/tag/apiops) for more information on 
 
 ## What is this library?
 
-Currently, this library contains functions to convert [OpenAPI Specifications](https://swagger.io/specification/) (OAS) to Kong Gateway deployment formats, including the configuration of Kong Gateway plugins. In the future, this library will contain additional functions to operate over gateway configurations in support of advanced automation workflows. The aim is to provide a library that contains a set of building blocks that can be used to assemble advanced and fully custom automated Kong Gateway deployment pipelines.
+The [go-apiops](https://github.com/Kong/go-apiops) library provides a set of tools (validation and transformation) for working with API specifications and [Kong Gateway](https://docs.konghq.com/gateway/latest/) declarative configurations. Conceptually, these tools are intended to be organized into a pipeline of individual steps configured for a particular users needs. The overall purpose of the library is to enable users to build a CI/CD workflow which deliver APIs from specification to deployment. This pipeline design allows users to customize the delivery of APIs based on their specific needs.
 
 ## What is the current status of this library?
 
@@ -18,17 +18,9 @@ This library is a public preview project under an [Apache 2.0 license](LICENSE).
 
 ## Usage
 
-The library is under heavy development, and we do not provide API reference documentation. For testing and example usage, the library is released in a temporary CLI named `kced`. The latest release of the CLI can be downloaded for your OS from the [releases page](https://github.com/Kong/go-apiops/releases).
+The library is under heavy development, and we do not provide API reference documentation. For testing and example usage, the library is released in a temporary CLI named `kced`. The latest release of the CLI can be downloaded for your OS from the [releases page](https://github.com/Kong/go-apiops/releases) Downloaded and extract the release archive to install.
 
-Once you've downloaded and extracted release archive, try running the following:
-
-```bash
-cat /path/to/openapi.yaml | kced openapi2kong
-```
-
-`kced` will print a Kong Gateway 3.0 compatible decK configuration to `STDOUT`.
-
-An example OAS file is provided at [docs/learnservice_oas.yaml](docs/learnservice_oas.yaml). More documentation and examples will be added in the future.
+The [Documentation](./docs/README.md) page provides examples and command details.
 
 ## Reporting issues
 
