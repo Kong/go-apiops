@@ -153,7 +153,7 @@ func DeepCopyObject(data *map[string]interface{}) *map[string]interface{} {
 }
 
 // DeepCopyArray implements a poor man's deepcopy by jsonify/de-jsonify
-func DeepCopyarray(data *[]interface{}) *[]interface{} {
+func DeepCopyArray(data *[]interface{}) *[]interface{} {
 	var dataCopy []interface{}
 	serialized, _ := json.Marshal(data)
 	_ = json.Unmarshal(serialized, &dataCopy)

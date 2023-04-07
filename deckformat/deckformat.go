@@ -83,7 +83,8 @@ func CompatibleTransform(data1 map[string]interface{}, data2 map[string]interfac
 	}
 
 	if transform1 != transform2 {
-		return errors.New("files with '_transform: true' (default) and '_transform: false' are not compatible")
+		return errors.New("files with '" + TransformKey + ": true' (default) and '" +
+			TransformKey + ": false' are not compatible")
 	}
 
 	return nil
@@ -153,23 +154,23 @@ func ParseFormatVersion(data map[string]interface{}) (int, int, error) {
 	// get the file version and check it
 	v, err := jsonbasics.GetStringField(data, VersionKey)
 	if err != nil {
-		return 0, 0, errors.New("expected field '._format_version' to be a string in 'x.y' format")
+		return 0, 0, errors.New("expected field '." + VersionKey + "' to be a string in 'x.y' format")
 	}
 	elem := strings.Split(v, ".")
 	if len(elem) > 2 {
-		return 0, 0, errors.New("expected field '._format_version' to be a string in 'x.y' format")
+		return 0, 0, errors.New("expected field '." + VersionKey + "' to be a string in 'x.y' format")
 	}
 
 	majorVersion, err := strconv.Atoi(elem[0])
 	if err != nil {
-		return 0, 0, errors.New("expected field '._format_version' to be a string in 'x.y' format")
+		return 0, 0, errors.New("expected field '." + VersionKey + "' to be a string in 'x.y' format")
 	}
 
 	minorVersion := 0
 	if len(elem) > 1 {
 		minorVersion, err = strconv.Atoi(elem[1])
 		if err != nil {
-			return 0, 0, errors.New("expected field '._format_version' to be a string in 'x.y' format")
+			return 0, 0, errors.New("expected field '." + VersionKey + "' to be a string in 'x.y' format")
 		}
 	}
 
@@ -182,11 +183,12 @@ func ParseFormatVersion(data map[string]interface{}) (int, int, error) {
 //
 //
 
-// HistoryGet returns a copy of the history info array. If there is none, it will create one.
-func HistoryGet(filedata map[string]interface{}) (historyArray *[]interface{}) {
+// HistoryGet returns a the history info array. If there is none, or if filedata is nil,
+// it will return an empty one.
+func HistoryGet(filedata map[string]interface{}) (historyArray []interface{}) {
 	if filedata == nil || filedata[HistoryKey] == nil {
 		historyInfo := make([]interface{}, 0)
-		return &historyInfo
+		return historyInfo
 	}
 
 	trackInfo, err := jsonbasics.ToArray(filedata[HistoryKey])
@@ -196,37 +198,28 @@ func HistoryGet(filedata map[string]interface{}) (historyArray *[]interface{}) {
 	}
 
 	// Return a copy
-	return jsonbasics.DeepCopyarray(&trackInfo)
+	return *jsonbasics.DeepCopyArray(&trackInfo)
 }
 
-// HistorySet sets the history info array. The one provided is set (not a copy). If 'newEntry'
-// is non-nil it will be appended to the array before setting it.
-func HistorySet(filedata map[string]interface{}, historyArray *[]interface{}, newEntry interface{}) {
-	if filedata == nil {
-		panic("data cannot be nil")
+// HistorySet sets the history info array. Setting to nil will delete the history.
+func HistorySet(filedata map[string]interface{}, historyArray []interface{}) {
+	if historyArray == nil {
+		HistoryClear(filedata)
+		return
 	}
-
-	// append the given entry
-	if newEntry != nil {
-		var h []interface{}
-		if historyArray == nil {
-			h = []interface{}{newEntry}
-		} else {
-			h = append(*historyArray, newEntry)
-		}
-		historyArray = &h
-	}
-
-	filedata[HistoryKey] = *historyArray
+	filedata[HistoryKey] = historyArray
 }
 
 // HistoryAppend appends an entry (if non-nil) to the history info array. If there is
 // no array, it will create one.
 func HistoryAppend(filedata map[string]interface{}, newEntry interface{}) {
-	if newEntry == nil {
-		return
-	}
-	HistorySet(filedata, HistoryGet(filedata), newEntry)
+	hist := HistoryGet(filedata)
+	hist = append(hist, newEntry)
+	HistorySet(filedata, hist)
+}
+
+func HistoryClear(filedata map[string]interface{}) {
+	delete(filedata, HistoryKey)
 }
 
 // HistoryNewEntry returns a new JSONobject with tool version and command keys set.
