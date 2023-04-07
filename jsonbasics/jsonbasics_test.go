@@ -158,7 +158,12 @@ var _ = Describe("jsonbasics", func() {
 		})
 	})
 
-	Describe("DeepCopy", func() {
+	Describe("DeepCopyObject", func() {
+		PIt("still to do", func() {
+		})
+	})
+
+	Describe("DeepCopyArray", func() {
 		PIt("still to do", func() {
 		})
 	})

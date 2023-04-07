@@ -74,7 +74,7 @@ func Files(filenames []string) (map[string]interface{}, []interface{}, error) {
 		newInfo := make(map[string]interface{})
 		newInfo["filename"] = filename
 		fileHistory := deckformat.HistoryGet(data)
-		if len(*fileHistory) > 0 {
+		if len(fileHistory) > 0 {
 			newInfo["info"] = fileHistory
 		}
 		historyArray[i] = newInfo

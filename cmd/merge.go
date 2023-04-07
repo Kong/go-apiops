@@ -35,13 +35,14 @@ func executeMerge(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	trackInfo := deckformat.HistoryNewEntry("merge")
-	trackInfo["output"] = outputFilename
-
 	// do the work: read/merge
 	merged, info := merge.MustFiles(args)
-	trackInfo["files"] = info
-	deckformat.HistorySet(merged, nil, trackInfo)
+
+	historyEntry := deckformat.HistoryNewEntry("merge")
+	historyEntry["output"] = outputFilename
+	historyEntry["files"] = info
+	deckformat.HistoryClear(merged)
+	deckformat.HistoryAppend(merged, historyEntry)
 
 	filebasics.MustWriteSerializedFile(outputFilename, merged, asYaml)
 }
