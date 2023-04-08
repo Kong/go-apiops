@@ -10,10 +10,13 @@
             "request": "launch",
             "mode": "auto",
             "program": "main.go",
-            "args": ["merge",
-              "merge/merge_testfiles/file1.yml",
-              "merge/merge_testfiles/file2.yml",
-              "merge/merge_testfiles/file3.yml"
+            "args": ["patch",
+              "-s",
+              "kong.yml",
+              "--selector",
+              "$..services[*]",
+              "--value",
+              "read_timeout:10000"
             ]
         }
     ]

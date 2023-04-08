@@ -40,44 +40,83 @@ func executePatch(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	var valuesMap map[string]interface{}
+	var valuesPatch patch.DeckPatch
 	{
 		values, err := cmd.Flags().GetStringArray("value")
 		if err != nil {
 			log.Fatalf("failed to retrieve '--value' entries; %s", err)
 		}
-		valuesMap, err = patch.ValidateValuesFlags(values)
+		valuesPatch.Values, valuesPatch.Remove, err = patch.ValidateValuesFlags(values)
 		if err != nil {
 			log.Fatalf("failed parsing '--value' entry; %s", err)
 		}
 	}
 
-	var selector string
 	{
 		s, err := cmd.Flags().GetString("selector")
 		if err != nil {
 			log.Fatalf("failed to retrieve '--selector' entry; %s", err)
 		}
-		selector = s
+		valuesPatch.SelectorSource = s
+	}
+	{
+		println(valuesPatch.SelectorSource)
+		d := filebasics.MustSerialize(valuesPatch.Values, true)
+		println(*d)
+		println(valuesPatch.Remove)
+	}
+
+	patchFiles := make([]patch.DeckPatchFile, 0)
+	{
+		for _, filename := range args {
+			var patchfile patch.DeckPatchFile
+			err := patchfile.ParseFile(filename)
+			if err != nil {
+				log.Fatalf("failed to parse '%s': %s", filename, err)
+			}
+			patchFiles = append(patchFiles, patchfile)
+		}
 	}
 
 	trackInfo := deckformat.HistoryNewEntry("patch")
 	trackInfo["input"] = inputFilename
 	trackInfo["output"] = outputFilename
-	trackInfo["selector"] = selector
-	trackInfo["values"] = valuesMap
+	if len(valuesPatch.Values) != 0 || len(valuesPatch.Remove) != 0 {
+		trackInfo["selector"] = valuesPatch.SelectorSource
+	}
+	if len(valuesPatch.Values) != 0 {
+		trackInfo["values"] = valuesPatch.Values
+	}
+	if len(valuesPatch.Remove) != 0 {
+		trackInfo["remove"] = valuesPatch.Remove
+	}
+	if len(args) != 0 {
+		trackInfo["patchfiles"] = args
+	}
 
 	// do the work; read/patch/write
 	data := filebasics.MustDeserializeFile(inputFilename)
 	deckformat.HistoryAppend(data, trackInfo) // add before patching, so patch can operate on it
-	if len(valuesMap) > 0 {
+
+	yamlNode := patch.ConvertToYamlNode(data)
+
+	if (len(valuesPatch.Values) + len(valuesPatch.Remove)) > 0 {
 		// apply selector + value flags
-		data = patch.MustApplyValues(data, selector, valuesMap)
+		err = valuesPatch.ApplyToNodes(yamlNode)
+		if err != nil {
+			log.Fatalf("Failed to apply command-line values; %s", err)
+		}
 	}
+
 	if len(args) > 0 {
 		// apply patch files
-		data = patch.MustApplyPatches(data, args)
+		for i, patchFile := range patchFiles {
+			patchFile.MustApply(yamlNode, args[i])
+		}
 	}
+
+	data = patch.ConvertToJSONobject(yamlNode)
+
 	filebasics.MustWriteSerializedFile(outputFilename, data, asYaml)
 }
 
@@ -107,6 +146,21 @@ Examples:
   --selector="$..services[*]" --value='_comment:"comment injected by patching"'
   --selector="$..services[*]" --value='_ignore:["ignore1","ignore2"]'
   --selector="$..services[*]" --value='_ignore:' --value='_comment:'
+
+The patchfiles have the following format (JSON or Yaml) and can contain multiple
+patches that will be applied in order;
+
+  { "_format_version": "1.0",
+    "patches": [
+      { "selector": "$..services[*]",
+        "values": {
+          "read_timeout": 10000,
+          "_comment": "comment injected by patching",
+        },
+        "remove": [ "_ignore" ]
+      }
+    ]
+  }
 `,
 	Run: executePatch,
 }

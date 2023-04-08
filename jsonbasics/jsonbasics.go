@@ -50,6 +50,32 @@ func GetObjectArrayField(object map[string]interface{}, fieldName string) ([]map
 	return result, nil
 }
 
+// GetStringArrayField returns a new slice containing all strings from the array referenced by fieldName.
+// If the field is not an array, it returns an error.
+// If the field doesn't exist it returns an empty array.
+// Any entry in the array that is not a string will be omitted from the returned slice.
+func GetStringArrayField(object map[string]interface{}, fieldName string) ([]string, error) {
+	target := object[fieldName]
+	if target == nil {
+		return make([]string, 0), nil
+	}
+
+	arr, err := ToArray(target)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]string, 0, len(arr))
+	for _, expectedString := range arr {
+		obj, ok := expectedString.(string)
+		if ok {
+			result = append(result, obj)
+		}
+	}
+
+	return result, nil
+}
+
 // RemoveObjectFromArrayByFieldValue returns a slice in which objects that
 // match the field value are removed. Returns; new slice, # of removals, err.
 // occurrences determines the maximum number of items to remove, use -1 for unlimited.
