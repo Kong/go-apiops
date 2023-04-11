@@ -19,6 +19,7 @@ This library is a public preview project under an [Apache 2.0 license](LICENSE).
 ## Usage
 
 The library is under heavy development, and we do not provide API reference documentation. For testing and example usage, the library is released in a temporary CLI named `kced`. The latest release of the CLI can be downloaded for your OS from the [releases page](https://github.com/Kong/go-apiops/releases) Downloaded and extract the release archive to install.
+[Docker images](https://hub.docker.com/r/kong/kced) are also available.
 
 The [Documentation](./docs/README.md) page provides examples and command details.
 
@@ -30,6 +31,9 @@ Issues using `kced` or the library can be reported in the [Github repo](https://
 
 The releases are automated. To create a new release;
 
-- check git history; the commit messages are collected into the release-notes
 - tag & push the release commit, CI will create a new release
-- verify the release on [the releases page](https://github.com/Kong/go-apiops/releases), possibly edit the release-notes
+
+      git tag vX.Y.Z
+      git push --tags
+
+- verify the release on [the releases page](https://github.com/Kong/go-apiops/releases), possibly edit the release-notes (which will be generated from the commit history)
