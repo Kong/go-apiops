@@ -26,3 +26,10 @@ The [Documentation](./docs/README.md) page provides examples and command details
 
 Issues using `kced` or the library can be reported in the [Github repo](https://github.com/Kong/go-apiops/issues).
 
+## Releasing new versions
+
+The releases are automated. To create a new release;
+
+- check git history; the commit messages are collected into the release-notes
+- tag & push the release commit, CI will create a new release
+- verify the release on [the releases page](https://github.com/Kong/go-apiops/releases), possibly edit the release-notes
