@@ -59,12 +59,6 @@ func executePatch(cmd *cobra.Command, args []string) {
 		}
 		valuesPatch.SelectorSource = s
 	}
-	{
-		println(valuesPatch.SelectorSource)
-		d := filebasics.MustSerialize(valuesPatch.Values, true)
-		println(*d)
-		println(valuesPatch.Remove)
-	}
 
 	patchFiles := make([]patch.DeckPatchFile, 0)
 	{
