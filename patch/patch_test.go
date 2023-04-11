@@ -107,10 +107,16 @@ var _ = Describe("Patch", func() {
 	})
 
 	Describe("validating --selector flags", func() {
-		PIt("returns error on bad JSONpath", func() {
-			// res, err := patch.ApplyValues(nil, "bad JSONpath", nil)
-			// Expect(res).To(BeNil())
-			// Expect(err).To(MatchError("invalid character ' ' at position 3, following \"bad\""))
+		It("returns error on bad JSONpath", func() {
+			testPatch := patch.DeckPatch{
+				SelectorSource: "bad JSONpath",
+				Values:         nil,
+				Remove:         []string{"test"},
+			}
+			data := []byte(`{}`)
+			err := testPatch.ApplyToNodes(patch.ConvertToYamlNode(MustDeserialize(&data)))
+			Expect(err).To(MatchError("selector 'bad JSONpath' is not a valid JSONpath expression; " +
+				"invalid character ' ' at position 3, following \"bad\""))
 		})
 	})
 
