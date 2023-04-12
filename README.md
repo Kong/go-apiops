@@ -2,6 +2,12 @@
 
 Home of Kong's Go based APIOps library.
 
+[![Build Status](https://img.shields.io/github/actions/workflow/status/kong/go-apiops/test.yml?branch=main&label=Tests)](https://github.com/kong/go-apiops/actions?query=branch%3Amain+event%3Apush)
+[![Lint Status](https://img.shields.io/github/actions/workflow/status/kong/go-apiops/golangci-lint.yml?branch=main&label=Linter)](https://github.com/kong/go-apiops/actions?query=branch%3Amain+event%3Apush)
+[![codecov](https://codecov.io/gh/Kong/go-apiops/branch/main/graph/badge.svg?token=8XTDGNP8VW)](https://codecov.io/gh/Kong/go-apiops)
+[![Go Report Card](https://goreportcard.com/badge/github.com/kong/go-apiops)](https://goreportcard.com/report/github.com/kong/go-apiops)
+[![SemVer](https://img.shields.io/github/v/tag/kong/go-apiops?color=brightgreen&label=SemVer&logo=semver&sort=semver)](CHANGELOG.md)
+
 ## What is APIOps
 
 API Lifecycle Automation, or APIOps, is the process of applying API best practices via automation frameworks. This library contains functions to aid the development of tools to apply APIOps to Kong Gateway deployments.

@@ -1,4 +1,4 @@
-.PHONY: all check-main-dependencies check-test-dependencies check-lint-dependencies build lint test clean
+.PHONY: all check-main-dependencies check-test-dependencies check-lint-dependencies build lint test coverage clean
 
 BINARY_NAME=kced
 
@@ -26,6 +26,9 @@ lint: check-lint-dependencies
 
 test: check-test-dependencies
 	ginkgo -r
+
+coverage: check-test-dependencies
+	ginkgo -r --race --coverprofile coverage.out
 
 clean: check-main-dependencies
 	$(RM) ./convertoas3/oas3_testfiles/*.generated.json
