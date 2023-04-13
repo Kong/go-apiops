@@ -3,6 +3,8 @@ package jsonbasics
 import (
 	"encoding/json"
 	"fmt"
+
+	"gopkg.in/yaml.v3"
 )
 
 // ToObject returns the object, if it was one, or nil+err.
@@ -184,4 +186,55 @@ func DeepCopyArray(data *[]interface{}) *[]interface{} {
 	serialized, _ := json.Marshal(data)
 	_ = json.Unmarshal(serialized, &dataCopy)
 	return &dataCopy
+}
+
+//
+//
+//  Start of workaround code
+//
+//
+
+// The JSONpath lib does not parse to interface{} types, but uses its own struct,
+// yaml.Node. Hence anything read by the filebasics helpers must be converted back
+// and forth, so we serialize and deserialze the data in an extra round-trip to get
+// it into the proper structures.
+//
+// In library code, this takes a performance hit, in the CLI it's a lesser concern.
+
+func ConvertToYamlNode(data interface{}) *yaml.Node {
+	encData, err := json.Marshal(data)
+	if err != nil {
+		panic(err)
+	}
+	var yNode yaml.Node
+	err = yaml.Unmarshal(encData, &yNode)
+	if err != nil {
+		panic(err)
+	}
+	if yNode.Kind == yaml.DocumentNode {
+		return yNode.Content[0]
+	}
+	return &yNode
+}
+
+func ConvertToJSONInterface(data *yaml.Node) *interface{} {
+	encData, err := yaml.Marshal(data)
+	if err != nil {
+		panic(err)
+	}
+	var jsonData interface{}
+	err = json.Unmarshal(encData, &jsonData)
+	if err != nil {
+		panic(err)
+	}
+	return &jsonData
+}
+
+func ConvertToJSONobject(data *yaml.Node) map[string]interface{} {
+	jsonInterface := *ConvertToJSONInterface(data)
+	jsonObject, err := ToObject(jsonInterface)
+	if err != nil {
+		panic(err)
+	}
+	return jsonObject
 }

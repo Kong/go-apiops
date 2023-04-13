@@ -2,6 +2,7 @@ package patch_test
 
 import (
 	. "github.com/kong/go-apiops/filebasics"
+	"github.com/kong/go-apiops/jsonbasics"
 	"github.com/kong/go-apiops/patch"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -114,7 +115,7 @@ var _ = Describe("Patch", func() {
 				Remove:         []string{"test"},
 			}
 			data := []byte(`{}`)
-			err := testPatch.ApplyToNodes(patch.ConvertToYamlNode(MustDeserialize(&data)))
+			err := testPatch.ApplyToNodes(jsonbasics.ConvertToYamlNode(MustDeserialize(&data)))
 			Expect(err).To(MatchError("selector 'bad JSONpath' is not a valid JSONpath expression; " +
 				"invalid character ' ' at position 3, following \"bad\""))
 		})
@@ -132,11 +133,11 @@ var _ = Describe("Patch", func() {
 				Remove:         remove,
 			}
 
-			yamlNode := patch.ConvertToYamlNode(jsonData)
+			yamlNode := jsonbasics.ConvertToYamlNode(jsonData)
 			err = testPatch.ApplyToNodes(yamlNode)
 			Expect(err).To(BeNil())
 
-			updated := patch.ConvertToJSONobject(yamlNode)
+			updated := jsonbasics.ConvertToJSONobject(yamlNode)
 			result := MustSerialize(updated, false)
 			return *result
 		}
