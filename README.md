@@ -32,18 +32,19 @@ Currently, the functionality is released in a temporary CLI named `kced`. The CL
 * Download the latest release archive of the CLI for your OS from the [releases page](https://github.com/Kong/go-apiops/releases).
 * Once you have downloaded, extract the release archive contents somewhere in your `PATH`, for example:
 
-  To extract:
-  ```
-  tar xvf ~/Downloads/go-apiops_0.1.11_darwin_all.tar.gz -C ~/go/bin
+  ```bash
+  tar xvf ~/Downloads/go-apiops_0.1.11_darwin_all.tar.gz -C /tmp
   ```
 
   And test the installation:
-  ```
-  ~/go/bin/kced version
+
+  ```bash
+  /tmp/kced version
   ```
 
   Should print the installed version:
-  ```
+
+  ```bash
   kceD v0.1.11 (347b296)
   ```
 
@@ -99,11 +100,18 @@ Issues using `kced` or the library can be reported in the [Github repo](https://
 
 ## Releasing new versions
 
-The releases are automated. To create a new release;
+The releases are automated. To create a new release:
 
-- tag & push the release commit, CI will create a new release
+* tag at the desired place to release
 
-      git tag vX.Y.Z
-      git push --tags
+``` bash
+git tag vX.Y.Z
+```
 
-- verify the release on [the releases page](https://github.com/Kong/go-apiops/releases), possibly edit the release-notes (which will be generated from the commit history)
+* push the tag and CI will create a new release
+
+```bash
+git push vX.Y.Z
+```
+
+* verify the release on [the releases page](https://github.com/Kong/go-apiops/releases), possibly edit the release-notes (which will be generated from the commit history)
