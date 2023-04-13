@@ -21,14 +21,37 @@ The [go-apiops](https://github.com/Kong/go-apiops) library provides a set of too
 
 ## What is the current status of this library?
 
-This library is a public preview project under an [Apache 2.0 license](LICENSE). The library is under heavy development and is not currently supported by Kong Inc. In the future, this library will be tightly integrated into Kong tooling to allow users to apply Kong Gateway based APIOps directly in their deployment pipelines with existing well known command line and CICD tools.
+The library is under heavy development and is a public preview project under an [Apache 2.0 license](LICENSE). The library is not currently supported by Kong Inc. In the future, this library will be tightly integrated into Kong tooling to allow users to apply Kong Gateway based APIOps directly in their deployment pipelines with existing well known command line and CICD tools.
 
-## Usage
+## Installation & Usage
 
-The library is under heavy development, and we do not provide API reference documentation. For testing and example usage, the library is released in a temporary CLI named `kced`. The latest release of the CLI can be downloaded for your OS from the [releases page](https://github.com/Kong/go-apiops/releases) Downloaded and extract the release archive to install.
-[Docker images](https://hub.docker.com/r/kong/kced) are also available.
+Currently, the library is released in a temporary CLI named `kced`. The latest release of the CLI can be downloaded for your OS from the [releases page](https://github.com/Kong/go-apiops/releases). Downloaded and extract the release archive to install. [Docker images](https://hub.docker.com/r/kong/kced) are also available for the temporary CLI.
 
-The [Documentation](./docs/README.md) page provides examples and command details.
+The [Documentation](./docs/README.md) page provides command details and examples. The CLI also provides a `help` command to see usage details:
+
+```
+> kced help
+
+A temporary CLI that drives the Kong go-apiops library.
+
+go-apiops houses an improved APIOps toolset for operating Kong Gateway deployments.
+
+Usage:
+  kced [command]
+
+Available Commands:
+  completion   Generate the autocompletion script for the specified shell
+  help         Help about any command
+  merge        Merges multiple decK files into one
+  openapi2kong Convert OpenAPI files to Kong's decK format
+  patch        Applies patches on top of a decK file
+  version      Print the kceD version
+
+Flags:
+  -h, --help   help for kced
+
+Use "kced [command] --help" for more information about a command.
+```
 
 ## Reporting issues
 
