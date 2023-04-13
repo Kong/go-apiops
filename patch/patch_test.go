@@ -9,6 +9,99 @@ import (
 )
 
 var _ = Describe("Patch", func() {
+	Describe("Parse", func() {
+		It("parses a valid patch", func() {
+			jsonData := []byte(`{
+				"selector": "$",
+				"values": {
+					"field1": "value1"
+				},
+				"remove": [ "field2" ]
+			}`)
+			data := MustDeserialize(&jsonData)
+
+			var patch patch.DeckPatch
+			err := patch.Parse(data, "breadcrumb-text")
+
+			Expect(err).To(BeNil())
+			Expect(patch.SelectorSource).To(Equal("$"))
+			Expect(patch.Selector).ToNot(BeNil())
+			Expect(patch.Values).To(BeEquivalentTo(map[string]interface{}{
+				"field1": "value1",
+			}))
+			Expect(patch.Remove).To(BeEquivalentTo([]string{
+				"field2",
+			}))
+		})
+
+		It("fails on non-string selector", func() {
+			jsonData := []byte(`{
+				"selector": 123
+			}`)
+			data := MustDeserialize(&jsonData)
+
+			var patch patch.DeckPatch
+			err := patch.Parse(data, "file1.yml:patches[1]")
+
+			Expect(err).To(MatchError("file1.yml:patches[1].selector is not a string"))
+		})
+
+		It("fails on bad selector", func() {
+			jsonData := []byte(`{
+				"selector": "not valid"
+			}`)
+			data := MustDeserialize(&jsonData)
+
+			var patch patch.DeckPatch
+			err := patch.Parse(data, "file1.yml:patches[1]")
+
+			Expect(err).To(MatchError("file1.yml:patches[1].selector is not a valid JSONpath " +
+				"expression; invalid character ' ' at position 3, following \"not\""))
+		})
+
+		It("fails on non-object 'values'", func() {
+			jsonData := []byte(`{
+				"selector": "$",
+				"values": 123
+			}`)
+			data := MustDeserialize(&jsonData)
+
+			var patch patch.DeckPatch
+			err := patch.Parse(data, "file1.yml:patches[1]")
+
+			Expect(err).To(MatchError("file1.yml:patches[1].values is not an object"))
+		})
+
+		It("fails on non-array 'remove'", func() {
+			jsonData := []byte(`{
+				"selector": "$",
+				"remove": 123
+			}`)
+			data := MustDeserialize(&jsonData)
+
+			var patch patch.DeckPatch
+			err := patch.Parse(data, "file1.yml:patches[1]")
+
+			Expect(err).To(MatchError("file1.yml:patches[1].remove is not an array"))
+		})
+
+		It("fails on changing and removing the same field", func() {
+			jsonData := []byte(`{
+				"selector": "$",
+				"values": {
+					"field1": "value1"
+				},
+				"remove": [ "field1" ]
+			}`)
+			data := MustDeserialize(&jsonData)
+
+			var patch patch.DeckPatch
+			err := patch.Parse(data, "file1.yml:patches[1]")
+
+			Expect(err).To(MatchError("file1.yml:patches[1] is trying to change and remove 'field1' at the same time"))
+		})
+	})
+
 	Describe("validating --value flags", func() {
 		It("validates a number", func() {
 			val, rem, err := patch.ValidateValuesFlags([]string{"key1:1", "key2:2"})
