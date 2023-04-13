@@ -84,7 +84,7 @@ func (patch *DeckPatch) ApplyToNode(node *yaml.Node) error {
 		newData, found := patch.Values[key]
 		if found {
 			// we have an updated value for this key, set it
-			node.Content[i+1] = ConvertToYamlNode(newData)
+			node.Content[i+1] = jsonbasics.ConvertToYamlNode(newData)
 			handledFields[key] = true
 		}
 		i = i + 2
@@ -107,7 +107,7 @@ func (patch *DeckPatch) ApplyToNode(node *yaml.Node) error {
 				Value: fieldName,
 				Style: yaml.DoubleQuotedStyle,
 			}
-			valueNode := ConvertToYamlNode(newValue)
+			valueNode := jsonbasics.ConvertToYamlNode(newValue)
 			node.Content = append(node.Content, &keyNode, valueNode)
 		}
 	}
