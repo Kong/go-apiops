@@ -117,4 +117,30 @@ var _ = Describe("Merge", func() {
 			validateMerge(fileList, expected, expectErr, nil)
 		})
 	})
+
+	Describe("MustMerge", func() {
+		It("succeeds on proper files", func() {
+			// This tests the order of the resulting file, but also the version of the
+			// final file
+			fileList := []string{
+				"./merge_testfiles/file1.yml",
+				"./merge_testfiles/file2.yml",
+				"./merge_testfiles/file3.yml",
+			}
+			expectedFile := "./merge_testfiles/test1_expected.json"
+
+			res, _ := merge.MustFiles(fileList)
+			result := MustSerialize(res, false)
+			expected := MustReadFile(expectedFile)
+
+			Expect(*result).To(MatchJSON(*expected))
+		})
+
+		It("throws error on bad files", func() {
+			t := func() {
+				merge.MustFiles([]string{"bad_file1.yml", "bad_file2.yml"})
+			}
+			Expect(t).Should(Panic())
+		})
+	})
 })
