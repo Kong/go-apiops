@@ -25,13 +25,54 @@ The library is under heavy development and is a public preview project under an 
 
 ## Installation & Usage
 
-Currently, the library is released in a temporary CLI named `kced`. The latest release of the CLI can be downloaded for your OS from the [releases page](https://github.com/Kong/go-apiops/releases). Downloaded and extract the release archive to install. [Docker images](https://hub.docker.com/r/kong/kced) are also available for the temporary CLI.
+Currently, the functionality is released in a temporary CLI named `kced`. The CLI can be installed locally or ran as a Docker container.
 
-The [Documentation](./docs/README.md) page provides command details and examples. The CLI also provides a `help` command to see usage details:
+### Local Install
 
+* Download the latest release archive of the CLI for your OS from the [releases page](https://github.com/Kong/go-apiops/releases).
+* Once you have downloaded, extract the release archive contents somewhere in your `PATH`, for example:
+
+  ```bash
+  tar xvf ~/Downloads/go-apiops_0.1.11_darwin_all.tar.gz -C /tmp
+  ```
+
+  And test the installation:
+
+  ```bash
+  /tmp/kced version
+  ```
+
+  Should print the installed version:
+
+  ```bash
+  kceD v0.1.11 (347b296)
+  ```
+
+### Docker Install
+
+[Docker images](https://hub.docker.com/r/kong/kced) are available on Docker Hub and can be ran with:
+
+```bash
+docker run kong/kced:v0.1.11 version
 ```
-> kced help
 
+Should result in:
+
+```bash
+kceD kong/kced:v0.1.11 (347b2965c3713219aff3844306878ca492e782a2)
+```
+
+### Usage
+
+The [Documentation](./docs/README.md) page provides command details and examples. The CLI also provides a `help` command to see usage details on the command line:
+
+```bash
+kced help
+```
+
+Usage example:
+
+```bash
 A temporary CLI that drives the Kong go-apiops library.
 
 go-apiops houses an improved APIOps toolset for operating Kong Gateway deployments.
@@ -59,11 +100,18 @@ Issues using `kced` or the library can be reported in the [Github repo](https://
 
 ## Releasing new versions
 
-The releases are automated. To create a new release;
+The releases are automated. To create a new release:
 
-- tag & push the release commit, CI will create a new release
+* tag at the desired place to release
 
-      git tag vX.Y.Z
-      git push --tags
+``` bash
+git tag vX.Y.Z
+```
 
-- verify the release on [the releases page](https://github.com/Kong/go-apiops/releases), possibly edit the release-notes (which will be generated from the commit history)
+* push the tag and CI will create a new release
+
+```bash
+git push vX.Y.Z
+```
+
+* verify the release on [the releases page](https://github.com/Kong/go-apiops/releases), possibly edit the release-notes (which will be generated from the commit history)
