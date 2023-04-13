@@ -41,7 +41,7 @@ func merge2Files(data1 map[string]interface{}, data2 map[string]interface{}) map
 
 // MustFiles is identical to `Files` except that it will panic instead of returning
 // an error.
-func MustFiles(filenames []string) (map[string]interface{}, []interface{}) {
+func MustFiles(filenames []string) (result map[string]interface{}, history []interface{}) {
 	result, info, err := Files(filenames)
 	if err != nil {
 		panic(err)
@@ -54,12 +54,11 @@ func MustFiles(filenames []string) (map[string]interface{}, []interface{}) {
 // concatenating them. Any other keys will be copied. The files will be processed
 // in order provided. An error will be returned if files are incompatible.
 // There are no checks on duplicates, etc... garbage-in-garbage-out.
-func Files(filenames []string) (map[string]interface{}, []interface{}, error) {
+func Files(filenames []string) (result map[string]interface{}, history []interface{}, err error) {
 	if len(filenames) == 0 {
 		panic("no filenames provided")
 	}
 
-	var result map[string]interface{}
 	historyArray := make([]interface{}, len(filenames))
 	minorVersion := 0
 
