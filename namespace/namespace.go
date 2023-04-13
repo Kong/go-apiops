@@ -45,7 +45,7 @@ func UpdateRoute(route *yaml.Node, prefix string, ns string) {
 	}
 
 	var updated bool
-	for i := 0; i < len(route.Content); {
+	for i := 0; i < len(route.Content); i += 2 {
 		key := route.Content[i]
 		if key.Value == "paths" {
 			// found the 'paths' property
@@ -56,33 +56,34 @@ func UpdateRoute(route *yaml.Node, prefix string, ns string) {
 				break
 			}
 		}
-		i = i + 2
 	}
 
 	if !updated {
 		return // nothing changed, so we're done
 	}
 
-	// set strip_path properties
-	stripPathDone := false
-	stripPathPrefixDone := false
-
-	// update strip_path properties if they exist
-	for i := 0; i < len(route.Content); {
+	// set strip_path & strip_prefix properties
+	var stripPathNode *yaml.Node
+	var stripPrefixNode *yaml.Node
+	for i := 0; i < len(route.Content); i += 2 {
 		key := route.Content[i]
-		if key.Value == "strip_path" {
-			route.Content[i+1].Value = "true"
-			stripPathDone = true
+		switch key.Value {
+		case "strip_path":
+			stripPathNode = route.Content[i+1]
+		case "strip_prefix":
+			stripPrefixNode = route.Content[i+1]
 		}
-		if key.Value == "strip_prefix" {
-			route.Content[i+1].Value = ns + route.Content[i+1].Value
-			stripPathPrefixDone = true
-		}
-		i = i + 2
 	}
 
-	// add strip_path properties if they didn't exist
-	if !stripPathDone {
+	if stripPathNode != nil {
+		// a 'strip_path' property is present
+		if stripPathNode.Value == "true" && stripPrefixNode == nil {
+			// nothing to do. We were already stripping the entire path, and we're not changing that
+			return
+		}
+		stripPathNode.Value = "true"
+	} else {
+		// add the 'strip_path' property
 		keyNode := yaml.Node{
 			Kind:  yaml.ScalarNode,
 			Style: yaml.DoubleQuotedStyle,
@@ -94,9 +95,15 @@ func UpdateRoute(route *yaml.Node, prefix string, ns string) {
 			Tag:   "!!bool",
 			Value: "true",
 		}
-		route.Content = append(route.Content, &keyNode, &valueNode)
+		stripPathNode = &valueNode
+		route.Content = append(route.Content, &keyNode, stripPathNode)
 	}
-	if !stripPathPrefixDone {
+
+	if stripPrefixNode != nil {
+		// we're already stripping a prefix, we just need to strip some more
+		stripPrefixNode.Value = ns + stripPrefixNode.Value
+	} else {
+		// add the 'strip_prefix' property
 		keyNode := yaml.Node{
 			Kind:  yaml.ScalarNode,
 			Style: yaml.DoubleQuotedStyle,
@@ -109,7 +116,8 @@ func UpdateRoute(route *yaml.Node, prefix string, ns string) {
 			Tag:   "!!str",
 			Value: ns,
 		}
-		route.Content = append(route.Content, &keyNode, &valueNode)
+		stripPrefixNode = &valueNode
+		route.Content = append(route.Content, &keyNode, stripPrefixNode)
 	}
 }
 

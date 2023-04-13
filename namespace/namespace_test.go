@@ -64,6 +64,27 @@ var _ = Describe("Namespace", func() {
 			}`))
 		})
 
+		It("doesn't set 'strip_prefix' if 'strip_path' was already set", func() {
+			data := `{
+				"paths": [
+					"/one",
+					"/two"
+				],
+				"strip_path": true
+			}`
+
+			route := toYaml(data)
+			namespace.UpdateRoute(route, "/", "/prefix")
+
+			Expect(toString(route)).To(MatchJSON(`{
+				"paths": [
+					"/prefix/one",
+					"/prefix/two"
+				],
+				"strip_path": true
+			}`))
+		})
+
 		It("keeps stripping existing prefixes (plain)", func() {
 			data := `{
 				"paths": [
