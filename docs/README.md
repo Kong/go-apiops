@@ -95,7 +95,8 @@ To accomplish the same with a patch-file, first specify the file:
 _format_version: 1.0
 patches:
   - selector: $..services[*]
-    value: read_timeout: 30000
+    values:
+      read_timeout: 30000
 ```
 
 And apply it by passing it as an argument to `patch`:
