@@ -22,7 +22,7 @@ kced openapi2kong --help
 The general pattern for this command is to provide an OAS file and output to a deck file:
 
 ```
-./kced openapi2kong --spec <input-oas-file> --output-file <output-deck-file>
+kced openapi2kong --spec <input-oas-file> --output-file <output-deck-file>
 ```
 ---
 ### `merge`
@@ -77,16 +77,32 @@ d:
 
 The `patch` transformation is used to apply a partial update to a Kong Declarative configuration using a [JSONPath](https://goessner.net/articles/JsonPath/) selector syntax. There are many useful use cases for `patch`. One example might be when you have a central team responsible for applying standards to Kong Gateway configurations, independent of "upstream" developer teams. The developer teams provide the OAS, and the central team "patches" the gateway configuration with company standard security plugins.
 
-For usage instructions, see the the command help:
+The `patch` command supports the ability to apply a patch using only command line flags or with 'patch-files'. For full usage instructions, see the the command help:
 
 ```
 kced patch --help
 ```
 
 For example, to update the `read_timeout` for _all_ services in a given configuration, you could use the following command:
+
 ```
-./kced patch --state <deck-file> --selector '$..services[*]' --value 'read_timeout: 30000'
+kced patch --state <deck-file> --selector '$..services[*]' --value 'read_timeout: 30000'
 ```
+
+To accomplish the same with a patch-file, first specify the file:
+
+```yaml
+_format_version: 1.0
+patches:
+  - selector: $..services[*]
+    values:
+      read_timeout: 30000
+```
+
+And apply it by passing it as an argument to `patch`:
+
+kced patch --state <deck-file> <patch-file>
+
 ---
 ## Example Workflow
 
