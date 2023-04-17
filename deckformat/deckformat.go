@@ -208,6 +208,9 @@ func HistorySet(filedata map[string]interface{}, historyArray []interface{}) {
 		return
 	}
 	filedata[HistoryKey] = historyArray
+
+	// TODO: remove this after the we get support for metafields in deck
+	HistoryClear(filedata)
 }
 
 // HistoryAppend appends an entry (if non-nil) to the history info array. If there is
