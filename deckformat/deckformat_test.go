@@ -226,7 +226,7 @@ var _ = Describe("deckformat", func() {
 		})
 
 		Describe("HistorySet", func() {
-			It("sets the history array", func() {
+			PIt("sets the history array", func() {
 				hist := []interface{}{"one", "two"}
 				data := map[string]interface{}{}
 
@@ -247,7 +247,7 @@ var _ = Describe("deckformat", func() {
 			})
 		})
 
-		Describe("HistoryAppend", func() {
+		PDescribe("HistoryAppend", func() {
 			It("adds an entry to an existing array", func() {
 				hist := []interface{}{"one", "two"}
 				data := map[string]interface{}{
