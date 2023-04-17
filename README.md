@@ -30,7 +30,7 @@ Currently, the functionality is released in a temporary CLI named `kced`. The CL
 ### Local Install
 
 * Download the latest release archive of the CLI for your OS from the [releases page](https://github.com/Kong/go-apiops/releases).
-* Once you have downloaded, extract the release archive contents somewhere in your `PATH`, for example:
+* Once you have downloaded, extract the release archive contents somewhere, for example:
 
   ```bash
   tar xvf ~/Downloads/go-apiops_0.1.11_darwin_all.tar.gz -C /tmp
@@ -47,6 +47,8 @@ Currently, the functionality is released in a temporary CLI named `kced`. The CL
   ```bash
   kceD v0.1.11 (347b296)
   ```
+
+  (Install somewhere on the `PATH` to avoid needing the binary path for each usage.)
 
 ### Docker Install
 
