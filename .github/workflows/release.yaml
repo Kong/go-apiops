@@ -59,7 +59,7 @@ jobs:
           images: kong/kced
           tags: ${{ env.TAGS_STANDARD }}${{ env.TAGS_SUPPLEMENTAL }}
           flavor: |
-            latest=${{ startsWith(github.ref, 'refs/tags/v1') }}
+            latest=${{ startsWith(github.ref, 'refs/tags/v0') }}
       - name: Build and push
         id: docker_build
         uses: docker/build-push-action@v4
