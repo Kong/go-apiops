@@ -103,15 +103,15 @@ And apply it by passing it as an argument to `patch`:
 
 kced patch --state <deck-file> <patch-file>
 
-Patch-files can also be used to _remove_ keys from the output file. For example, if you wish to remove the `_ignore` key from the root of a file, you can apply the following patch-file:
+Patch-files can also be used to _remove_ keys from the output file. For example, if you wish to remove the `read_timeout` key from all services in a file, you can apply the following patch-file:
 
 ```yaml
 _format_version: "1.0"
 
 patches:
-  - selector: $
+  - selector: $..services[*]
     remove:
-      - _ignore
+      - read_timeout
 ```
 
 ---

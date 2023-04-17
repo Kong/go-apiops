@@ -6,7 +6,6 @@ package cmd
 import (
 	"log"
 
-	"github.com/kong/go-apiops/deckformat"
 	"github.com/kong/go-apiops/filebasics"
 	"github.com/kong/go-apiops/jsonbasics"
 	"github.com/kong/go-apiops/patch"
@@ -73,25 +72,8 @@ func executePatch(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	trackInfo := deckformat.HistoryNewEntry("patch")
-	trackInfo["input"] = inputFilename
-	trackInfo["output"] = outputFilename
-	if len(valuesPatch.Values) != 0 || len(valuesPatch.Remove) != 0 {
-		trackInfo["selector"] = valuesPatch.SelectorSource
-	}
-	if len(valuesPatch.Values) != 0 {
-		trackInfo["values"] = valuesPatch.Values
-	}
-	if len(valuesPatch.Remove) != 0 {
-		trackInfo["remove"] = valuesPatch.Remove
-	}
-	if len(args) != 0 {
-		trackInfo["patchfiles"] = args
-	}
-
 	// do the work; read/patch/write
 	data := filebasics.MustDeserializeFile(inputFilename)
-	deckformat.HistoryAppend(data, trackInfo) // add before patching, so patch can operate on it
 
 	yamlNode := jsonbasics.ConvertToYamlNode(data)
 

@@ -41,42 +41,36 @@ func merge2Files(data1 map[string]interface{}, data2 map[string]interface{}) map
 
 // MustFiles is identical to `Files` except that it will panic instead of returning
 // an error.
-func MustFiles(filenames []string) (result map[string]interface{}, history []interface{}) {
-	result, info, err := Files(filenames)
+func MustFiles(filenames []string) (result map[string]interface{}) {
+	result, err := Files(filenames)
 	if err != nil {
 		panic(err)
 	}
 
-	return result, info
+	return result
 }
 
 // MergeFiles reads and merges files. Will merge all top-level arrays by simply
 // concatenating them. Any other keys will be copied. The files will be processed
 // in order provided. An error will be returned if files are incompatible.
 // There are no checks on duplicates, etc... garbage-in-garbage-out.
-func Files(filenames []string) (result map[string]interface{}, history []interface{}, err error) {
+func Files(filenames []string) (result map[string]interface{}, err error) {
 	if len(filenames) == 0 {
 		panic("no filenames provided")
 	}
 
-	historyArray := make([]interface{}, len(filenames))
 	minorVersion := 0
 
 	// traverse all files
-	for i, filename := range filenames {
+	for _, filename := range filenames {
 		// read the file
 		data, err := filebasics.DeserializeFile(filename)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 
 		newInfo := make(map[string]interface{})
 		newInfo["filename"] = filename
-		fileHistory := deckformat.HistoryGet(data)
-		if len(fileHistory) > 0 {
-			newInfo["info"] = fileHistory
-		}
-		historyArray[i] = newInfo
 
 		if result == nil {
 			// set up initial map, ensure it is "compatible" with first entry
@@ -91,7 +85,7 @@ func Files(filenames []string) (result map[string]interface{}, history []interfa
 
 		// check compatibility
 		if err := deckformat.CompatibleFile(result, data); err != nil {
-			return nil, nil, fmt.Errorf("failed to merge %s: %w", filename, err)
+			return nil, fmt.Errorf("failed to merge %s: %w", filename, err)
 		}
 
 		// record minor version
@@ -115,5 +109,5 @@ func Files(filenames []string) (result map[string]interface{}, history []interfa
 		}
 	}
 
-	return result, historyArray, nil
+	return result, nil
 }

@@ -12,7 +12,7 @@ import (
 const (
 	VersionKey   = "_format_version"
 	TransformKey = "_transform"
-	HistoryKey   = "_ignore" // the top-level key in deck files for storing history info
+	//HistoryKey   = "_ignore" // the top-level key in deck files for storing history info
 )
 
 //
@@ -185,49 +185,49 @@ func ParseFormatVersion(data map[string]interface{}) (int, int, error) {
 
 // HistoryGet returns a the history info array. If there is none, or if filedata is nil,
 // it will return an empty one.
-func HistoryGet(filedata map[string]interface{}) (historyArray []interface{}) {
-	if filedata == nil || filedata[HistoryKey] == nil {
-		historyInfo := make([]interface{}, 0)
-		return historyInfo
-	}
-
-	trackInfo, err := jsonbasics.ToArray(filedata[HistoryKey])
-	if err != nil {
-		// the entry wasn't an array, so wrap it in one
-		trackInfo = []interface{}{filedata[HistoryKey]}
-	}
-
-	// Return a copy
-	return *jsonbasics.DeepCopyArray(&trackInfo)
-}
+//func HistoryGet(filedata map[string]interface{}) (historyArray []interface{}) {
+//	if filedata == nil || filedata[HistoryKey] == nil {
+//		historyInfo := make([]interface{}, 0)
+//		return historyInfo
+//	}
+//
+//	trackInfo, err := jsonbasics.ToArray(filedata[HistoryKey])
+//	if err != nil {
+//		// the entry wasn't an array, so wrap it in one
+//		trackInfo = []interface{}{filedata[HistoryKey]}
+//	}
+//
+//	// Return a copy
+//	return *jsonbasics.DeepCopyArray(&trackInfo)
+//}
 
 // HistorySet sets the history info array. Setting to nil will delete the history.
-func HistorySet(filedata map[string]interface{}, historyArray []interface{}) {
-	if historyArray == nil {
-		HistoryClear(filedata)
-		return
-	}
-	filedata[HistoryKey] = historyArray
-}
+//func HistorySet(filedata map[string]interface{}, historyArray []interface{}) {
+//	if historyArray == nil {
+//		HistoryClear(filedata)
+//		return
+//	}
+//	filedata[HistoryKey] = historyArray
+//}
 
 // HistoryAppend appends an entry (if non-nil) to the history info array. If there is
 // no array, it will create one.
-func HistoryAppend(filedata map[string]interface{}, newEntry interface{}) {
-	hist := HistoryGet(filedata)
-	hist = append(hist, newEntry)
-	HistorySet(filedata, hist)
-}
+//func HistoryAppend(filedata map[string]interface{}, newEntry interface{}) {
+//	hist := HistoryGet(filedata)
+//	hist = append(hist, newEntry)
+//	HistorySet(filedata, hist)
+//}
 
-func HistoryClear(filedata map[string]interface{}) {
-	delete(filedata, HistoryKey)
-}
+//func HistoryClear(filedata map[string]interface{}) {
+//	delete(filedata, HistoryKey)
+//}
 
 // HistoryNewEntry returns a new JSONobject with tool version and command keys set.
-func HistoryNewEntry(cmd string) map[string]interface{} {
-	return map[string]interface{}{
-		"version": ToolVersionString(),
-		"command": cmd,
-		// For now: no timestamps in git-ops!
-		// "time":    time.Now().UTC().Format("2006-01-02T15:04:05.000Z"), // ISO8601 format
-	}
-}
+//func HistoryNewEntry(cmd string) map[string]interface{} {
+//	return map[string]interface{}{
+//		"version": ToolVersionString(),
+//		"command": cmd,
+//		// For now: no timestamps in git-ops!
+//		// "time":    time.Now().UTC().Format("2006-01-02T15:04:05.000Z"), // ISO8601 format
+//	}
+//}

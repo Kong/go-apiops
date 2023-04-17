@@ -7,7 +7,6 @@ import (
 	"log"
 
 	"github.com/kong/go-apiops/convertoas3"
-	"github.com/kong/go-apiops/deckformat"
 	"github.com/kong/go-apiops/filebasics"
 	"github.com/spf13/cobra"
 )
@@ -62,14 +61,8 @@ func executeOpenapi2Kong(cmd *cobra.Command, _ []string) {
 		DocName: docName,
 	}
 
-	trackInfo := deckformat.HistoryNewEntry("openapi2kong")
-	trackInfo["input"] = inputFilename
-	trackInfo["output"] = outputFilename
-	trackInfo["uuid-base"] = docName
-
 	// do the work: read/convert/write
 	result := convertoas3.MustConvert(filebasics.MustReadFile(inputFilename), options)
-	deckformat.HistoryAppend(result, trackInfo)
 	filebasics.MustWriteSerializedFile(outputFilename, result, asYaml)
 }
 
