@@ -12,7 +12,6 @@ import (
 const (
 	VersionKey   = "_format_version"
 	TransformKey = "_transform"
-	//HistoryKey   = "_ignore" // the top-level key in deck files for storing history info
 )
 
 //
