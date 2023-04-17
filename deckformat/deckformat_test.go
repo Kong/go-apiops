@@ -221,7 +221,7 @@ var _ = Describe("deckformat", func() {
 
 			Expect(entry).To(BeEquivalentTo(map[string]interface{}{
 				"command": cmd,
-				"version": ToolVersionString(),
+				"tool":    ToolVersionString(),
 			}))
 		})
 
