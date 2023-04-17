@@ -33,7 +33,7 @@ Currently, the functionality is released in a temporary CLI named `kced`. The CL
 * Once you have downloaded, extract the release archive contents somewhere, for example:
 
   ```bash
-  tar xvf ~/Downloads/go-apiops_0.1.11_darwin_all.tar.gz -C /tmp
+  tar xvf ~/Downloads/go-apiops_0.1.12_darwin_all.tar.gz -C /tmp
   ```
 
   And test the installation:
@@ -45,7 +45,7 @@ Currently, the functionality is released in a temporary CLI named `kced`. The CL
   Should print the installed version:
 
   ```bash
-  kceD v0.1.11 (347b296)
+  kceD v0.1.12 (54a2edb)
   ```
 
   (Install somewhere on the `PATH` to avoid needing the binary path for each usage.)
@@ -55,13 +55,13 @@ Currently, the functionality is released in a temporary CLI named `kced`. The CL
 [Docker images](https://hub.docker.com/r/kong/kced) are available on Docker Hub and can be ran with:
 
 ```bash
-docker run kong/kced:v0.1.11 version
+docker run kong/kced:latest version
 ```
 
-Should result in:
+Should result in something like:
 
 ```bash
-kceD kong/kced:v0.1.11 (347b2965c3713219aff3844306878ca492e782a2)
+kceD kong/kced:v0.1.12 (54a2edbea8a23802ce5969f87da7839f744f5985)
 ```
 
 ### Usage
