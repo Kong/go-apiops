@@ -326,7 +326,13 @@ func insertPlugin(list *[]*map[string]interface{}, plugin *map[string]interface{
 	for i, config := range *list {
 		pluginName := (*config)["name"].(string) // safe because it was previously parsed
 		if pluginName > newPluginName {
-			l := (*list)[:i-1]
+			offset := 1
+			// If the plugin is the first item in the list, we want
+			// to insert at the beginning. Index -1 doesn't exist
+			if i == 0 {
+				offset = 0
+			}
+			l := (*list)[:i-offset]
 			l = append(l, config)
 			l = append(l, (*list)[:i]...)
 			return &l
