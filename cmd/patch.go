@@ -150,7 +150,7 @@ patches that will be applied in order;
       { "selector": "$..services[*]",
         "values": {
           "read_timeout": 10000,
-          "_comment": "comment injected by patching",
+          "_comment": "comment injected by patching"
         },
         "remove": [ "_ignore" ]
       }
