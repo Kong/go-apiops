@@ -106,14 +106,14 @@ The releases are automated. To create a new release:
 
 * tag at the desired place to release
 
-``` bash
-git tag vX.Y.Z
-```
+  ``` bash
+  git tag vX.Y.Z
+  ```
 
 * push the tag and CI will create a new release
 
-```bash
-git push vX.Y.Z
-```
+  ```bash
+  git push vX.Y.Z
+  ```
 
 * verify the release on [the releases page](https://github.com/Kong/go-apiops/releases), possibly edit the release-notes (which will be generated from the commit history)
