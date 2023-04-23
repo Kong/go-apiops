@@ -26,6 +26,6 @@ commit hash of the source tree.`,
 }
 
 func init() {
-	deckformat.ToolVersionSet("kceD", VERSION, COMMIT)
+	deckformat.ToolVersionSet("kceD", "", "") // VERSION, COMMIT) disabled for now
 	rootCmd.AddCommand(versionCmd)
 }

@@ -28,8 +28,10 @@ var toolInfo = struct {
 }{}
 
 // ToolVersionSet can be called once to set the tool info that is reported in the history.
+// The 'version' and 'commit' strings are optional. Omitting them (lower cardinality) makes
+// for a better GitOps experience, but provides less detail.
 func ToolVersionSet(name string, version string, commit string) {
-	if toolInfo.name != "" || name == "" || version == "" || commit == "" {
+	if toolInfo.name != "" || name == "" {
 		panic("the tool information was already set, or cannot be set to an empty string")
 	}
 	toolInfo.name = name
@@ -48,7 +50,13 @@ func ToolVersionGet() (name string, version string, commit string) {
 // ToolVersionString returns the info in a single formatted string. eg. "decK 1.2 (123abc)"
 func ToolVersionString() string {
 	n, v, c := ToolVersionGet()
-	return fmt.Sprintf("%s %s (%s)", n, v, c)
+	if c != "" {
+		return fmt.Sprintf("%s %s (%s)", n, v, c)
+	}
+	if v != "" {
+		return fmt.Sprintf("%s %s", n, v)
+	}
+	return n
 }
 
 //
@@ -228,7 +236,7 @@ func HistoryClear(filedata map[string]interface{}) {
 // HistoryNewEntry returns a new JSONobject with tool version and command keys set.
 func HistoryNewEntry(cmd string) map[string]interface{} {
 	return map[string]interface{}{
-		"version": ToolVersionString(),
+		"tool":    ToolVersionString(),
 		"command": cmd,
 		// For now: no timestamps in git-ops!
 		// "time":    time.Now().UTC().Format("2006-01-02T15:04:05.000Z"), // ISO8601 format
