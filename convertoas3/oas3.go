@@ -326,7 +326,10 @@ func insertPlugin(list *[]*map[string]interface{}, plugin *map[string]interface{
 	for i, config := range *list {
 		pluginName := (*config)["name"].(string) // safe because it was previously parsed
 		if pluginName > newPluginName {
-			l := (*list)[:i-1]
+			var l []*map[string]interface{}
+			if i > 0 {
+				l = (*list)[:i-1]
+			}
 			l = append(l, config)
 			l = append(l, (*list)[:i]...)
 			return &l
