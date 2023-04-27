@@ -58,9 +58,10 @@ x-kong-upstream-defaults:
 
 
 x-kong-name: awesome_learnservice
-# the above directive give the entire spec file its name. This will be used for naming
+# the above directive gives the entire spec file its name. This will be used for naming
 # the service and upstream objects in Kong. If not given it will use the 'info.title'
-# field above to name them. Names are converted into valid identifiers. For example,
+# field above to name them, or a random UUID if the 'info.title' field is misssing.
+# Names are converted into valid identifiers. For example,
 # "Learn Services" becomes "learn-services".
 # This directive can also be used on "path" and "operation" objects to name them.
 
