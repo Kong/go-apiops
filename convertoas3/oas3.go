@@ -454,14 +454,18 @@ func Convert(content *[]byte, opts O2kOptions) (map[string]interface{}, error) {
 	// set document level elements
 	docServers = &doc.Servers // this one is always set, but can be empty
 
-	// determine document name, precedence: specified -> x-kong-name -> Info.Title
+	// determine document name, precedence: specified -> x-kong-name -> Info.Title -> random
 	docBaseName = opts.DocName
 	if docBaseName == "" {
 		if docBaseName, err = getKongName(doc.ExtensionProps); err != nil {
 			return nil, err
 		}
 		if docBaseName == "" {
-			docBaseName = doc.Info.Title
+			if doc.Info != nil && doc.Info.Title != "" {
+				docBaseName = doc.Info.Title
+			} else {
+				docBaseName = uuid.NewV4().String()
+			}
 		}
 	}
 	docBaseName = Slugify(docBaseName)
