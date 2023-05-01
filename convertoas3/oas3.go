@@ -316,28 +316,33 @@ func getValidatorPlugin(list *[]*map[string]interface{}, currentConfig []byte) (
 
 // insertPlugin will insert a plugin in the list array, in a sorted manner.
 // List must already be sorted by plugin-name.
-func insertPlugin(list *[]*map[string]interface{}, plugin *map[string]interface{}) *[]*map[string]interface{} {
-	if plugin == nil {
+func insertPlugin(list *[]*map[string]interface{}, newPlugin *map[string]interface{}) *[]*map[string]interface{} {
+	if newPlugin == nil {
 		return list
 	}
 
-	newPluginName := (*plugin)["name"].(string) // safe because it was previously parsed
+	newPluginName := (*newPlugin)["name"].(string) // safe because it was previously parsed
+	var l []*map[string]interface{}
 
-	for i, config := range *list {
-		pluginName := (*config)["name"].(string) // safe because it was previously parsed
-		if pluginName > newPluginName {
-			var l []*map[string]interface{}
-			if i > 0 {
-				l = (*list)[:i-1]
+	for _, plugin := range *list {
+		pluginName := (*plugin)["name"].(string) // safe because it was previously parsed
+		if pluginName == newPluginName {
+			l = append(l, newPlugin)
+			newPlugin = nil
+		} else {
+			if pluginName > newPluginName && newPlugin != nil {
+				l = append(l, newPlugin)
+				newPlugin = nil
 			}
-			l = append(l, config)
-			l = append(l, (*list)[:i]...)
-			return &l
+			l = append(l, plugin)
 		}
 	}
 
-	// it's the last one, append it
-	l := append(*list, plugin)
+	if newPlugin != nil {
+		// it's the last one, append it
+		l = append(l, newPlugin)
+	}
+
 	return &l
 }
 
