@@ -52,6 +52,22 @@ func GetObjectArrayField(object map[string]interface{}, fieldName string) ([]map
 	return result, nil
 }
 
+// SetObjectArrayField sets an array in a parsed json object. This ensure it is of type
+// []interface{}, such that a next call to GetObjectArrayField will work.
+// If 'objectArray' is nil, then the field is deleted from the object.
+func SetObjectArrayField(object map[string]interface{}, fieldName string, objectArray []map[string]interface{}) {
+	if objectArray == nil {
+		delete(object, fieldName)
+		return
+	}
+
+	arr := make([]interface{}, len(objectArray))
+	for i, obj := range objectArray {
+		arr[i] = obj
+	}
+	object[fieldName] = arr
+}
+
 // GetStringArrayField returns a new slice containing all strings from the array referenced by fieldName.
 // If the field is not an array, it returns an error.
 // If the field doesn't exist it returns an empty array.
