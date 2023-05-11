@@ -133,6 +133,39 @@ var _ = Describe("jsonbasics", func() {
 		})
 	})
 
+	Describe("SetObjectArrayField", func() {
+		It("sets an array to be recognized as an array again", func() {
+			data := []byte(`{
+				"myArray": [
+					{ "name": "one" }
+				]
+			}`)
+			obj := MustDeserialize(&data)
+			objArr, err := GetObjectArrayField(obj, "myArray")
+			Expect(err).To(BeNil())
+			Expect(objArr[0]["name"]).To(Equal("one"))
+
+			// append a new entry and set it in the object
+			entry := make(map[string]interface{})
+			entry["name"] = "two"
+			obj["myArray"] = append(objArr, entry)
+
+			// since the myArray field is now []map[string]interface{} instead of
+			// []interface{} it will no longer be recognized as an array
+			objArr2, err := GetObjectArrayField(obj, "myArray")
+			Expect(err.Error()).To(ContainSubstring("not an array"))
+			Expect(objArr2).To(BeNil())
+
+			// Do it again, but use the SetObjectArrayField
+			SetObjectArrayField(obj, "myArray", append(objArr, entry))
+			// check that it worked
+			objArr3, err := GetObjectArrayField(obj, "myArray")
+			Expect(err).To(BeNil())
+			Expect(objArr3[0]["name"]).To(Equal("one"))
+			Expect(objArr3[1]["name"]).To(Equal("two"))
+		})
+	})
+
 	Describe("RemoveObjectFromArrayByFieldValue", func() {
 		PIt("still to do", func() {
 		})
