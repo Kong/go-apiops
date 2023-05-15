@@ -37,6 +37,7 @@ following metadata fields:
 | `_transform` | yes| yes | whether field transforms should still be applied or not, only supported on the root-object in the file.
 | `_comment` | no | yes | a string field supporting opaque data to be stored in the same file, to be ignored by Kong. This field can be present on any entity (including the root-object) in the file.
 | `_ignore` | no | yes | an array field supporting opaque data to be stored in the same file, to be ignored by Kong. This field can be present on any entity (including the root-object) in the file.
+| `_workspace` | yes | no | To specify, in the deck file, the target workspace (only supported on the root-object in the file).
 
 ### Explicit incompatibilities
 
