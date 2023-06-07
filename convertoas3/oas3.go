@@ -10,6 +10,7 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/kong/go-apiops/jsonbasics"
+	"github.com/kong/go-apiops/logbasics"
 	"github.com/mozillazg/go-slugify"
 	uuid "github.com/satori/go.uuid"
 )
@@ -393,6 +394,7 @@ func MustConvert(content *[]byte, opts O2kOptions) map[string]interface{} {
 // Convert converts an OpenAPI spec to a Kong declarative file.
 func Convert(content *[]byte, opts O2kOptions) (map[string]interface{}, error) {
 	opts.setDefaults()
+	logbasics.Debug("received OpenAPI2Kong options", "options", opts)
 
 	// set up output document
 	result := make(map[string]interface{})
@@ -455,6 +457,7 @@ func Convert(content *[]byte, opts O2kOptions) (map[string]interface{}, error) {
 	if kongTags, err = getKongTags(doc, opts.Tags); err != nil {
 		return nil, err
 	}
+	logbasics.Info("tags after parsing x-kong-tags", "tags", kongTags)
 
 	// set document level elements
 	docServers = &doc.Servers // this one is always set, but can be empty
@@ -462,18 +465,22 @@ func Convert(content *[]byte, opts O2kOptions) (map[string]interface{}, error) {
 	// determine document name, precedence: specified -> x-kong-name -> Info.Title -> random
 	docBaseName = opts.DocName
 	if docBaseName == "" {
+		logbasics.Debug("no document name specified, trying x-kong-name")
 		if docBaseName, err = getKongName(doc.ExtensionProps); err != nil {
 			return nil, err
 		}
 		if docBaseName == "" {
+			logbasics.Debug("no x-kong-name specified, trying Info.Title")
 			if doc.Info != nil && doc.Info.Title != "" {
 				docBaseName = doc.Info.Title
 			} else {
+				logbasics.Info("no document name, x-kong-name, nor Info.Title specified, generating random name")
 				docBaseName = uuid.NewV4().String()
 			}
 		}
 	}
 	docBaseName = Slugify(docBaseName)
+	logbasics.Info("document name (namespace for UUID generation)", "name", docBaseName)
 
 	if kongComponents, err = getXKongComponents(doc); err != nil {
 		return nil, err
@@ -532,6 +539,7 @@ func Convert(content *[]byte, opts O2kOptions) (map[string]interface{}, error) {
 	sort.Strings(sortedPaths)
 
 	for _, path := range sortedPaths {
+		logbasics.Info("processing path", "path", path)
 		pathitem := doc.Paths[path]
 
 		// determine path name, precedence: specified -> x-kong-name -> actual-path
@@ -550,6 +558,7 @@ func Convert(content *[]byte, opts O2kOptions) (map[string]interface{}, error) {
 			pathBaseName = Slugify(pathBaseName)
 		}
 		pathBaseName = docBaseName + "_" + pathBaseName
+		logbasics.Debug("path name (namespace for UUID generation)", "name", pathBaseName)
 
 		// Set up the defaults on the Path level
 		newPathService := false
@@ -592,6 +601,7 @@ func Convert(content *[]byte, opts O2kOptions) (map[string]interface{}, error) {
 		// create a new service if we need to do so
 		if newPathService {
 			// create the path-level service and (optional) upstream
+			logbasics.Debug("creating path-level service/upstream")
 			pathService, pathUpstream, err = CreateKongService(
 				pathBaseName,
 				pathServers,
@@ -664,6 +674,7 @@ func Convert(content *[]byte, opts O2kOptions) (map[string]interface{}, error) {
 		// traverse all operations
 		for _, method := range sortedMethods {
 			operation := operations[method]
+			logbasics.Info("processing operation", "method", method, "path", path, "id", operation.OperationID)
 
 			var operationRoutes []interface{} // the routes array we need to add to
 
@@ -684,6 +695,7 @@ func Convert(content *[]byte, opts O2kOptions) (map[string]interface{}, error) {
 					operationBaseName = docBaseName + "_" + Slugify(operationBaseName)
 				}
 			}
+			logbasics.Debug("operation base name (namespace for UUID generation)", "name", operationBaseName)
 
 			// Set up the defaults on the Operation level
 			newOperationService := false
@@ -726,6 +738,7 @@ func Convert(content *[]byte, opts O2kOptions) (map[string]interface{}, error) {
 			// create a new service if we need to do so
 			if newOperationService {
 				// create the operation-level service and (optional) upstream
+				logbasics.Debug("creating operation-level service/upstream")
 				operationService, operationUpstream, err = CreateKongService(
 					operationBaseName,
 					operationServers,
@@ -818,6 +831,7 @@ func Convert(content *[]byte, opts O2kOptions) (map[string]interface{}, error) {
 					// see https://github.com/OAI/OpenAPI-Specification/issues/291#issuecomment-316593913
 					regexMatch := "(?<" + sanitizeRegexCapture(varName) + ">[^#?/]+)"
 					placeHolder := "{" + varName + "}"
+					logbasics.Debug("replacing path parameter", "parameter", placeHolder, "regex", regexMatch)
 					convertedPath = strings.Replace(convertedPath, placeHolder, regexMatch, 1)
 				}
 			}
@@ -850,5 +864,6 @@ func Convert(content *[]byte, opts O2kOptions) (map[string]interface{}, error) {
 	}
 
 	// we're done!
+	logbasics.Debug("finished processing document")
 	return result, nil
 }

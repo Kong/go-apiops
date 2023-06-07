@@ -5,6 +5,7 @@ import (
 
 	"github.com/kong/go-apiops/deckformat"
 	"github.com/kong/go-apiops/filebasics"
+	"github.com/kong/go-apiops/logbasics"
 )
 
 func merge2Files(data1 map[string]interface{}, data2 map[string]interface{}) map[string]interface{} {
@@ -50,7 +51,7 @@ func MustFiles(filenames []string) (result map[string]interface{}, history []int
 	return result, info
 }
 
-// MergeFiles reads and merges files. Will merge all top-level arrays by simply
+// Files reads and merges files. Will merge all top-level arrays by simply
 // concatenating them. Any other keys will be copied. The files will be processed
 // in order provided. An error will be returned if files are incompatible.
 // There are no checks on duplicates, etc... garbage-in-garbage-out.
@@ -64,6 +65,8 @@ func Files(filenames []string) (result map[string]interface{}, history []interfa
 
 	// traverse all files
 	for i, filename := range filenames {
+		logbasics.Info("merging file", "filename", filename)
+
 		// read the file
 		data, err := filebasics.DeserializeFile(filename)
 		if err != nil {
@@ -82,9 +85,11 @@ func Files(filenames []string) (result map[string]interface{}, history []interfa
 			// set up initial map, ensure it is "compatible" with first entry
 			result = make(map[string]interface{})
 			if data[deckformat.TransformKey] != nil {
+				logbasics.Debug("setting transform meta-field", "value", data[deckformat.TransformKey])
 				result[deckformat.TransformKey] = data[deckformat.TransformKey]
 			}
 			if data[deckformat.VersionKey] != nil {
+				logbasics.Debug("setting version meta-field", "value", data[deckformat.VersionKey])
 				result[deckformat.VersionKey] = data[deckformat.VersionKey]
 			}
 		}
@@ -99,6 +104,7 @@ func Files(filenames []string) (result map[string]interface{}, history []interfa
 		if m > minorVersion {
 			// we only track minor version, because majors must be the same to pass the
 			// compatibility check above
+			logbasics.Debug("updating resulting version", "sourcefile", filename, "new_minor", m)
 			minorVersion = m
 		}
 

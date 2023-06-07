@@ -46,9 +46,9 @@ func MustReadFile(filename string) *[]byte {
 	return body
 }
 
-// MustWriteFile writes the output to a file. Will panic if writing fails.
+// WriteFile writes the output to a file.
 // Writes to stdout if filename == "-"
-func MustWriteFile(filename string, content *[]byte) {
+func WriteFile(filename string, content *[]byte) error {
 	var f *os.File
 	var err error
 
@@ -56,7 +56,7 @@ func MustWriteFile(filename string, content *[]byte) {
 		// write to file
 		f, err = os.Create(filename)
 		if err != nil {
-			log.Fatalf("failed to create output file '%s'", filename)
+			return fmt.Errorf("failed to create output file '%s'; %w", filename, err)
 		}
 		defer f.Close()
 	} else {
@@ -65,13 +65,22 @@ func MustWriteFile(filename string, content *[]byte) {
 	}
 	_, err = f.Write(*content)
 	if err != nil {
-		log.Fatalf(fmt.Sprintf("failed to write to output file '%s'; %%w", filename), err)
+		return fmt.Errorf("failed to write to output file '%s'; %w", filename, err)
+	}
+	return nil
+}
+
+// MustWriteFile writes the output to a file. Will panic if writing fails.
+// Writes to stdout if filename == "-"
+func MustWriteFile(filename string, content *[]byte) {
+	err := WriteFile(filename, content)
+	if err != nil {
+		panic(err)
 	}
 }
 
-// MustSerialize will serialize the result as a JSON/YAML. Will panic
-// if serializing fails.
-func MustSerialize(content map[string]interface{}, asYaml bool) *[]byte {
+// Serialize will serialize the result as a JSON/YAML.
+func Serialize(content map[string]interface{}, asYaml bool) (*[]byte, error) {
 	var (
 		str []byte
 		err error
@@ -80,16 +89,25 @@ func MustSerialize(content map[string]interface{}, asYaml bool) *[]byte {
 	if asYaml {
 		str, err = yaml.Marshal(content)
 		if err != nil {
-			log.Fatal("failed to yaml-serialize the resulting file; %w", err)
+			return nil, fmt.Errorf("failed to yaml-serialize the resulting file; %w", err)
 		}
 	} else {
 		str, err = json.MarshalIndent(content, "", defaultJSONIndent)
 		if err != nil {
-			log.Fatal("failed to json-serialize the resulting file; %w", err)
+			return nil, fmt.Errorf("failed to json-serialize the resulting file; %w", err)
 		}
 	}
+	return &str, nil
+}
 
-	return &str
+// MustSerialize will serialize the result as a JSON/YAML. Will panic
+// if serializing fails.
+func MustSerialize(content map[string]interface{}, asYaml bool) *[]byte {
+	result, err := Serialize(content, asYaml)
+	if err != nil {
+		panic(err)
+	}
+	return result
 }
 
 // Deserialize will deserialize data as a JSON or YAML object. Will return an error
@@ -121,6 +139,20 @@ func MustDeserialize(data *[]byte) map[string]interface{} {
 		log.Fatal("%w", err)
 	}
 	return jsondata
+}
+
+// WriteSerializedFile will serialize the data and write it to a file.
+// Writes to stdout if filename == "-"
+func WriteSerializedFile(filename string, content map[string]interface{}, asYaml bool) error {
+	serializedContent, err := Serialize(content, asYaml)
+	if err != nil {
+		return err
+	}
+	err = WriteFile(filename, serializedContent)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // MustWriteSerializedFile will serialize the data and write it to a file. Will

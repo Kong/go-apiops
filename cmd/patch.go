@@ -4,40 +4,45 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/kong/go-apiops/deckformat"
 	"github.com/kong/go-apiops/filebasics"
 	"github.com/kong/go-apiops/jsonbasics"
+	"github.com/kong/go-apiops/logbasics"
 	"github.com/kong/go-apiops/patch"
 	"github.com/spf13/cobra"
 )
 
 // Executes the CLI command "patch"
-func executePatch(cmd *cobra.Command, args []string) {
+func executePatch(cmd *cobra.Command, args []string) error {
+	verbosity, _ := cmd.Flags().GetInt("verbose")
+	logbasics.Initialize(log.LstdFlags, verbosity)
+
 	inputFilename, err := cmd.Flags().GetString("state")
 	if err != nil {
-		log.Fatalf("failed getting cli argument 'state'; %s", err)
+		return fmt.Errorf("failed getting cli argument 'state'; %w", err)
 	}
 
 	outputFilename, err := cmd.Flags().GetString("output-file")
 	if err != nil {
-		log.Fatalf("failed getting cli argument 'output-file'; %s", err)
+		return fmt.Errorf("failed getting cli argument 'output-file'; %w", err)
 	}
 
 	var asYaml bool
 	{
 		outputFormat, err := cmd.Flags().GetString("format")
 		if err != nil {
-			log.Fatalf("failed getting cli argument 'format'; %s", err)
+			return fmt.Errorf("failed getting cli argument 'format'; %w", err)
 		}
 		if outputFormat == outputFormatYaml {
 			asYaml = true
 		} else if outputFormat == outputFormatJSON {
 			asYaml = false
 		} else {
-			log.Fatalf("expected '--format' to be either '"+outputFormatYaml+
-				"' or '"+outputFormatJSON+"', got: '%s'", outputFormat)
+			return fmt.Errorf("expected '--format' to be either '%s' or '%s', got: '%s'",
+				outputFormatYaml, outputFormatJSON, outputFormat)
 		}
 	}
 
@@ -45,18 +50,18 @@ func executePatch(cmd *cobra.Command, args []string) {
 	{
 		values, err := cmd.Flags().GetStringArray("value")
 		if err != nil {
-			log.Fatalf("failed to retrieve '--value' entries; %s", err)
+			return fmt.Errorf("failed to retrieve '--value' entries; %w", err)
 		}
 		valuesPatch.Values, valuesPatch.Remove, err = patch.ValidateValuesFlags(values)
 		if err != nil {
-			log.Fatalf("failed parsing '--value' entry; %s", err)
+			return fmt.Errorf("failed parsing '--value' entry; %w", err)
 		}
 	}
 
 	{
 		s, err := cmd.Flags().GetString("selector")
 		if err != nil {
-			log.Fatalf("failed to retrieve '--selector' entry; %s", err)
+			return fmt.Errorf("failed to retrieve '--selector' entry; %w", err)
 		}
 		valuesPatch.SelectorSource = s
 	}
@@ -67,7 +72,7 @@ func executePatch(cmd *cobra.Command, args []string) {
 			var patchfile patch.DeckPatchFile
 			err := patchfile.ParseFile(filename)
 			if err != nil {
-				log.Fatalf("failed to parse '%s': %s", filename, err)
+				return fmt.Errorf("failed to parse '%s': %w", filename, err)
 			}
 			patchFiles = append(patchFiles, patchfile)
 		}
@@ -90,29 +95,37 @@ func executePatch(cmd *cobra.Command, args []string) {
 	}
 
 	// do the work; read/patch/write
-	data := filebasics.MustDeserializeFile(inputFilename)
+	data, err := filebasics.DeserializeFile(inputFilename)
+	if err != nil {
+		return fmt.Errorf("failed to read input file '%s'; %w", inputFilename, err)
+	}
 	deckformat.HistoryAppend(data, trackInfo) // add before patching, so patch can operate on it
 
 	yamlNode := jsonbasics.ConvertToYamlNode(data)
 
 	if (len(valuesPatch.Values) + len(valuesPatch.Remove)) > 0 {
 		// apply selector + value flags
+		logbasics.Debug("applying value-flags")
 		err = valuesPatch.ApplyToNodes(yamlNode)
 		if err != nil {
-			log.Fatalf("Failed to apply command-line values; %s", err)
+			return fmt.Errorf("failed to apply command-line values; %w", err)
 		}
 	}
 
 	if len(args) > 0 {
 		// apply patch files
 		for i, patchFile := range patchFiles {
-			patchFile.MustApply(yamlNode, args[i])
+			logbasics.Debug("applying patch-file", "file", i)
+			err := patchFile.Apply(yamlNode)
+			if err != nil {
+				return fmt.Errorf("failed to apply patch-file '%s'; %w", args[i], err)
+			}
 		}
 	}
 
 	data = jsonbasics.ConvertToJSONobject(yamlNode)
 
-	filebasics.MustWriteSerializedFile(outputFilename, data, asYaml)
+	return filebasics.WriteSerializedFile(outputFilename, data, asYaml)
 }
 
 //
@@ -157,7 +170,7 @@ patches that will be applied in order;
     ]
   }
 `,
-	Run: executePatch,
+	RunE: executePatch,
 }
 
 func init() {
