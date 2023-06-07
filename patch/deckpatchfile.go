@@ -6,6 +6,7 @@ import (
 	"github.com/kong/go-apiops/deckformat"
 	"github.com/kong/go-apiops/filebasics"
 	"github.com/kong/go-apiops/jsonbasics"
+	"github.com/kong/go-apiops/logbasics"
 	"gopkg.in/yaml.v3"
 )
 
@@ -25,10 +26,13 @@ func (patchFile *DeckPatchFile) ParseFile(filename string) error {
 	}
 
 	if data[deckformat.VersionKey] != nil {
+		logbasics.Debug("parsed patch file", "file", filename, "version", data[deckformat.VersionKey])
 		patchFile.VersionMajor, patchFile.VersionMinor, err = deckformat.ParseFormatVersion(data)
 		if err != nil {
 			return fmt.Errorf("%s: has an invalid "+deckformat.VersionKey+" specified; %w", filename, err)
 		}
+	} else {
+		logbasics.Debug("parsed unversioned patch-file", "file", filename)
 	}
 
 	patchesRead, err := jsonbasics.GetObjectArrayField(data, "patches")

@@ -40,7 +40,8 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.kced.yaml)")
+	rootCmd.PersistentFlags().Int("verbose", 0,
+		"this value sets the verbosity level of the log output (higher == more verbose)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.

@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	"github.com/kong/go-apiops/logbasics"
 )
 
 // ValidateValuesFlags parses the CLI '--values' keys formatted 'key:json-string', into
@@ -34,6 +36,7 @@ func ValidateValuesFlags(values []string) (map[string]interface{}, []string, err
 		var value interface{}
 		if val == "" {
 			// this is a delete-instruction, so inject the delete marker
+			logbasics.Debug("parsed delete-instruction", "key", key)
 			removeArr = append(removeArr, key)
 		} else {
 			err := json.Unmarshal([]byte(val), &value)
@@ -42,6 +45,7 @@ func ValidateValuesFlags(values []string) (map[string]interface{}, []string, err
 					"failed parsing json-string in '%s' (did you forget to wrap a json-string-value in quotes?)",
 					content)
 			}
+			logbasics.Debug("parsed patch-instruction", "key", key, "value", value)
 			valuesMap[key] = value
 		}
 	}

@@ -4,36 +4,41 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/kong/go-apiops/convertoas3"
 	"github.com/kong/go-apiops/deckformat"
 	"github.com/kong/go-apiops/filebasics"
+	"github.com/kong/go-apiops/logbasics"
 	"github.com/spf13/cobra"
 )
 
 // Executes the CLI command "openapi2kong"
-func executeOpenapi2Kong(cmd *cobra.Command, _ []string) {
+func executeOpenapi2Kong(cmd *cobra.Command, _ []string) error {
+	verbosity, _ := cmd.Flags().GetInt("verbose")
+	logbasics.Initialize(log.LstdFlags, verbosity)
+
 	inputFilename, err := cmd.Flags().GetString("spec")
 	if err != nil {
-		log.Fatalf("failed getting cli argument 'spec'; %s", err)
+		return fmt.Errorf("failed getting cli argument 'spec'; %w", err)
 	}
 
 	outputFilename, err := cmd.Flags().GetString("output-file")
 	if err != nil {
-		log.Fatalf("failed getting cli argument 'output-file'; %s", err)
+		return fmt.Errorf("failed getting cli argument 'output-file'; %w", err)
 	}
 
 	docName, err := cmd.Flags().GetString("uuid-base")
 	if err != nil {
-		log.Fatalf("failed getting cli argument 'uuid-base'; %s", err)
+		return fmt.Errorf("failed getting cli argument 'uuid-base'; %w", err)
 	}
 
 	var entityTags *[]string
 	{
 		tags, err := cmd.Flags().GetStringSlice("select-tag")
 		if err != nil {
-			log.Fatalf("failed getting cli argument 'select-tag'; %s", err)
+			return fmt.Errorf("failed getting cli argument 'select-tag'; %w", err)
 		}
 		entityTags = &tags
 		if len(*entityTags) == 0 {
@@ -45,15 +50,15 @@ func executeOpenapi2Kong(cmd *cobra.Command, _ []string) {
 	{
 		outputFormat, err := cmd.Flags().GetString("format")
 		if err != nil {
-			log.Fatalf("failed getting cli argument 'format'; %s", err)
+			return fmt.Errorf("failed getting cli argument 'format'; %w", err)
 		}
 		if outputFormat == outputFormatYaml {
 			asYaml = true
 		} else if outputFormat == outputFormatJSON {
 			asYaml = false
 		} else {
-			log.Fatalf("expected '--format' to be either '"+outputFormatYaml+
-				"' or '"+outputFormatJSON+"', got: '%s'", outputFormat)
+			return fmt.Errorf("expected '--format' to be either '%s' or '%s', got: '%s'",
+				outputFormatYaml, outputFormatJSON, outputFormat)
 		}
 	}
 
@@ -68,9 +73,16 @@ func executeOpenapi2Kong(cmd *cobra.Command, _ []string) {
 	trackInfo["uuid-base"] = docName
 
 	// do the work: read/convert/write
-	result := convertoas3.MustConvert(filebasics.MustReadFile(inputFilename), options)
+	content, err := filebasics.ReadFile(inputFilename)
+	if err != nil {
+		return err
+	}
+	result, err := convertoas3.Convert(content, options)
+	if err != nil {
+		return fmt.Errorf("failed converting OpenAPI spec '%s'; %w", inputFilename, err)
+	}
 	deckformat.HistoryAppend(result, trackInfo)
-	filebasics.MustWriteSerializedFile(outputFilename, result, asYaml)
+	return filebasics.WriteSerializedFile(outputFilename, result, asYaml)
 }
 
 //
@@ -87,7 +99,7 @@ var openapi2kongCmd = &cobra.Command{
 The example file has extensive annotations explaining the conversion
 process, as well as all supported custom annotations (x-kong-... directives).
 See: https://github.com/Kong/kced/blob/main/docs/learnservice_oas.yaml`,
-	Run:  executeOpenapi2Kong,
+	RunE: executeOpenapi2Kong,
 	Args: cobra.NoArgs,
 }
 
