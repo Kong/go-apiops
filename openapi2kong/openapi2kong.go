@@ -1,4 +1,4 @@
-package convertoas3
+package openapi2kong
 
 import (
 	"encoding/json"
@@ -27,7 +27,7 @@ type O2kOptions struct {
 	UUIDNamespace uuid.UUID // Namespace for UUID generation, defaults to DNS namespace for UUID v5
 }
 
-// setDefaults sets the defaults for ConvertOas3 operation.
+// setDefaults sets the defaults for the OpenAPI2Kong operation.
 func (opts *O2kOptions) setDefaults() {
 	var emptyUUID uuid.UUID
 	if uuid.Equal(emptyUUID, opts.UUIDNamespace) {

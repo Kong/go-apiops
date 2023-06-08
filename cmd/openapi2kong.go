@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/kong/go-apiops/convertoas3"
 	"github.com/kong/go-apiops/deckformat"
 	"github.com/kong/go-apiops/filebasics"
 	"github.com/kong/go-apiops/logbasics"
+	"github.com/kong/go-apiops/openapi2kong"
 	"github.com/spf13/cobra"
 )
 
@@ -62,7 +62,7 @@ func executeOpenapi2Kong(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	options := convertoas3.O2kOptions{
+	options := openapi2kong.O2kOptions{
 		Tags:    entityTags,
 		DocName: docName,
 	}
@@ -77,7 +77,7 @@ func executeOpenapi2Kong(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	result, err := convertoas3.Convert(content, options)
+	result, err := openapi2kong.Convert(content, options)
 	if err != nil {
 		return fmt.Errorf("failed converting OpenAPI spec '%s'; %w", inputFilename, err)
 	}
