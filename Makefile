@@ -31,7 +31,7 @@ coverage: check-test-dependencies
 	ginkgo -r --race --coverprofile coverage.out
 
 clean: check-main-dependencies
-	$(RM) ./convertoas3/oas3_testfiles/*.generated.json
+	$(RM) ./openapi2kong/oas3_testfiles/*.generated.json
 	$(RM) ./${BINARY_NAME}
 	$(RM) ./go-apiops
 	go mod tidy

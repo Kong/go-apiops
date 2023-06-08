@@ -1,4 +1,4 @@
-package convertoas3
+package openapi2kong
 
 import (
 	"encoding/json"

@@ -1,4 +1,4 @@
-package convertoas3
+package openapi2kong
 
 import (
 	"encoding/json"
@@ -12,7 +12,7 @@ import (
 
 const fixturePath = "./oas3_testfiles/"
 
-func Test_ConvertOas3(t *testing.T) {
+func Test_Openapi2kong(t *testing.T) {
 	files, err := os.ReadDir(fixturePath)
 	if err != nil {
 		t.Error("failed reading test data: %w", err)

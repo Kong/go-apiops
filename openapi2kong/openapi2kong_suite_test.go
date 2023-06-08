@@ -1,4 +1,4 @@
-package convertoas3_test
+package openapi2kong_test
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestConvertoas3(t *testing.T) {
+func TestOpenapi2kong(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Convertoas3 Suite")
+	RunSpecs(t, "OpenAPI2Kong Suite")
 }
