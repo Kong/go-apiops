@@ -231,7 +231,7 @@ var _ = Describe("Patch", func() {
 			Expect(err).To(BeNil())
 
 			updated := jsonbasics.ConvertToJSONobject(yamlNode)
-			result := MustSerialize(updated, false)
+			result := MustSerialize(updated, OutputFormatJSON)
 			return *result
 		}
 

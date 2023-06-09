@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/kong/go-apiops/deckformat"
 	"github.com/kong/go-apiops/filebasics"
@@ -30,20 +31,13 @@ func executePatch(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed getting cli argument 'output-file'; %w", err)
 	}
 
-	var asYaml bool
+	var outputFormat string
 	{
-		outputFormat, err := cmd.Flags().GetString("format")
+		outputFormat, err = cmd.Flags().GetString("format")
 		if err != nil {
 			return fmt.Errorf("failed getting cli argument 'format'; %w", err)
 		}
-		if outputFormat == outputFormatYaml {
-			asYaml = true
-		} else if outputFormat == outputFormatJSON {
-			asYaml = false
-		} else {
-			return fmt.Errorf("expected '--format' to be either '%s' or '%s', got: '%s'",
-				outputFormatYaml, outputFormatJSON, outputFormat)
-		}
+		outputFormat = strings.ToUpper(outputFormat)
 	}
 
 	var valuesPatch patch.DeckPatch
@@ -125,7 +119,7 @@ func executePatch(cmd *cobra.Command, args []string) error {
 
 	data = jsonbasics.ConvertToJSONobject(yamlNode)
 
-	return filebasics.WriteSerializedFile(outputFilename, data, asYaml)
+	return filebasics.WriteSerializedFile(outputFilename, data, outputFormat)
 }
 
 //
@@ -177,7 +171,8 @@ func init() {
 	rootCmd.AddCommand(patchCmd)
 	patchCmd.Flags().StringP("state", "s", "-", "decK file to process. Use - to read from stdin")
 	patchCmd.Flags().StringP("output-file", "o", "-", "output file to write. Use - to write to stdout")
-	patchCmd.Flags().StringP("format", "", outputFormatYaml, "output format: "+outputFormatJSON+" or "+outputFormatYaml)
+	patchCmd.Flags().StringP("format", "", filebasics.OutputFormatYaml, "output format: "+
+		filebasics.OutputFormatJSON+" or "+filebasics.OutputFormatYaml)
 	patchCmd.Flags().StringP("selector", "", "", "json-pointer identifying element to patch")
 	patchCmd.Flags().StringArrayP("value", "", []string{}, "a value to set in the selected entry in "+
 		"format <key:value> (can be specified more than once)")

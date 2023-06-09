@@ -60,7 +60,7 @@ var _ = Describe("deckformat", func() {
 			deckdata, err := ConvertDBless(MustDeserialize(&jsonData))
 			Expect(err).To(BeNil())
 
-			jsonDeck := MustSerialize(deckdata, false)
+			jsonDeck := MustSerialize(deckdata, OutputFormatJSON)
 			Expect(*jsonDeck).Should(MatchJSON(`{
 				"consumer_groups": [
 					{
@@ -151,7 +151,7 @@ var _ = Describe("deckformat", func() {
 			deckdata, err := ConvertDBless(MustDeserialize(&jsonData))
 			Expect(err).To(BeNil())
 
-			jsonDeck := MustSerialize(deckdata, false)
+			jsonDeck := MustSerialize(deckdata, OutputFormatJSON)
 			Expect(*jsonDeck).Should(MatchJSON(`{
 				"consumer_groups": [
 					{

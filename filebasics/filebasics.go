@@ -7,12 +7,15 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 
 	"sigs.k8s.io/yaml"
 )
 
 const (
 	defaultJSONIndent = "  "
+	OutputFormatYaml  = "YAML"
+	OutputFormatJSON  = "JSON"
 )
 
 // ReadFile reads file contents.
@@ -80,30 +83,35 @@ func MustWriteFile(filename string, content *[]byte) {
 }
 
 // Serialize will serialize the result as a JSON/YAML.
-func Serialize(content map[string]interface{}, asYaml bool) (*[]byte, error) {
+func Serialize(content map[string]interface{}, format string) (*[]byte, error) {
 	var (
 		str []byte
 		err error
 	)
 
-	if asYaml {
+	switch format {
+	case OutputFormatYaml:
 		str, err = yaml.Marshal(content)
 		if err != nil {
 			return nil, fmt.Errorf("failed to yaml-serialize the resulting file; %w", err)
 		}
-	} else {
+	case OutputFormatJSON:
 		str, err = json.MarshalIndent(content, "", defaultJSONIndent)
 		if err != nil {
 			return nil, fmt.Errorf("failed to json-serialize the resulting file; %w", err)
 		}
+	default:
+		return nil, fmt.Errorf("expected 'format' to be either '%s' or '%s', got: '%s'",
+			strings.ToLower(OutputFormatYaml), strings.ToLower(OutputFormatJSON), format)
 	}
+
 	return &str, nil
 }
 
 // MustSerialize will serialize the result as a JSON/YAML. Will panic
 // if serializing fails.
-func MustSerialize(content map[string]interface{}, asYaml bool) *[]byte {
-	result, err := Serialize(content, asYaml)
+func MustSerialize(content map[string]interface{}, format string) *[]byte {
+	result, err := Serialize(content, format)
 	if err != nil {
 		panic(err)
 	}
@@ -143,8 +151,8 @@ func MustDeserialize(data *[]byte) map[string]interface{} {
 
 // WriteSerializedFile will serialize the data and write it to a file.
 // Writes to stdout if filename == "-"
-func WriteSerializedFile(filename string, content map[string]interface{}, asYaml bool) error {
-	serializedContent, err := Serialize(content, asYaml)
+func WriteSerializedFile(filename string, content map[string]interface{}, format string) error {
+	serializedContent, err := Serialize(content, format)
 	if err != nil {
 		return err
 	}
@@ -157,8 +165,8 @@ func WriteSerializedFile(filename string, content map[string]interface{}, asYaml
 
 // MustWriteSerializedFile will serialize the data and write it to a file. Will
 // panic if it fails. Writes to stdout if filename == "-"
-func MustWriteSerializedFile(filename string, content map[string]interface{}, asYaml bool) {
-	MustWriteFile(filename, MustSerialize(content, asYaml))
+func MustWriteSerializedFile(filename string, content map[string]interface{}, format string) {
+	MustWriteFile(filename, MustSerialize(content, format))
 }
 
 // DeserializeFile will read a JSON or YAML file and return the top-level object. Will return an

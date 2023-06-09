@@ -30,10 +30,10 @@ var _ = Describe("Merge", func() {
 			} else {
 				// 'expected' is filename of expected json output, so an error wasn't expected
 				expectedResult := MustReadFile("./merge_testfiles/" + expected)
-				result := MustSerialize(res, false)
+				result := MustSerialize(res, OutputFormatJSON)
 
 				MustWriteSerializedFile("./merge_testfiles/"+
-					strings.Replace(expected, "_expected.", "_generated.", -1), res, false)
+					strings.Replace(expected, "_expected.", "_generated.", -1), res, OutputFormatJSON)
 
 				Expect(*result).To(MatchJSON(*expectedResult))
 			}
@@ -130,7 +130,7 @@ var _ = Describe("Merge", func() {
 			expectedFile := "./merge_testfiles/test1_expected.json"
 
 			res, _ := merge.MustFiles(fileList)
-			result := MustSerialize(res, false)
+			result := MustSerialize(res, OutputFormatJSON)
 			expected := MustReadFile(expectedFile)
 
 			Expect(*result).To(MatchJSON(*expected))
