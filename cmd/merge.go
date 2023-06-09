@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/kong/go-apiops/deckformat"
 	"github.com/kong/go-apiops/filebasics"
@@ -24,20 +25,13 @@ func executeMerge(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed getting cli argument 'output-file'; %w", err)
 	}
 
-	var asYaml bool
+	var outputFormat string
 	{
-		outputFormat, err := cmd.Flags().GetString("format")
+		outputFormat, err = cmd.Flags().GetString("format")
 		if err != nil {
 			return fmt.Errorf("failed getting cli argument 'format'; %w", err)
 		}
-		if outputFormat == outputFormatYaml {
-			asYaml = true
-		} else if outputFormat == outputFormatJSON {
-			asYaml = false
-		} else {
-			return fmt.Errorf("expected '--format' to be either '%s' or '%s', got: '%s'",
-				outputFormatYaml, outputFormatJSON, outputFormat)
-		}
+		outputFormat = strings.ToUpper(outputFormat)
 	}
 
 	// do the work: read/merge
@@ -52,7 +46,7 @@ func executeMerge(cmd *cobra.Command, args []string) error {
 	deckformat.HistoryClear(merged)
 	deckformat.HistoryAppend(merged, historyEntry)
 
-	return filebasics.WriteSerializedFile(outputFilename, merged, asYaml)
+	return filebasics.WriteSerializedFile(outputFilename, merged, outputFormat)
 }
 
 //
@@ -79,5 +73,6 @@ determined by the '_transform' and '_format_version' fields.`,
 func init() {
 	rootCmd.AddCommand(mergeCmd)
 	mergeCmd.Flags().StringP("output-file", "o", "-", "output file to write. Use - to write to stdout")
-	mergeCmd.Flags().StringP("format", "", outputFormatYaml, "output format: "+outputFormatJSON+" or "+outputFormatYaml)
+	mergeCmd.Flags().StringP("format", "", filebasics.OutputFormatYaml, "output format: "+
+		filebasics.OutputFormatJSON+" or "+filebasics.OutputFormatYaml)
 }

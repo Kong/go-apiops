@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/kong/go-apiops/deckformat"
 	"github.com/kong/go-apiops/filebasics"
@@ -46,20 +47,13 @@ func executeOpenapi2Kong(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	var asYaml bool
+	var outputFormat string
 	{
-		outputFormat, err := cmd.Flags().GetString("format")
+		outputFormat, err = cmd.Flags().GetString("format")
 		if err != nil {
 			return fmt.Errorf("failed getting cli argument 'format'; %w", err)
 		}
-		if outputFormat == outputFormatYaml {
-			asYaml = true
-		} else if outputFormat == outputFormatJSON {
-			asYaml = false
-		} else {
-			return fmt.Errorf("expected '--format' to be either '%s' or '%s', got: '%s'",
-				outputFormatYaml, outputFormatJSON, outputFormat)
-		}
+		outputFormat = strings.ToUpper(outputFormat)
 	}
 
 	options := openapi2kong.O2kOptions{
@@ -82,7 +76,7 @@ func executeOpenapi2Kong(cmd *cobra.Command, _ []string) error {
 		return fmt.Errorf("failed converting OpenAPI spec '%s'; %w", inputFilename, err)
 	}
 	deckformat.HistoryAppend(result, trackInfo)
-	return filebasics.WriteSerializedFile(outputFilename, result, asYaml)
+	return filebasics.WriteSerializedFile(outputFilename, result, outputFormat)
 }
 
 //
@@ -107,8 +101,8 @@ func init() {
 	rootCmd.AddCommand(openapi2kongCmd)
 	openapi2kongCmd.Flags().StringP("spec", "s", "-", "OpenAPI spec file to process. Use - to read from stdin")
 	openapi2kongCmd.Flags().StringP("output-file", "o", "-", "output file to write. Use - to write to stdout")
-	openapi2kongCmd.Flags().StringP("format", "", outputFormatYaml, "output format: "+
-		outputFormatJSON+" or "+outputFormatYaml)
+	openapi2kongCmd.Flags().StringP("format", "", filebasics.OutputFormatYaml, "output format: "+
+		filebasics.OutputFormatJSON+" or "+filebasics.OutputFormatYaml)
 	openapi2kongCmd.Flags().StringP("uuid-base", "", "",
 		`the unique base-string for uuid-v5 generation of enity id's (if omitted
 will use the root-level "x-kong-name" directive, or fall back to 'info.title')`)
