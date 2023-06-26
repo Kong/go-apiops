@@ -49,9 +49,9 @@ func executeRemoveTags(cmd *cobra.Command, tagsToRemove []string) error {
 
 	var keepEmptyArrays bool
 	{
-		keepEmptyArrays, err = cmd.Flags().GetBool("keep-empty")
+		keepEmptyArrays, err = cmd.Flags().GetBool("keep-empty-array")
 		if err != nil {
-			return fmt.Errorf("failed getting cli argument 'keep-array'; %w", err)
+			return fmt.Errorf("failed getting cli argument 'keep-empty-array'; %w", err)
 		}
 	}
 
@@ -93,7 +93,7 @@ func executeRemoveTags(cmd *cobra.Command, tagsToRemove []string) error {
 	trackInfo["input"] = inputFilename
 	trackInfo["output"] = outputFilename
 	trackInfo["tags"] = tagsToRemove
-	trackInfo["keep-empty"] = keepEmptyArrays
+	trackInfo["keep-empty-array"] = keepEmptyArrays
 	trackInfo["selectors"] = selectors
 	deckformat.HistoryAppend(data, trackInfo)
 
@@ -118,7 +118,7 @@ If no selectors are given, all Kong entities will be selected.`,
 
 func init() {
 	rootCmd.AddCommand(RemoveTagsCmd)
-	RemoveTagsCmd.Flags().Bool("keep-empty", false, "keep empty tag-arrays in output")
+	RemoveTagsCmd.Flags().Bool("keep-empty-array", false, "keep empty tag-arrays in output")
 	RemoveTagsCmd.Flags().Bool("keep-only", false, "setting this flag will remove all tags except the ones listed\n"+
 		"(if none are listed, all tags will be removed)")
 	RemoveTagsCmd.Flags().StringP("state", "s", "-", "decK file to process. Use - to read from stdin")
