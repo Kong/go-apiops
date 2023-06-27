@@ -114,6 +114,11 @@ var RemoveTagsCmd = &cobra.Command{
 The listed tags are removed from all objects that match the selector expressions.
 If no selectors are given, all Kong entities will be selected.`,
 	RunE: executeRemoveTags,
+	Example: "  # clear tags 'tag1' and 'tag2' from all services in file 'kong.yml'\n" +
+		"  cat kong.yml | kced remove-tags --selector='services[*]' tag1 tag2\n" +
+		"\n" +
+		"  # clear all tags except 'tag1' and 'tag2' from the file 'kong.yml'\n" +
+		"  cat kong.yml | kced remove-tags --keep-only tag1 tag2",
 }
 
 func init() {
