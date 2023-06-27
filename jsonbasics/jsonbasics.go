@@ -150,6 +150,8 @@ func RemoveObjectFromArrayByFieldValue(inArr interface{},
 	return arr[:targetIdx], count, nil
 }
 
+// GetStringField returns a string-value from an object field. Returns an error if the field
+// is not a string, or is not found.
 func GetStringField(object map[string]interface{}, fieldName string) (string, error) {
 	value := object[fieldName]
 	switch result := value.(type) {

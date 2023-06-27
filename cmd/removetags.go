@@ -106,7 +106,7 @@ func executeRemoveTags(cmd *cobra.Command, tagsToRemove []string) error {
 //
 //
 
-var RemoveTagsCmd = &cobra.Command{
+var removeTagsCmd = &cobra.Command{
 	Use:   "remove-tags [flags] tag [...tag]",
 	Short: "Removes tags from objects in a decK file",
 	Long: `Removes tags from objects in a decK file.
@@ -122,14 +122,14 @@ If no selectors are given, all Kong entities will be selected.`,
 }
 
 func init() {
-	rootCmd.AddCommand(RemoveTagsCmd)
-	RemoveTagsCmd.Flags().Bool("keep-empty-array", false, "keep empty tag-arrays in output")
-	RemoveTagsCmd.Flags().Bool("keep-only", false, "setting this flag will remove all tags except the ones listed\n"+
+	rootCmd.AddCommand(removeTagsCmd)
+	removeTagsCmd.Flags().Bool("keep-empty-array", false, "keep empty tag-arrays in output")
+	removeTagsCmd.Flags().Bool("keep-only", false, "setting this flag will remove all tags except the ones listed\n"+
 		"(if none are listed, all tags will be removed)")
-	RemoveTagsCmd.Flags().StringP("state", "s", "-", "decK file to process. Use - to read from stdin")
-	RemoveTagsCmd.Flags().StringArray("selector", []string{}, "JSON path expression to select "+
+	removeTagsCmd.Flags().StringP("state", "s", "-", "decK file to process. Use - to read from stdin")
+	removeTagsCmd.Flags().StringArray("selector", []string{}, "JSON path expression to select "+
 		"objects to remove tags from,\ndefaults to all Kong entities (repeat for multiple selectors)")
-	RemoveTagsCmd.Flags().StringP("output-file", "o", "-", "output file to write. Use - to write to stdout")
-	RemoveTagsCmd.Flags().StringP("format", "", filebasics.OutputFormatYaml, "output format: "+
+	removeTagsCmd.Flags().StringP("output-file", "o", "-", "output file to write. Use - to write to stdout")
+	removeTagsCmd.Flags().StringP("format", "", filebasics.OutputFormatYaml, "output format: "+
 		filebasics.OutputFormatJSON+" or "+filebasics.OutputFormatYaml)
 }

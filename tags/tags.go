@@ -18,10 +18,7 @@ const tagArrayName = "tags"
 var defaultSelectors []string
 
 func init() {
-	defaultSelectors = make([]string, 0)
-	for _, selectors := range deckformat.EntityPointers {
-		defaultSelectors = append(defaultSelectors, selectors...)
-	}
+	defaultSelectors = deckformat.EntityPointers["TagOwners"]
 }
 
 type Tagger struct {

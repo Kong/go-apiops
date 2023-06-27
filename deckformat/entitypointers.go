@@ -1,8 +1,12 @@
 package deckformat
 
+import "strings"
+
 // EntityPointers is a map of entity names to an array of JSONpointers that can be used to find
-// the all of those entities in a deck file. For example; credentials typically can be under
+// all of those entities in a deck file. For example; credentials typically can be under
 // their own top-level key, or nested under a consumer.
+// Additional sets are dynamically added (capitalized) for other common uses. e.g.
+// "PluginOwners" is a list of all entities that can hold plugins.
 var EntityPointers = map[string][]string{
 	// list created from the deck source code, looking at: deck/types/*.go
 	"acls": {
@@ -21,7 +25,7 @@ var EntityPointers = map[string][]string{
 	"consumer_group_consumers": {
 		"$.consumer_group_consumers[*]",
 	},
-	"consumer_group_plugins": {
+	"consumer_group_plugins": { // deprecated in Kong 3.4
 		"$.consumer_group_plugins[*]",
 		"$.consumer_groups[*].consumer_group_plugins[*]",
 	},
@@ -62,9 +66,9 @@ var EntityPointers = map[string][]string{
 		"$.services[*].plugins[*]",
 		"$.services[*].routes[*].plugins[*]",
 		"$.consumers[*].plugins[*]",
-		"$.consumer_group_plugins[*]",                    // the dbless format
-		"$.consumer_groups[*].consumer_group_plugins[*]", // the dbless format
-		"$.consumer_groups[*].plugins[*]",                // the deck format
+		"$.consumer_group_plugins[*]",                    // the dbless format, deprecated in Kong 3.4
+		"$.consumer_groups[*].consumer_group_plugins[*]", // the dbless format, deprecated in Kong 3.4
+		"$.consumer_groups[*].plugins[*]",                // the deck format + new Kong 3.4 implementation
 	},
 	"rbac_role_endpoints": {
 		"$.rbac_role_endpoints[*]",
@@ -100,4 +104,26 @@ var EntityPointers = map[string][]string{
 	"vaults": {
 		"$.vaults[*]",
 	},
+}
+
+// initPointerCollections will initialize sub-lists of useful pointer combinations.
+func initPointerCollections() {
+	// all entities that can hold tags (eg. have a "tags" array)
+	TagOwners := make([]string, 0)
+	for _, selectors := range EntityPointers {
+		TagOwners = append(TagOwners, selectors...)
+	}
+
+	// all entities that can hold plugins (eg. have a "plugins" array)
+	PluginOwners := make([]string, 0)
+	for _, selector := range EntityPointers["plugins"] {
+		if strings.HasSuffix(selector, ".plugins[*]") {
+			selector := strings.TrimSuffix(selector, ".plugins[*]")
+			PluginOwners = append(PluginOwners, selector)
+		}
+	}
+
+	// Store them in the overall list, capitalized to prevent colissions
+	EntityPointers["TagOwners"] = TagOwners
+	EntityPointers["PluginOwners"] = PluginOwners
 }
