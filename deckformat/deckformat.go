@@ -15,6 +15,10 @@ const (
 	HistoryKey   = "_ignore" // the top-level key in deck files for storing history info
 )
 
+func init() {
+	initPointerCollections()
+}
+
 //
 //
 //  Keeping track of the tool/binary version info (set once at startup)
