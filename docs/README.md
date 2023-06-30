@@ -11,7 +11,7 @@ This document contains usage and examples for the current set of tools available
 ---
 ### `openapi2kong`
 
-The `openapi2kong` transformation is used to convert an OpenAPI Specification (OAS) to a Kong declarative configuration which can be further used with `deck` to configure a Kong Gateway. [OpenAPI Specifications](https://swagger.io/specification/) allow you to define language-agnostic interfaces to your services. The `openapi2kong` tool allows conversion of those specifications directly into Kong Gateway declarative configurations and includes support for Kong extensions (`x-kong`). For details on the format and conversion features, see the included [annotated example file](learnservice_oas.yml).
+The `openapi2kong` transformation is used to convert an OpenAPI Specification (OAS) to a Kong declarative configuration which can be further used with `deck` to configure a Kong Gateway. [OpenAPI Specifications](https://swagger.io/specification/) allow you to define language-agnostic interfaces to your services. The `openapi2kong` tool allows conversion of those specifications directly into Kong Gateway declarative configurations and includes support for Kong extensions (`x-kong`). For details on the format and conversion features, see the included [annotated example file](learnservice_oas.yaml).
 
 For full usage instructions, see the command help:
 
