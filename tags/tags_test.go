@@ -7,14 +7,6 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-// func taggerWithData(data string) tags.Tagger {
-// 	GinkgoHelper()
-// 	tagger := tags.Tagger{}
-// 	d := []byte(data)
-// 	tagger.SetData(filebasics.MustDeserialize(&d))
-// 	return tagger
-// }
-
 var _ = Describe("tags", func() {
 	Describe("Tagger.SetData", func() {
 		It("panics if data is nil", func() {
