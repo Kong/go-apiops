@@ -7,6 +7,7 @@ import (
 	"github.com/kong/go-apiops/deckformat"
 	"github.com/kong/go-apiops/jsonbasics"
 	"github.com/kong/go-apiops/logbasics"
+	"github.com/kong/go-apiops/yamlbasics"
 	"github.com/vmware-labs/yaml-jsonpath/pkg/yamlpath"
 	"gopkg.in/yaml.v3"
 )
@@ -141,36 +142,30 @@ func (ts *Tagger) RemoveTags(tags []string, removeEmptyTagArrays bool) error {
 
 	for _, node := range ts.tagOwners {
 		// 'node' is a JSONobject that can hold tags, type is yaml.MappingNode
-		// loop over the object to find the tags array
-		for i := 0; i < len(node.Content); i += 2 {
-			keyNode := node.Content[i]
-			valueNode := node.Content[i+1]
-			if keyNode.Value == tagArrayName && valueNode.Kind == yaml.SequenceNode {
-				// we found the tags array on this object
+		tagArray := yamlbasics.GetFieldValue(node, tagArrayName)
+		if tagArray != nil && tagArray.Kind == yaml.SequenceNode {
+			// we found the tags array on this object
 
-				// loop over this tags array to find the tags to remove
-				for j := 0; j < len(valueNode.Content); j++ {
-					tagNode := valueNode.Content[j]
-					if tagNode.Kind == yaml.ScalarNode {
-						tag := tagNode.Value
+			// loop over this tags array to find the tags to remove
+			for j := 0; j < len(tagArray.Content); j++ {
+				tagNode := tagArray.Content[j]
+				if tagNode.Kind == yaml.ScalarNode {
+					tag := tagNode.Value
 
-						// is this tag in the list of tags to remove?
-						if reverseTags[tag] {
-							valueNode.Content = append(valueNode.Content[:j], valueNode.Content[j+1:]...)
-							j-- // we're removing a node, so we need to go back one node
-						}
+					// is this tag in the list of tags to remove?
+					if reverseTags[tag] {
+						tagArray.Content = append(tagArray.Content[:j], tagArray.Content[j+1:]...)
+						j-- // we're removing a node, so we need to go back one node
 					}
 				}
+			}
 
-				// if the tags array is empty remove it
-				if removeEmptyTagArrays && len(valueNode.Content) == 0 {
-					node.Content = append(node.Content[:i], node.Content[i+2:]...)
-					i -= 2 // we're removing two nodes, so we need to go back two nodes
-				}
+			// if the tags array is empty remove it
+			if removeEmptyTagArrays && len(tagArray.Content) == 0 {
+				yamlbasics.RemoveField(node, tagArrayName)
 			}
 		}
 	}
-
 	return nil
 }
 
@@ -188,44 +183,20 @@ func (ts *Tagger) AddTags(tags []string) error {
 
 	for _, node := range ts.tagOwners {
 		// 'node' is a JSONobject that can hold tags, type is yaml.MappingNode
-		// loop over the object to find the tags array
 
-		var (
-			keyNode   *yaml.Node
-			valueNode *yaml.Node
-			found     bool
-		)
-		for i := 0; i < len(node.Content); i += 2 {
-			keyNode = node.Content[i]
-			valueNode = node.Content[i+1]
-			if keyNode.Value == tagArrayName && valueNode.Kind == yaml.SequenceNode {
-				// we found the tags array on this object
-				found = true
-				break
-			}
-		}
+		tagsArray := yamlbasics.GetFieldValue(node, tagArrayName)
 
 		// if we didn't find the tags array, create it
-		if !found {
-			keyNode = &yaml.Node{
-				Kind:  yaml.ScalarNode,
-				Value: tagArrayName,
-				Style: yaml.DoubleQuotedStyle,
-			}
-			valueNode = &yaml.Node{
-				Kind:  yaml.SequenceNode,
-				Tag:   "!!seq",
-				Value: "",
-				Style: yaml.DoubleQuotedStyle,
-			}
-			node.Content = append(node.Content, keyNode, valueNode)
+		if tagsArray == nil || tagsArray.Kind != yaml.SequenceNode {
+			tagsArray = yamlbasics.NewArray()
+			yamlbasics.SetFieldValue(node, tagArrayName, tagsArray)
 		}
 
 		// loop over the tags to add
 		for _, tag := range tags {
 			// loop over this tags array to find the tags to add
 			found := false
-			for _, tagNode := range valueNode.Content {
+			for _, tagNode := range tagsArray.Content {
 				if tagNode.Value == tag && tagNode.Kind == yaml.ScalarNode {
 					found = true
 					break
@@ -234,11 +205,7 @@ func (ts *Tagger) AddTags(tags []string) error {
 
 			// if the tag is not already in the array, add it
 			if !found {
-				valueNode.Content = append(valueNode.Content, &yaml.Node{
-					Kind:  yaml.ScalarNode,
-					Value: tag,
-					Style: yaml.DoubleQuotedStyle,
-				})
+				_ = yamlbasics.Append(tagsArray, yamlbasics.NewString(tag))
 			}
 		}
 	}
@@ -256,13 +223,12 @@ func (ts *Tagger) ListTags() ([]string, error) {
 		// 'node' is a JSONobject that can hold tags, type is yaml.MappingNode
 		// loop over the object to find the tags array
 		for i := 0; i < len(node.Content); i += 2 {
-			keyNode := node.Content[i]
-			valueNode := node.Content[i+1]
-			if keyNode.Value == tagArrayName && valueNode.Kind == yaml.SequenceNode {
+			tagsArray := yamlbasics.GetFieldValue(node, tagArrayName)
+			if tagsArray != nil && tagsArray.Kind == yaml.SequenceNode {
 				// we found the tags array on this object
 
 				// loop over this tags array to find the tags
-				for _, tagNode := range valueNode.Content {
+				for _, tagNode := range tagsArray.Content {
 					if tagNode.Kind == yaml.ScalarNode {
 						tags[tagNode.Value] = true
 					}
