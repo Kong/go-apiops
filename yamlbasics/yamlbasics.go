@@ -225,3 +225,45 @@ func AppendSlice(targetArray *yaml.Node, values []*yaml.Node) error {
 	}
 	return nil
 }
+
+// Search returns a function that can be called repeatedly to find the next matching
+// node in the targetArray. If no more matches are found, then nil is returned.
+// The search is resilient against changing the targetArray while searching.
+// The match function is called with each (non-nil) node in the targetArray.
+// If the match function
+// returns true, then the node is returned. If the match function returns false, then
+// the next node is checked. If the match function returns an error, then the search
+// is aborted and the error is returned (calling again returns the same error).
+func Search(targetArray *yaml.Node, match func(*yaml.Node) (bool, error)) func() (*yaml.Node, int, error) {
+	if targetArray == nil || targetArray.Kind != yaml.SequenceNode {
+		panic("targetArray is not a sequence node/array")
+	}
+
+	refs := make(map[*yaml.Node]bool)
+	done := false
+	var err error
+	var idx int
+
+	return func() (*yaml.Node, int, error) {
+		if !done {
+			for i := 0; i < len(targetArray.Content); i++ {
+				res := targetArray.Content[i]
+				if res != nil && !refs[res] {
+					var matched bool
+					matched, err = match(res)
+					if err != nil {
+						done = true
+						idx = i
+						return nil, idx, err
+					}
+					if matched {
+						refs[res] = true
+						return res, i, nil
+					}
+				}
+			}
+			done = true
+		}
+		return nil, idx, err
+	}
+}
