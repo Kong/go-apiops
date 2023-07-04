@@ -292,4 +292,84 @@ var _ = Describe("yamlbasics", func() {
 			Expect(data.Content[0]).To(Equal(d1))
 		})
 	})
+
+	Describe("Search", func() {
+		var hits []string
+
+		newSearcher := func() func(*yaml.Node) (bool, error) {
+			hits = make([]string, 0)
+			return func(node *yaml.Node) (bool, error) {
+				hits = append(hits, node.Value)
+				return true, nil
+			}
+		}
+
+		It("panics if targetArray is nil", func() {
+			Expect(func() { Search(nil, newSearcher()) }).To(Panic())
+		})
+
+		It("panics if targetArray is not an array", func() {
+			Expect(func() { Search(NewObject(), newSearcher()) }).To(Panic())
+		})
+
+		It("gets hit with each entry", func() {
+			data := NewArray()
+			Append(data, NewString("myName"), NewString("yourName"), NewString("hisName"))
+			next := Search(data, newSearcher())
+			for {
+				node, _, _ := next()
+				if node == nil {
+					break
+				}
+			}
+
+			Expect(hits).To(BeEquivalentTo([]string{"myName", "yourName", "hisName"}))
+		})
+
+		It("doesn't fail on an empty array", func() {
+			data := NewArray()
+			next := Search(data, newSearcher())
+			for {
+				node, _, _ := next()
+				if node == nil {
+					break
+				}
+			}
+
+			Expect(hits).To(BeEquivalentTo([]string{}))
+		})
+
+		It("doesn't get hit by nil values", func() {
+			data := NewArray()
+			Append(data, NewString("myName"), NewString("yourName"), NewString("hisName"))
+			data.Content[1] = nil // simulate a nil value
+			next := Search(data, newSearcher())
+			for {
+				node, _, _ := next()
+				if node == nil {
+					break
+				}
+			}
+
+			Expect(hits).To(BeEquivalentTo([]string{"myName", "hisName"}))
+		})
+
+		It("handles adding/removing values", func() {
+			data := NewArray()
+			Append(data, NewString("myName"), NewString("yourName"), NewString("hisName"))
+			next := Search(data, newSearcher())
+			for {
+				node, _, _ := next()
+				if data.Content[1] != nil {
+					data.Content[1] = nil                   // simulate a nil value (after 1st call)
+					data.Content[0] = NewString("injected") // replace first value
+				}
+				if node == nil {
+					break
+				}
+			}
+
+			Expect(hits).To(BeEquivalentTo([]string{"myName", "injected", "hisName"}))
+		})
+	})
 })
