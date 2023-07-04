@@ -96,6 +96,7 @@ func (ts *Tagger) search() error {
 
 	// build list of targets by executing the selectors one by one
 	targets := make([]*yaml.Node, 0)
+	refs := make(map[*yaml.Node]bool, 0) // keep track of already found nodes
 	for idx, selector := range ts.selectors {
 		nodes, err := selector.Find(ts.data)
 		if err != nil {
@@ -107,7 +108,8 @@ func (ts *Tagger) search() error {
 		for _, node := range nodes {
 			// since we're updating object fields, we'll skip anything that is
 			// not a JSONobject
-			if node.Kind == yaml.MappingNode {
+			if node.Kind == yaml.MappingNode && !refs[node] {
+				refs[node] = true
 				targets = append(targets, node)
 				objCount++
 			}
