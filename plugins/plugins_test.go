@@ -186,5 +186,122 @@ var _ = Describe("plugins", func() {
 					]
 			}`))
 		})
+
+		It("adds plugin with foreign keys to the main array", func() {
+			dataInput := []byte(`
+				{ "services": [
+					{ "name": "service1" }
+				]
+			}`)
+
+			plugger := plugins.Plugger{}
+			plugger.SetData(filebasics.MustDeserialize(&dataInput))
+			plugger.SetSelectors([]string{
+				"$",
+			})
+			err := plugger.AddPlugin(map[string]interface{}{
+				"name":           "plugin1",
+				"service":        "service1",
+				"route":          "route1",
+				"consumer":       "consumer1",
+				"consumer_group": "consumer_group1",
+			}, true)
+			Expect(err).ToNot(HaveOccurred())
+
+			result := *(filebasics.MustSerialize(plugger.GetData(), filebasics.OutputFormatJSON))
+			Expect(result).To(MatchJSON(`
+				{
+					"services": [
+						{
+							"name": "service1"
+						}
+					],
+					"plugins": [
+						{
+							"name": "plugin1",
+							"service": "service1",
+							"route": "route1",
+							"consumer": "consumer1",
+							"consumer_group": "consumer_group1"
+						}
+					]
+			}`))
+		})
+
+		It("fails to add plugin to nested array with service foreign key", func() {
+			dataInput := []byte(`
+				{ "services": [
+					{ "name": "service1" }
+				]
+			}`)
+
+			plugger := plugins.Plugger{}
+			plugger.SetData(filebasics.MustDeserialize(&dataInput))
+			plugger.SetSelectors([]string{
+				"$..services[*]",
+			})
+			err := plugger.AddPlugin(map[string]interface{}{
+				"name":    "plugin1",
+				"service": "some_name",
+			}, true)
+			Expect(err).To(MatchError("plugin 0 has foreign keys, but they are only supported in the main plugin array"))
+		})
+
+		It("fails to add plugin to nested array with route foreign key", func() {
+			dataInput := []byte(`
+				{ "services": [
+					{ "name": "service1" }
+				]
+			}`)
+
+			plugger := plugins.Plugger{}
+			plugger.SetData(filebasics.MustDeserialize(&dataInput))
+			plugger.SetSelectors([]string{
+				"$..services[*]",
+			})
+			err := plugger.AddPlugin(map[string]interface{}{
+				"name":  "plugin1",
+				"route": "some_name",
+			}, true)
+			Expect(err).To(MatchError("plugin 0 has foreign keys, but they are only supported in the main plugin array"))
+		})
+
+		It("fails to add plugin to nested array with consumer foreign key", func() {
+			dataInput := []byte(`
+				{ "services": [
+					{ "name": "service1" }
+				]
+			}`)
+
+			plugger := plugins.Plugger{}
+			plugger.SetData(filebasics.MustDeserialize(&dataInput))
+			plugger.SetSelectors([]string{
+				"$..services[*]",
+			})
+			err := plugger.AddPlugin(map[string]interface{}{
+				"name":     "plugin1",
+				"consumer": "some_name",
+			}, true)
+			Expect(err).To(MatchError("plugin 0 has foreign keys, but they are only supported in the main plugin array"))
+		})
+
+		It("fails to add plugin to nested array with consumer_group foreign key", func() {
+			dataInput := []byte(`
+				{ "services": [
+					{ "name": "service1" }
+				]
+			}`)
+
+			plugger := plugins.Plugger{}
+			plugger.SetData(filebasics.MustDeserialize(&dataInput))
+			plugger.SetSelectors([]string{
+				"$..services[*]",
+			})
+			err := plugger.AddPlugin(map[string]interface{}{
+				"name":           "plugin1",
+				"consumer_group": "some_name",
+			}, true)
+			Expect(err).To(MatchError("plugin 0 has foreign keys, but they are only supported in the main plugin array"))
+		})
 	})
 })

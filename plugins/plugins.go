@@ -20,7 +20,7 @@ import (
 var defaultSelectors = []string{"$"}
 
 // (constant) list of foreign keys that a plugin can have (field names)
-var foreignKeys = []string{"service", "route", "consumer"}
+var foreignKeys = []string{"service", "route", "consumer", "consumer_group"}
 
 // the separator when constructing cache-keys for foreign keys
 const foreignKeySeparator = ":"
@@ -186,8 +186,9 @@ func (ts *Plugger) AddPlugins(plugins []map[string]interface{}, overwrite bool) 
 	}
 
 	// foreignkeys can only be added to the main plugin array, so only allow them if
-	// we have 1 plugin owner, and it's the main plugin array
-	foreignKeysSupported := len(ts.pluginOwners) == 1 && ts.pluginOwners[0] == ts.pluginMain
+	// we have 1 plugin owner, and it's the main plugin array.
+	// ts.pluginMain might not exist yet, so check the parent
+	foreignKeysSupported := len(ts.pluginOwners) == 1 && ts.pluginOwners[0] == ts.data
 
 	// validate the contents, plugins can't be nil, and foreign keys are only allowed in the main plugin array
 	pluginNodes := make([]*yaml.Node, len(plugins))
@@ -263,6 +264,10 @@ func (ts *Plugger) addPluginToOwners(newPlugin *yaml.Node, overwrite bool) error
 			// no plugins array yet, create an empty one and add it
 			ownerPluginArray = yamlbasics.NewArray()
 			yamlbasics.SetFieldValue(owner, "plugins", ownerPluginArray)
+			if owner == ts.data {
+				// we created the main plugin array, so set in our cache
+				ts.pluginMain = ownerPluginArray
+			}
 		}
 
 		// findPlugin the plugin in the owner
