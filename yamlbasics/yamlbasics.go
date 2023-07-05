@@ -73,6 +73,22 @@ func ToArray(data *yaml.Node) ([]interface{}, error) {
 	return jsonData.([]interface{}), nil
 }
 
+// CopyNode creates a deep copy of the given node.
+func CopyNode(node *yaml.Node) *yaml.Node {
+	if node == nil {
+		return nil
+	}
+
+	nodeCopy := *node
+	nodeCopy.Alias = nil // TODO: for now assume we do not use aliases
+	nodeCopy.Content = nil
+	for _, child := range node.Content {
+		nodeCopy.Content = append(nodeCopy.Content, CopyNode(child))
+	}
+
+	return &nodeCopy
+}
+
 //
 //
 //  Handling objects and fields
@@ -226,15 +242,24 @@ func AppendSlice(targetArray *yaml.Node, values []*yaml.Node) error {
 	return nil
 }
 
-// Search returns a function that can be called repeatedly to find the next matching
+// YamlArrayMatcher is a type of function passed to Search. To match a node against
+// the search criteria, the function should return true if it matches.
+type YamlArrayMatcher func(*yaml.Node) (bool, error)
+
+// YamlArrayIterator is a type of function returned by Search. On each call, it returns
+// the next matching node in the targetArray. If no more matches are found, then nil is
+// returned. The second return value is the index of the node in the targetArray.
+type YamlArrayIterator func() (*yaml.Node, int, error)
+
+// Search returns a YamlArrayIterator function that can be called repeatedly to find the next matching
 // node in the targetArray. If no more matches are found, then nil is returned.
 // The search is resilient against changing the targetArray while searching.
-// The match function is called with each (non-nil) node in the targetArray.
+// The YamlArrayMatcher function is called with each (non-nil) node in the targetArray.
 // If the match function
 // returns true, then the node is returned. If the match function returns false, then
 // the next node is checked. If the match function returns an error, then the search
 // is aborted and the error is returned (calling again returns the same error).
-func Search(targetArray *yaml.Node, match func(*yaml.Node) (bool, error)) func() (*yaml.Node, int, error) {
+func Search(targetArray *yaml.Node, match YamlArrayMatcher) YamlArrayIterator {
 	if targetArray == nil || targetArray.Kind != yaml.SequenceNode {
 		panic("targetArray is not a sequence node/array")
 	}

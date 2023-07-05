@@ -372,4 +372,34 @@ var _ = Describe("yamlbasics", func() {
 			Expect(hits).To(BeEquivalentTo([]string{"myName", "injected", "hisName"}))
 		})
 	})
+
+	Describe("CopyNode", func() {
+		It("doesn't panic on nil", func() {
+			Expect(func() { CopyNode(nil) }).ToNot(Panic())
+			Expect(CopyNode(nil)).To(BeNil())
+		})
+
+		It("Copies a scalar node", func() {
+			node := NewString("myName")
+			duplicate := CopyNode(node)
+			Expect(duplicate).ToNot(BeNil())
+			Expect(duplicate).ToNot(BeIdenticalTo(node))
+			Expect(duplicate).To(Equal(node))
+		})
+
+		It("Copies a non-scalar node", func() {
+			node := NewObject()
+			SetFieldValue(node, "key1", NewString("myName"))
+			SetFieldValue(node, "key2", NewString("yourName"))
+			duplicate := CopyNode(node)
+			Expect(duplicate).ToNot(BeNil())
+			Expect(len(duplicate.Content)).To(Equal(4))
+
+			node.Content[0].Value = "key3" // change the original
+			Expect(duplicate.Content[0].Value).To(Equal("key1"))
+			Expect(duplicate.Content[1].Value).To(Equal("myName"))
+			Expect(duplicate.Content[2].Value).To(Equal("key2"))
+			Expect(duplicate.Content[3].Value).To(Equal("yourName"))
+		})
+	})
 })
