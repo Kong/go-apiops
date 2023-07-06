@@ -32,7 +32,7 @@ func getDefaultParamStyle(givenStyle string, paramType string) string {
 // generateParameterSchema returns the given schema if there is one, a generated
 // schema if it was specified, or nil if there is none.
 // Parameters include path, query, and headers
-func generateParameterSchema(operation *openapi3.Operation) *[]map[string]interface{} {
+func generateParameterSchema(operation *openapi3.Operation) []map[string]interface{} {
 	parameters := operation.Parameters
 	if parameters == nil {
 		return nil
@@ -76,7 +76,7 @@ func generateParameterSchema(operation *openapi3.Operation) *[]map[string]interf
 		}
 	}
 
-	return &result
+	return result
 }
 
 // generateBodySchema returns the given schema if there is one, a generated
@@ -108,7 +108,7 @@ func generateBodySchema(operation *openapi3.Operation) string {
 
 // generateContentTypes returns an array of allowed content types. nil if none.
 // Returned array will be sorted by name for deterministic comparisons.
-func generateContentTypes(operation *openapi3.Operation) *[]string {
+func generateContentTypes(operation *openapi3.Operation) []string {
 	requestBody := operation.RequestBody
 	if requestBody == nil {
 		return nil
@@ -136,7 +136,7 @@ func generateContentTypes(operation *openapi3.Operation) *[]string {
 	}
 	sort.Strings(list)
 
-	return &list
+	return list
 }
 
 // generateValidatorPlugin generates the validator plugin configuration, based

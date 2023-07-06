@@ -22,7 +22,7 @@ const (
 
 // O2KOptions defines the options for an O2K conversion operation
 type O2kOptions struct {
-	Tags          *[]string // Array of tags to mark all generated entities with, taken from 'x-kong-tags' if omitted.
+	Tags          []string  // Array of tags to mark all generated entities with, taken from 'x-kong-tags' if omitted.
 	DocName       string    // Base document name, will be taken from x-kong-name, or info.title (for UUID generation!)
 	UUIDNamespace uuid.UUID // Namespace for UUID generation, defaults to DNS namespace for UUID v5
 }
@@ -60,10 +60,10 @@ func sanitizeRegexCapture(varName string) string {
 // getKongTags returns the provided tags or if nil, then the `x-kong-tags` property,
 // validated to be a string array. If there is no error, then there will always be
 // an array returned for safe access later in the process.
-func getKongTags(doc *openapi3.T, tagsProvided *[]string) ([]string, error) {
+func getKongTags(doc *openapi3.T, tagsProvided []string) ([]string, error) {
 	if tagsProvided != nil {
 		// the provided tags take precedence, return them
-		return *tagsProvided, nil
+		return tagsProvided, nil
 	}
 
 	if doc.ExtensionProps.Extensions == nil || doc.ExtensionProps.Extensions["x-kong-tags"] == nil {
