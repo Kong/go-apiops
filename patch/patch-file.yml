@@ -13,7 +13,8 @@ patches:
   # Notes:
   # - this is equivalent to the `--value` flag on the CLI
   - format: deck
-    selector: "a jsonpath query"  # defaults to "$"
+    selectors:
+    - "a jsonpath query"  # defaults to "$"
     values:
       field1: any-json-value
       field2: any-json-value
@@ -29,7 +30,8 @@ patches:
   # - if the patch is NOT an object, then the target is replaced with the patch.
   # NOT IMPLEMENTED YET!
   - format: application/merge-patch+json
-    selector: "a jsonpath query"  # defaults to "$"
+    selectors:
+    - "a jsonpath query"  # defaults to "$"
     patch:                        # this field contains the "merge-patch" object as per the RFC
       field1: This object is the
       field2: merge-patch to apply
@@ -42,7 +44,8 @@ patches:
   # - if "path" == "" then it targets the entire document, see https://www.rfc-editor.org/rfc/rfc6901#section-5
   # NOT IMPLEMENTED YET!
   - format: application/json-patch+json
-    selector: "a jsonpath query"  # defaults to "$"
+    selectors:
+    - "a jsonpath query"  # defaults to "$"
     operations:                   # this field contains the "json-patch" array as per the RFC
       - op: add       # one of; "add", "remove", "replace", "move", "copy", "test"
         path: /a/b/c  # 'path' always is a JSON pointer; RFC-6901

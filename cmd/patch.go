@@ -53,11 +53,11 @@ func executePatch(cmd *cobra.Command, args []string) error {
 	}
 
 	{
-		s, err := cmd.Flags().GetString("selector")
+		s, err := cmd.Flags().GetStringArray("selector")
 		if err != nil {
 			return fmt.Errorf("failed to retrieve '--selector' entry; %w", err)
 		}
-		valuesPatch.SelectorSource = s
+		valuesPatch.SelectorSources = s
 	}
 
 	patchFiles := make([]patch.DeckPatchFile, 0)
@@ -76,7 +76,7 @@ func executePatch(cmd *cobra.Command, args []string) error {
 	trackInfo["input"] = inputFilename
 	trackInfo["output"] = outputFilename
 	if len(valuesPatch.Values) != 0 || len(valuesPatch.Remove) != 0 {
-		trackInfo["selector"] = valuesPatch.SelectorSource
+		trackInfo["selector"] = valuesPatch.SelectorSources
 	}
 	if len(valuesPatch.Values) != 0 {
 		trackInfo["values"] = valuesPatch.Values
@@ -173,7 +173,8 @@ func init() {
 	patchCmd.Flags().StringP("output-file", "o", "-", "output file to write. Use - to write to stdout")
 	patchCmd.Flags().StringP("format", "", filebasics.OutputFormatYaml, "output format: "+
 		filebasics.OutputFormatJSON+" or "+filebasics.OutputFormatYaml)
-	patchCmd.Flags().StringP("selector", "", "", "json-pointer identifying element to patch")
+	patchCmd.Flags().StringArrayP("selector", "", []string{},
+		"json-pointer identifying element to patch (can be specified more than once)")
 	patchCmd.Flags().StringArrayP("value", "", []string{}, "a value to set in the selected entry in "+
 		"format <key:value> (can be specified more than once)")
 	patchCmd.MarkFlagsRequiredTogether("selector", "value")
