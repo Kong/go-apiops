@@ -62,7 +62,7 @@ var _ = Describe("plugins", func() {
 			}`)
 
 			plugger := plugins.Plugger{}
-			plugger.SetData(filebasics.MustDeserialize(&dataInput))
+			plugger.SetData(filebasics.MustDeserialize(dataInput))
 			plugger.SetSelectors([]string{
 				"$..services[*]",
 			})
@@ -70,7 +70,7 @@ var _ = Describe("plugins", func() {
 				"name": "plugin-added",
 			}, false)
 
-			result := *(filebasics.MustSerialize(plugger.GetData(), filebasics.OutputFormatJSON))
+			result := filebasics.MustSerialize(plugger.GetData(), filebasics.OutputFormatJSON)
 			Expect(result).To(MatchJSON(`
 				{
 					"services": [
@@ -109,7 +109,7 @@ var _ = Describe("plugins", func() {
 			}`)
 
 			plugger := plugins.Plugger{}
-			plugger.SetData(filebasics.MustDeserialize(&dataInput))
+			plugger.SetData(filebasics.MustDeserialize(dataInput))
 			plugger.SetSelectors([]string{
 				"$..services[*]",
 			})
@@ -117,7 +117,7 @@ var _ = Describe("plugins", func() {
 				"name": "plugin-added",
 			}, false)
 
-			result := *(filebasics.MustSerialize(plugger.GetData(), filebasics.OutputFormatJSON))
+			result := filebasics.MustSerialize(plugger.GetData(), filebasics.OutputFormatJSON)
 			Expect(result).To(MatchJSON(`
 				{
 					"services": [
@@ -159,7 +159,7 @@ var _ = Describe("plugins", func() {
 			}`)
 
 			plugger := plugins.Plugger{}
-			plugger.SetData(filebasics.MustDeserialize(&dataInput))
+			plugger.SetData(filebasics.MustDeserialize(dataInput))
 			plugger.SetSelectors([]string{
 				"$..services[*]",
 			})
@@ -168,7 +168,7 @@ var _ = Describe("plugins", func() {
 				"plugin": "was added",
 			}, true)
 
-			result := *(filebasics.MustSerialize(plugger.GetData(), filebasics.OutputFormatJSON))
+			result := filebasics.MustSerialize(plugger.GetData(), filebasics.OutputFormatJSON)
 			Expect(result).To(MatchJSON(`
 				{
 					"services": [
@@ -195,7 +195,7 @@ var _ = Describe("plugins", func() {
 			}`)
 
 			plugger := plugins.Plugger{}
-			plugger.SetData(filebasics.MustDeserialize(&dataInput))
+			plugger.SetData(filebasics.MustDeserialize(dataInput))
 			plugger.SetSelectors([]string{
 				"$",
 			})
@@ -208,7 +208,7 @@ var _ = Describe("plugins", func() {
 			}, true)
 			Expect(err).ToNot(HaveOccurred())
 
-			result := *(filebasics.MustSerialize(plugger.GetData(), filebasics.OutputFormatJSON))
+			result := filebasics.MustSerialize(plugger.GetData(), filebasics.OutputFormatJSON)
 			Expect(result).To(MatchJSON(`
 				{
 					"services": [
@@ -245,7 +245,7 @@ var _ = Describe("plugins", func() {
 			}`)
 
 			plugger := plugins.Plugger{}
-			plugger.SetData(filebasics.MustDeserialize(&dataInput))
+			plugger.SetData(filebasics.MustDeserialize(dataInput))
 			plugger.SetSelectors([]string{
 				"$",
 			})
@@ -258,7 +258,7 @@ var _ = Describe("plugins", func() {
 			}, true)
 			Expect(err).ToNot(HaveOccurred())
 
-			result := *(filebasics.MustSerialize(plugger.GetData(), filebasics.OutputFormatJSON))
+			result := filebasics.MustSerialize(plugger.GetData(), filebasics.OutputFormatJSON)
 			Expect(result).To(MatchJSON(`
 				{
 					"services": [
@@ -302,7 +302,7 @@ var _ = Describe("plugins", func() {
 			}`)
 
 			plugger := plugins.Plugger{}
-			plugger.SetData(filebasics.MustDeserialize(&dataInput))
+			plugger.SetData(filebasics.MustDeserialize(dataInput))
 			plugger.SetSelectors([]string{
 				"$",
 			})
@@ -316,7 +316,7 @@ var _ = Describe("plugins", func() {
 			}, true)
 			Expect(err).ToNot(HaveOccurred())
 
-			result := *(filebasics.MustSerialize(plugger.GetData(), filebasics.OutputFormatJSON))
+			result := filebasics.MustSerialize(plugger.GetData(), filebasics.OutputFormatJSON)
 			Expect(result).To(MatchJSON(`
 				{
 					"services": [
@@ -345,7 +345,7 @@ var _ = Describe("plugins", func() {
 			}`)
 
 			plugger := plugins.Plugger{}
-			plugger.SetData(filebasics.MustDeserialize(&dataInput))
+			plugger.SetData(filebasics.MustDeserialize(dataInput))
 			plugger.SetSelectors([]string{
 				"$..services[*]",
 			})
@@ -364,7 +364,7 @@ var _ = Describe("plugins", func() {
 			}`)
 
 			plugger := plugins.Plugger{}
-			plugger.SetData(filebasics.MustDeserialize(&dataInput))
+			plugger.SetData(filebasics.MustDeserialize(dataInput))
 			plugger.SetSelectors([]string{
 				"$..services[*]",
 			})
@@ -383,7 +383,7 @@ var _ = Describe("plugins", func() {
 			}`)
 
 			plugger := plugins.Plugger{}
-			plugger.SetData(filebasics.MustDeserialize(&dataInput))
+			plugger.SetData(filebasics.MustDeserialize(dataInput))
 			plugger.SetSelectors([]string{
 				"$..services[*]",
 			})
@@ -402,7 +402,7 @@ var _ = Describe("plugins", func() {
 			}`)
 
 			plugger := plugins.Plugger{}
-			plugger.SetData(filebasics.MustDeserialize(&dataInput))
+			plugger.SetData(filebasics.MustDeserialize(dataInput))
 			plugger.SetSelectors([]string{
 				"$..services[*]",
 			})

@@ -18,7 +18,7 @@ var _ = Describe("Patch", func() {
 				},
 				"remove": [ "field2" ]
 			}`)
-			data := MustDeserialize(&jsonData)
+			data := MustDeserialize(jsonData)
 
 			var patch patch.DeckPatch
 			err := patch.Parse(data, "breadcrumb-text")
@@ -38,7 +38,7 @@ var _ = Describe("Patch", func() {
 			jsonData := []byte(`{
 				"selector": 123
 			}`)
-			data := MustDeserialize(&jsonData)
+			data := MustDeserialize(jsonData)
 
 			var patch patch.DeckPatch
 			err := patch.Parse(data, "file1.yml:patches[1]")
@@ -50,7 +50,7 @@ var _ = Describe("Patch", func() {
 			jsonData := []byte(`{
 				"selector": "not valid"
 			}`)
-			data := MustDeserialize(&jsonData)
+			data := MustDeserialize(jsonData)
 
 			var patch patch.DeckPatch
 			err := patch.Parse(data, "file1.yml:patches[1]")
@@ -64,7 +64,7 @@ var _ = Describe("Patch", func() {
 				"selector": "$",
 				"values": 123
 			}`)
-			data := MustDeserialize(&jsonData)
+			data := MustDeserialize(jsonData)
 
 			var patch patch.DeckPatch
 			err := patch.Parse(data, "file1.yml:patches[1]")
@@ -77,7 +77,7 @@ var _ = Describe("Patch", func() {
 				"selector": "$",
 				"remove": 123
 			}`)
-			data := MustDeserialize(&jsonData)
+			data := MustDeserialize(jsonData)
 
 			var patch patch.DeckPatch
 			err := patch.Parse(data, "file1.yml:patches[1]")
@@ -93,7 +93,7 @@ var _ = Describe("Patch", func() {
 				},
 				"remove": [ "field1" ]
 			}`)
-			data := MustDeserialize(&jsonData)
+			data := MustDeserialize(jsonData)
 
 			var patch patch.DeckPatch
 			err := patch.Parse(data, "file1.yml:patches[1]")
@@ -208,7 +208,7 @@ var _ = Describe("Patch", func() {
 				Remove:         []string{"test"},
 			}
 			data := []byte(`{}`)
-			err := testPatch.ApplyToNodes(jsonbasics.ConvertToYamlNode(MustDeserialize(&data)))
+			err := testPatch.ApplyToNodes(jsonbasics.ConvertToYamlNode(MustDeserialize(data)))
 			Expect(err).To(MatchError("selector 'bad JSONpath' is not a valid JSONpath expression; " +
 				"invalid character ' ' at position 3, following \"bad\""))
 		})
@@ -216,7 +216,7 @@ var _ = Describe("Patch", func() {
 
 	Describe("Applying values", func() {
 		applyUpdates := func(data []byte, selector string, valueFlags []string) []byte {
-			jsonData := MustDeserialize(&data)
+			jsonData := MustDeserialize(data)
 			parsedValues, remove, err := patch.ValidateValuesFlags(valueFlags)
 			Expect(err).To(BeNil())
 
@@ -232,7 +232,7 @@ var _ = Describe("Patch", func() {
 
 			updated := jsonbasics.ConvertToJSONobject(yamlNode)
 			result := MustSerialize(updated, OutputFormatJSON)
-			return *result
+			return result
 		}
 
 		It("to an object", func() {

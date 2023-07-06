@@ -66,7 +66,7 @@ func executeListTags(cmd *cobra.Command, _ []string) error {
 	if outputFormat == "PLAIN" {
 		// return as a plain text format, unix style; line separated
 		result := []byte(strings.Join(list, "\n"))
-		return filebasics.WriteFile(outputFilename, &result)
+		return filebasics.WriteFile(outputFilename, result)
 	}
 	// return as yaml/json, create an object containing only a tags-array
 	result := make(map[string]interface{})

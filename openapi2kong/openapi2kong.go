@@ -22,7 +22,7 @@ const (
 
 // O2KOptions defines the options for an O2K conversion operation
 type O2kOptions struct {
-	Tags          *[]string // Array of tags to mark all generated entities with, taken from 'x-kong-tags' if omitted.
+	Tags          []string  // Array of tags to mark all generated entities with, taken from 'x-kong-tags' if omitted.
 	DocName       string    // Base document name, will be taken from x-kong-name, or info.title (for UUID generation!)
 	UUIDNamespace uuid.UUID // Namespace for UUID generation, defaults to DNS namespace for UUID v5
 }
@@ -60,10 +60,10 @@ func sanitizeRegexCapture(varName string) string {
 // getKongTags returns the provided tags or if nil, then the `x-kong-tags` property,
 // validated to be a string array. If there is no error, then there will always be
 // an array returned for safe access later in the process.
-func getKongTags(doc *openapi3.T, tagsProvided *[]string) ([]string, error) {
+func getKongTags(doc *openapi3.T, tagsProvided []string) ([]string, error) {
 	if tagsProvided != nil {
 		// the provided tags take precedence, return them
-		return *tagsProvided, nil
+		return tagsProvided, nil
 	}
 
 	if doc.ExtensionProps.Extensions == nil || doc.ExtensionProps.Extensions["x-kong-tags"] == nil {
@@ -240,7 +240,7 @@ func getPluginsList(
 	if pluginsToInclude != nil {
 		for _, config := range *pluginsToInclude {
 			pluginName := (*config)["name"].(string) // safe because it was previously parsed
-			configCopy := *(jsonbasics.DeepCopyObject(config))
+			configCopy := jsonbasics.DeepCopyObject(*config)
 
 			// generate a new ID, for a new plugin, based on new basename
 			configCopy["id"] = createPluginID(uuidNamespace, baseName, configCopy)
@@ -383,7 +383,7 @@ func getForeignKeyPlugins(
 }
 
 // MustConvert is the same as Convert, but will panic if an error is returned.
-func MustConvert(content *[]byte, opts O2kOptions) map[string]interface{} {
+func MustConvert(content []byte, opts O2kOptions) map[string]interface{} {
 	result, err := Convert(content, opts)
 	if err != nil {
 		log.Fatal(err)
@@ -392,7 +392,7 @@ func MustConvert(content *[]byte, opts O2kOptions) map[string]interface{} {
 }
 
 // Convert converts an OpenAPI spec to a Kong declarative file.
-func Convert(content *[]byte, opts O2kOptions) (map[string]interface{}, error) {
+func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 	opts.setDefaults()
 	logbasics.Debug("received OpenAPI2Kong options", "options", opts)
 
@@ -442,7 +442,7 @@ func Convert(content *[]byte, opts O2kOptions) (map[string]interface{}, error) {
 
 	// Load and parse the OAS file
 	loader := openapi3.NewLoader()
-	doc, err = loader.LoadFromData(*content)
+	doc, err = loader.LoadFromData(content)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing OAS3 file: [%w]", err)
 	}

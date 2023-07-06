@@ -210,7 +210,7 @@ func HistoryGet(filedata map[string]interface{}) (historyArray []interface{}) {
 	}
 
 	// Return a copy
-	return *jsonbasics.DeepCopyArray(&trackInfo)
+	return jsonbasics.DeepCopyArray(trackInfo)
 }
 
 // HistorySet sets the history info array. Setting to nil will delete the history.

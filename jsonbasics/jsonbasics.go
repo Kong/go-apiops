@@ -191,19 +191,19 @@ func GetBoolIndex(arr []interface{}, index int) (bool, error) {
 }
 
 // DeepCopyObject implements a poor man's deepcopy by jsonify/de-jsonify
-func DeepCopyObject(data *map[string]interface{}) *map[string]interface{} {
+func DeepCopyObject(data map[string]interface{}) map[string]interface{} {
 	var dataCopy map[string]interface{}
 	serialized, _ := json.Marshal(data)
 	_ = json.Unmarshal(serialized, &dataCopy)
-	return &dataCopy
+	return dataCopy
 }
 
 // DeepCopyArray implements a poor man's deepcopy by jsonify/de-jsonify
-func DeepCopyArray(data *[]interface{}) *[]interface{} {
+func DeepCopyArray(data []interface{}) []interface{} {
 	var dataCopy []interface{}
 	serialized, _ := json.Marshal(data)
 	_ = json.Unmarshal(serialized, &dataCopy)
-	return &dataCopy
+	return dataCopy
 }
 
 //

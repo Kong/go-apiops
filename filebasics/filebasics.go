@@ -20,7 +20,7 @@ const (
 
 // ReadFile reads file contents.
 // Reads from stdin if filename == "-"
-func ReadFile(filename string) (*[]byte, error) {
+func ReadFile(filename string) ([]byte, error) {
 	var (
 		body []byte
 		err  error
@@ -35,12 +35,12 @@ func ReadFile(filename string) (*[]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &body, nil
+	return body, nil
 }
 
 // MustReadFile reads file contents. Will panic if reading fails.
 // Reads from stdin if filename == "-"
-func MustReadFile(filename string) *[]byte {
+func MustReadFile(filename string) []byte {
 	body, err := ReadFile(filename)
 	if err != nil {
 		log.Fatalf("unable to read file: %v", err)
@@ -51,7 +51,7 @@ func MustReadFile(filename string) *[]byte {
 
 // WriteFile writes the output to a file.
 // Writes to stdout if filename == "-"
-func WriteFile(filename string, content *[]byte) error {
+func WriteFile(filename string, content []byte) error {
 	var f *os.File
 	var err error
 
@@ -66,7 +66,7 @@ func WriteFile(filename string, content *[]byte) error {
 		// writing to stdout
 		f = os.Stdout
 	}
-	_, err = f.Write(*content)
+	_, err = f.Write(content)
 	if err != nil {
 		return fmt.Errorf("failed to write to output file '%s'; %w", filename, err)
 	}
@@ -75,7 +75,7 @@ func WriteFile(filename string, content *[]byte) error {
 
 // MustWriteFile writes the output to a file. Will panic if writing fails.
 // Writes to stdout if filename == "-"
-func MustWriteFile(filename string, content *[]byte) {
+func MustWriteFile(filename string, content []byte) {
 	err := WriteFile(filename, content)
 	if err != nil {
 		panic(err)
@@ -83,7 +83,7 @@ func MustWriteFile(filename string, content *[]byte) {
 }
 
 // Serialize will serialize the result as a JSON/YAML.
-func Serialize(content map[string]interface{}, format string) (*[]byte, error) {
+func Serialize(content map[string]interface{}, format string) ([]byte, error) {
 	var (
 		str []byte
 		err error
@@ -105,12 +105,12 @@ func Serialize(content map[string]interface{}, format string) (*[]byte, error) {
 			strings.ToLower(OutputFormatYaml), strings.ToLower(OutputFormatJSON), format)
 	}
 
-	return &str, nil
+	return str, nil
 }
 
 // MustSerialize will serialize the result as a JSON/YAML. Will panic
 // if serializing fails.
-func MustSerialize(content map[string]interface{}, format string) *[]byte {
+func MustSerialize(content map[string]interface{}, format string) []byte {
 	result, err := Serialize(content, format)
 	if err != nil {
 		panic(err)
@@ -120,12 +120,12 @@ func MustSerialize(content map[string]interface{}, format string) *[]byte {
 
 // Deserialize will deserialize data as a JSON or YAML object. Will return an error
 // if deserializing fails or if it isn't an object.
-func Deserialize(data *[]byte) (map[string]interface{}, error) {
+func Deserialize(data []byte) (map[string]interface{}, error) {
 	var output interface{}
 
-	err1 := json.Unmarshal(*data, &output)
+	err1 := json.Unmarshal(data, &output)
 	if err1 != nil {
-		err2 := yaml.Unmarshal(*data, &output)
+		err2 := yaml.Unmarshal(data, &output)
 		if err2 != nil {
 			return nil, errors.New("failed deserializing data as JSON and as YAML")
 		}
@@ -141,7 +141,7 @@ func Deserialize(data *[]byte) (map[string]interface{}, error) {
 
 // MustDeserialize will deserialize data as a JSON or YAML object. Will panic
 // if deserializing fails or if it isn't an object. Will never return nil.
-func MustDeserialize(data *[]byte) map[string]interface{} {
+func MustDeserialize(data []byte) map[string]interface{} {
 	jsondata, err := Deserialize(data)
 	if err != nil {
 		log.Fatal("%w", err)
