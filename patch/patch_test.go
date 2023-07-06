@@ -12,7 +12,7 @@ var _ = Describe("Patch", func() {
 	Describe("Parse", func() {
 		It("parses a valid patch", func() {
 			jsonData := []byte(`{
-				"selector": "$",
+				"selectors": ["$"],
 				"values": {
 					"field1": "value1"
 				},
@@ -24,8 +24,8 @@ var _ = Describe("Patch", func() {
 			err := patch.Parse(data, "breadcrumb-text")
 
 			Expect(err).To(BeNil())
-			Expect(patch.SelectorSource).To(Equal("$"))
-			Expect(patch.Selector).ToNot(BeNil())
+			Expect(patch.SelectorSources).To(BeEquivalentTo([]string{"$"}))
+			Expect(patch.Selectors).ToNot(BeNil())
 			Expect(patch.Values).To(BeEquivalentTo(map[string]interface{}{
 				"field1": "value1",
 			}))
@@ -34,34 +34,34 @@ var _ = Describe("Patch", func() {
 			}))
 		})
 
-		It("fails on non-string selector", func() {
+		It("fails on non-string-array selector", func() {
 			jsonData := []byte(`{
-				"selector": 123
+				"selectors": 123
 			}`)
 			data := MustDeserialize(jsonData)
 
 			var patch patch.DeckPatch
 			err := patch.Parse(data, "file1.yml:patches[1]")
 
-			Expect(err).To(MatchError("file1.yml:patches[1].selector is not a string"))
+			Expect(err).To(MatchError("file1.yml:patches[1].selectors is not a string-array"))
 		})
 
 		It("fails on bad selector", func() {
 			jsonData := []byte(`{
-				"selector": "not valid"
+				"selectors": ["not valid"]
 			}`)
 			data := MustDeserialize(jsonData)
 
 			var patch patch.DeckPatch
 			err := patch.Parse(data, "file1.yml:patches[1]")
 
-			Expect(err).To(MatchError("file1.yml:patches[1].selector is not a valid JSONpath " +
+			Expect(err).To(MatchError("file1.yml:patches[1].selectors[0] is not a valid JSONpath " +
 				"expression; invalid character ' ' at position 3, following \"not\""))
 		})
 
 		It("fails on non-object 'values'", func() {
 			jsonData := []byte(`{
-				"selector": "$",
+				"selectors": ["$"],
 				"values": 123
 			}`)
 			data := MustDeserialize(jsonData)
@@ -74,7 +74,7 @@ var _ = Describe("Patch", func() {
 
 		It("fails on non-array 'remove'", func() {
 			jsonData := []byte(`{
-				"selector": "$",
+				"selectors": ["$"],
 				"remove": 123
 			}`)
 			data := MustDeserialize(jsonData)
@@ -87,7 +87,7 @@ var _ = Describe("Patch", func() {
 
 		It("fails on changing and removing the same field", func() {
 			jsonData := []byte(`{
-				"selector": "$",
+				"selectors": ["$"],
 				"values": {
 					"field1": "value1"
 				},
@@ -203,9 +203,9 @@ var _ = Describe("Patch", func() {
 	Describe("validating --selector flags", func() {
 		It("returns error on bad JSONpath", func() {
 			testPatch := patch.DeckPatch{
-				SelectorSource: "bad JSONpath",
-				Values:         nil,
-				Remove:         []string{"test"},
+				SelectorSources: []string{"bad JSONpath"},
+				Values:          nil,
+				Remove:          []string{"test"},
 			}
 			data := []byte(`{}`)
 			err := testPatch.ApplyToNodes(jsonbasics.ConvertToYamlNode(MustDeserialize(data)))
@@ -221,9 +221,9 @@ var _ = Describe("Patch", func() {
 			Expect(err).To(BeNil())
 
 			testPatch := patch.DeckPatch{
-				SelectorSource: selector,
-				Values:         parsedValues,
-				Remove:         remove,
+				SelectorSources: []string{selector},
+				Values:          parsedValues,
+				Remove:          remove,
 			}
 
 			yamlNode := jsonbasics.ConvertToYamlNode(jsonData)

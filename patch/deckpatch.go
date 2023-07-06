@@ -8,15 +8,15 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const DefaultSelector = "$"
+var DefaultSelector = []string{"$"}
 
 // DeckPatch models a single DeckPatch that can be applied on a deckfile.
 type DeckPatch struct {
 	// Format         string                 // Name of the format specified
-	SelectorSource string                 // Source query for the JSONpath object
-	Selector       *yamlpath.Path         // JSONpath object
-	Values         map[string]interface{} // Values to set on target objects
-	Remove         []string               // List of keys to remove from the target object
+	SelectorSources []string               // Source query for the JSONpath object
+	Selectors       []*yamlpath.Path       // JSONpath object
+	Values          map[string]interface{} // Values to set on target objects
+	Remove          []string               // List of keys to remove from the target object
 	// Patch          map[string]interface{} // RFC-7396
 	// Operations     []interface{}          // RFC-6902
 }
@@ -26,18 +26,23 @@ type DeckPatch struct {
 // values is optional, defaults to empty map. If given, MUST be an object.
 // remove is optional, defaults to empty array. If given MUST be an array. Non-string entries will be ignored.
 func (patch *DeckPatch) Parse(obj map[string]interface{}, breadCrumb string) (err error) {
-	patch.SelectorSource, err = jsonbasics.GetStringField(obj, "selector")
+	patch.SelectorSources, err = jsonbasics.GetStringArrayField(obj, "selectors")
 	if err != nil {
-		if obj["selector"] != nil {
-			// selector is present, but not a string, error out
-			return fmt.Errorf("%s.selector is not a string", breadCrumb)
+		if obj["selectors"] != nil {
+			// selector is present, but not a string-array, error out
+			return fmt.Errorf("%s.selectors is not a string-array", breadCrumb)
 		}
 		// not present, so set default
-		patch.SelectorSource = DefaultSelector
+		patch.SelectorSources = DefaultSelector
 	}
-	patch.Selector, err = yamlpath.NewPath(patch.SelectorSource)
-	if err != nil {
-		return fmt.Errorf("%s.selector is not a valid JSONpath expression; %w", breadCrumb, err)
+
+	// compile JSONpath expressions
+	patch.Selectors = make([]*yamlpath.Path, len(patch.SelectorSources))
+	for i, selector := range patch.SelectorSources {
+		patch.Selectors[i], err = yamlpath.NewPath(selector)
+		if err != nil {
+			return fmt.Errorf("%s.selectors[%d] is not a valid JSONpath expression; %w", breadCrumb, i, err)
+		}
 	}
 
 	patch.Values, err = jsonbasics.ToObject(obj["values"])
@@ -124,19 +129,27 @@ func (patch *DeckPatch) ApplyToNodes(yamlData *yaml.Node) (err error) {
 		return nil
 	}
 
-	if patch.Selector == nil {
-		patch.Selector, err = yamlpath.NewPath(patch.SelectorSource)
-		if err != nil {
-			return fmt.Errorf("selector '%s' is not a valid JSONpath expression; %w", patch.SelectorSource, err)
+	if patch.Selectors == nil || len(patch.Selectors) == 0 {
+		patch.Selectors = make([]*yamlpath.Path, len(patch.SelectorSources))
+		for i, selector := range patch.SelectorSources {
+			patch.Selectors[i], err = yamlpath.NewPath(selector)
+			if err != nil {
+				return fmt.Errorf("selector '%s' is not a valid JSONpath expression; %w", selector, err)
+			}
 		}
 	}
 
-	nodes, err := patch.Selector.Find(yamlData)
-	if err != nil {
-		return err
+	// query the yamlData using the selector
+	nodes := make([]*yaml.Node, 0)
+	for _, selector := range patch.Selectors {
+		moreNodes, err := selector.Find(yamlData)
+		if err != nil {
+			return err
+		}
+		nodes = append(nodes, moreNodes...)
 	}
 
-	// 'nodes' is an array of nodes matching the selector
+	// 'nodes' is an array of nodes matching the selectors
 	for _, node := range nodes {
 		// since we're updating object fields, we'll skip anything that is
 		// not a JSONobject
