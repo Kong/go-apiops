@@ -106,7 +106,7 @@ func (ts *Plugger) SetSelectors(selectors []string) error {
 	ts.selectors = compiledSelectors
 	ts.pluginOwners = nil // clear previous JSONpointer search results
 	ts.pluginMain = nil
-	logbasics.Debug("successfully compiled JSONpaths")
+	logbasics.Debug("successfully compiled JSONpaths", selectors)
 	return nil
 }
 
@@ -220,6 +220,9 @@ func (ts *Plugger) addPluginToOwners(newPlugin *yaml.Node, overwrite bool) error
 		nameNode := yamlbasics.GetFieldValue(newPlugin, "name")
 		if nameNode != nil && nameNode.Kind == yaml.ScalarNode {
 			pluginName = nameNode.Value
+			logbasics.Info("adding plugin", "name", pluginName)
+		} else {
+			logbasics.Info("plugin has no name", "plugin", newPlugin)
 		}
 	}
 
@@ -272,7 +275,7 @@ func (ts *Plugger) addPluginToOwners(newPlugin *yaml.Node, overwrite bool) error
 
 		// findPlugin the plugin in the owner
 		var findPlugin yamlbasics.YamlArrayIterator
-		if owner == ts.pluginMain {
+		if ownerPluginArray == ts.pluginMain {
 			findPlugin = yamlbasics.Search(ownerPluginArray, mainSearcher)
 		} else {
 			findPlugin = yamlbasics.Search(ownerPluginArray, genericSearcher)
