@@ -35,7 +35,7 @@ var _ = Describe("Merge", func() {
 				MustWriteSerializedFile("./merge_testfiles/"+
 					strings.Replace(expected, "_expected.", "_generated.", -1), res, OutputFormatJSON)
 
-				Expect(*result).To(MatchJSON(*expectedResult))
+				Expect(result).To(MatchJSON(expectedResult))
 			}
 		}
 
@@ -133,7 +133,7 @@ var _ = Describe("Merge", func() {
 			result := MustSerialize(res, OutputFormatJSON)
 			expected := MustReadFile(expectedFile)
 
-			Expect(*result).To(MatchJSON(*expected))
+			Expect(result).To(MatchJSON(expected))
 		})
 
 		It("throws error on bad files", func() {

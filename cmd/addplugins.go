@@ -54,8 +54,7 @@ func executeAddPlugins(cmd *cobra.Command, cfgFiles []string) error {
 			return fmt.Errorf("failed getting cli argument 'config'; %w", err)
 		}
 		for _, strConfig := range strConfigs {
-			temp := []byte(strConfig)
-			pluginConfig, err := filebasics.Deserialize(&temp)
+			pluginConfig, err := filebasics.Deserialize([]byte(strConfig))
 			if err != nil {
 				return fmt.Errorf("failed to deserialize plugin config '%s'; %w", strConfig, err)
 			}

@@ -24,7 +24,7 @@ func Test_Openapi2kong(t *testing.T) {
 			fileNameExpected := strings.TrimSuffix(fileNameIn, ".yaml") + ".expected.json"
 			fileNameOut := strings.TrimSuffix(fileNameIn, ".yaml") + ".generated.json"
 			dataIn, _ := os.ReadFile(fixturePath + fileNameIn)
-			dataOut, err := Convert(&dataIn, O2kOptions{
+			dataOut, err := Convert(dataIn, O2kOptions{
 				Tags: &[]string{"OAS3_import", "OAS3file_" + fileNameIn},
 			})
 			if err != nil {

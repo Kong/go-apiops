@@ -64,7 +64,7 @@ var _ = Describe("jsonbasics", func() {
 					{ "name": "two" }
 				]
 			}`)
-			objArr, err := GetObjectArrayField(MustDeserialize(&data), "myArray")
+			objArr, err := GetObjectArrayField(MustDeserialize(data), "myArray")
 
 			Expect(err).To(BeNil())
 			Expect(objArr).To(BeEquivalentTo([]map[string]interface{}{
@@ -87,7 +87,7 @@ var _ = Describe("jsonbasics", func() {
 					[1,2,3]
 				]
 			}`)
-			objArr, err := GetObjectArrayField(MustDeserialize(&data), "myArray")
+			objArr, err := GetObjectArrayField(MustDeserialize(data), "myArray")
 
 			Expect(err).To(BeNil())
 			Expect(objArr).To(BeEquivalentTo([]map[string]interface{}{
@@ -102,7 +102,7 @@ var _ = Describe("jsonbasics", func() {
 
 		It("returns an empty array if the field doesn't exist", func() {
 			data := []byte(`{}`)
-			objArr, err := GetObjectArrayField(MustDeserialize(&data), "myArray")
+			objArr, err := GetObjectArrayField(MustDeserialize(data), "myArray")
 
 			Expect(err).To(BeNil())
 			Expect(objArr).To(BeEquivalentTo([]map[string]interface{}{}))
@@ -116,7 +116,7 @@ var _ = Describe("jsonbasics", func() {
 					[1,2,3]
 				]
 			}`)
-			objArr, err := GetObjectArrayField(MustDeserialize(&data), "myArray")
+			objArr, err := GetObjectArrayField(MustDeserialize(data), "myArray")
 
 			Expect(err).To(BeNil())
 			Expect(objArr).To(BeEquivalentTo([]map[string]interface{}{}))
@@ -126,7 +126,7 @@ var _ = Describe("jsonbasics", func() {
 			data := []byte(`{
 				"myArray": "it's a string"
 			}`)
-			objArr, err := GetObjectArrayField(MustDeserialize(&data), "myArray")
+			objArr, err := GetObjectArrayField(MustDeserialize(data), "myArray")
 
 			Expect(err).To(MatchError("not an array, but %!t(string=it's a string)"))
 			Expect(objArr).To(BeNil())
@@ -140,7 +140,7 @@ var _ = Describe("jsonbasics", func() {
 					{ "name": "one" }
 				]
 			}`)
-			obj := MustDeserialize(&data)
+			obj := MustDeserialize(data)
 			objArr, err := GetObjectArrayField(obj, "myArray")
 			Expect(err).To(BeNil())
 			Expect(objArr[0]["name"]).To(Equal("one"))

@@ -59,7 +59,7 @@ var _ = Describe("tags", func() {
 				]}`)
 
 			tagger := tags.Tagger{}
-			tagger.SetData(filebasics.MustDeserialize(&dataInput))
+			tagger.SetData(filebasics.MustDeserialize(dataInput))
 			tagger.SetSelectors([]string{
 				"$..anykey[*]",
 			})
@@ -67,7 +67,7 @@ var _ = Describe("tags", func() {
 				"tag2",
 			}, true)
 
-			result := *(filebasics.MustSerialize(tagger.GetData(), filebasics.OutputFormatJSON))
+			result := filebasics.MustSerialize(tagger.GetData(), filebasics.OutputFormatJSON)
 			Expect(result).To(MatchJSON(`
 				{ "anykey": [
 					{ "name": "svc1", "tags": ["tag1"] },
@@ -92,12 +92,12 @@ var _ = Describe("tags", func() {
 				}`)
 
 			tagger := tags.Tagger{}
-			tagger.SetData(filebasics.MustDeserialize(&dataInput))
+			tagger.SetData(filebasics.MustDeserialize(dataInput))
 			tagger.RemoveTags([]string{
 				"tag2",
 			}, true)
 
-			result := *(filebasics.MustSerialize(tagger.GetData(), filebasics.OutputFormatJSON))
+			result := filebasics.MustSerialize(tagger.GetData(), filebasics.OutputFormatJSON)
 			Expect(result).To(MatchJSON(`
 				{
 					"services": [
@@ -122,7 +122,7 @@ var _ = Describe("tags", func() {
 				]}`)
 
 			tagger := tags.Tagger{}
-			tagger.SetData(filebasics.MustDeserialize(&dataInput))
+			tagger.SetData(filebasics.MustDeserialize(dataInput))
 			tagger.SetSelectors([]string{
 				"$..anykey[*]",
 			})
@@ -131,7 +131,7 @@ var _ = Describe("tags", func() {
 				"tag3",
 			}, true)
 
-			result := *(filebasics.MustSerialize(tagger.GetData(), filebasics.OutputFormatJSON))
+			result := filebasics.MustSerialize(tagger.GetData(), filebasics.OutputFormatJSON)
 			Expect(result).To(MatchJSON(`
 				{ "anykey": [
 					{ "name": "svc1", "tags": ["tag1"] },
@@ -149,7 +149,7 @@ var _ = Describe("tags", func() {
 				]}`)
 
 			tagger := tags.Tagger{}
-			tagger.SetData(filebasics.MustDeserialize(&dataInput))
+			tagger.SetData(filebasics.MustDeserialize(dataInput))
 			tagger.SetSelectors([]string{
 				"$..anykey[*]",
 			})
@@ -158,7 +158,7 @@ var _ = Describe("tags", func() {
 				"tag3",
 			}, false)
 
-			result := *(filebasics.MustSerialize(tagger.GetData(), filebasics.OutputFormatJSON))
+			result := filebasics.MustSerialize(tagger.GetData(), filebasics.OutputFormatJSON)
 			Expect(result).To(MatchJSON(`
 				{ "anykey": [
 					{ "name": "svc1", "tags": ["tag1"] },
@@ -178,7 +178,7 @@ var _ = Describe("tags", func() {
 				]}`)
 
 			tagger := tags.Tagger{}
-			tagger.SetData(filebasics.MustDeserialize(&dataInput))
+			tagger.SetData(filebasics.MustDeserialize(dataInput))
 			tagger.SetSelectors([]string{
 				"$..anykey[*]",
 			})
@@ -187,7 +187,7 @@ var _ = Describe("tags", func() {
 				"tagY",
 			})
 
-			result := *(filebasics.MustSerialize(tagger.GetData(), filebasics.OutputFormatJSON))
+			result := filebasics.MustSerialize(tagger.GetData(), filebasics.OutputFormatJSON)
 			Expect(result).To(MatchJSON(`
 				{ "anykey": [
 					{ "name": "svc1", "tags": ["tagX", "tagY"] },
@@ -207,7 +207,7 @@ var _ = Describe("tags", func() {
 				]}`)
 
 			tagger := tags.Tagger{}
-			tagger.SetData(filebasics.MustDeserialize(&dataInput))
+			tagger.SetData(filebasics.MustDeserialize(dataInput))
 			tagger.SetSelectors([]string{
 				"$..anykey[*]",
 			})
@@ -232,7 +232,7 @@ var _ = Describe("tags", func() {
 				]}`)
 
 			tagger := tags.Tagger{}
-			tagger.SetData(filebasics.MustDeserialize(&dataInput))
+			tagger.SetData(filebasics.MustDeserialize(dataInput))
 			tagger.SetSelectors([]string{
 				"$..anykey[*]",
 			})
@@ -242,7 +242,7 @@ var _ = Describe("tags", func() {
 			}, false)
 			Expect(err).ToNot(HaveOccurred())
 
-			result := *(filebasics.MustSerialize(tagger.GetData(), filebasics.OutputFormatJSON))
+			result := filebasics.MustSerialize(tagger.GetData(), filebasics.OutputFormatJSON)
 			Expect(result).To(MatchJSON(`
 				{ "anykey": [
 					{ "name": "svc1", "tags": [] },
@@ -260,7 +260,7 @@ var _ = Describe("tags", func() {
 				]}`)
 
 			tagger := tags.Tagger{}
-			tagger.SetData(filebasics.MustDeserialize(&dataInput))
+			tagger.SetData(filebasics.MustDeserialize(dataInput))
 			tagger.SetSelectors([]string{
 				"$..anykey[*]",
 			})
@@ -270,7 +270,7 @@ var _ = Describe("tags", func() {
 			}, true)
 			Expect(err).ToNot(HaveOccurred())
 
-			result := *(filebasics.MustSerialize(tagger.GetData(), filebasics.OutputFormatJSON))
+			result := filebasics.MustSerialize(tagger.GetData(), filebasics.OutputFormatJSON)
 			Expect(result).To(MatchJSON(`
 				{ "anykey": [
 					{ "name": "svc1" },

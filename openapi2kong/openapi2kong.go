@@ -240,7 +240,7 @@ func getPluginsList(
 	if pluginsToInclude != nil {
 		for _, config := range *pluginsToInclude {
 			pluginName := (*config)["name"].(string) // safe because it was previously parsed
-			configCopy := *(jsonbasics.DeepCopyObject(config))
+			configCopy := jsonbasics.DeepCopyObject(*config)
 
 			// generate a new ID, for a new plugin, based on new basename
 			configCopy["id"] = createPluginID(uuidNamespace, baseName, configCopy)
@@ -383,7 +383,7 @@ func getForeignKeyPlugins(
 }
 
 // MustConvert is the same as Convert, but will panic if an error is returned.
-func MustConvert(content *[]byte, opts O2kOptions) map[string]interface{} {
+func MustConvert(content []byte, opts O2kOptions) map[string]interface{} {
 	result, err := Convert(content, opts)
 	if err != nil {
 		log.Fatal(err)
@@ -392,7 +392,7 @@ func MustConvert(content *[]byte, opts O2kOptions) map[string]interface{} {
 }
 
 // Convert converts an OpenAPI spec to a Kong declarative file.
-func Convert(content *[]byte, opts O2kOptions) (map[string]interface{}, error) {
+func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 	opts.setDefaults()
 	logbasics.Debug("received OpenAPI2Kong options", "options", opts)
 
@@ -442,7 +442,7 @@ func Convert(content *[]byte, opts O2kOptions) (map[string]interface{}, error) {
 
 	// Load and parse the OAS file
 	loader := openapi3.NewLoader()
-	doc, err = loader.LoadFromData(*content)
+	doc, err = loader.LoadFromData(content)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing OAS3 file: [%w]", err)
 	}

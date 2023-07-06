@@ -57,11 +57,11 @@ var _ = Describe("deckformat", func() {
 					}
 				]
 			}`)
-			deckdata, err := ConvertDBless(MustDeserialize(&jsonData))
+			deckdata, err := ConvertDBless(MustDeserialize(jsonData))
 			Expect(err).To(BeNil())
 
 			jsonDeck := MustSerialize(deckdata, OutputFormatJSON)
-			Expect(*jsonDeck).Should(MatchJSON(`{
+			Expect(jsonDeck).Should(MatchJSON(`{
 				"consumer_groups": [
 					{
 						"name": "A-team",
@@ -148,11 +148,11 @@ var _ = Describe("deckformat", func() {
 					}
 				]
 			}`)
-			deckdata, err := ConvertDBless(MustDeserialize(&jsonData))
+			deckdata, err := ConvertDBless(MustDeserialize(jsonData))
 			Expect(err).To(BeNil())
 
 			jsonDeck := MustSerialize(deckdata, OutputFormatJSON)
-			Expect(*jsonDeck).Should(MatchJSON(`{
+			Expect(jsonDeck).Should(MatchJSON(`{
 				"consumer_groups": [
 					{
 						"name": "A-team",
@@ -203,7 +203,7 @@ var _ = Describe("deckformat", func() {
 					},
 				]
 			}`)
-			_, err := ConvertDBless(MustDeserialize(&jsonData))
+			_, err := ConvertDBless(MustDeserialize(jsonData))
 			Expect(err.Error()).To(ContainSubstring(
 				"entry 'consumer_groups[0]' contains both 'consumer_group_plugins' and 'plugins'"))
 		})
@@ -218,7 +218,7 @@ var _ = Describe("deckformat", func() {
 					}
 				]
 			}`)
-			_, err := ConvertDBless(MustDeserialize(&jsonData))
+			_, err := ConvertDBless(MustDeserialize(jsonData))
 			Expect(err.Error()).To(ContainSubstring(
 				"consumer_group 'A-team' referenced by 'consumer_group_plugins[0]' not found"))
 		})
