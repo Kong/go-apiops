@@ -94,7 +94,8 @@ To accomplish the same with a patch-file, first specify the file:
 ```yaml
 _format_version: 1.0
 patches:
-  - selector: $..services[*]
+  - selectors:
+    - $..services[*]
     values:
       read_timeout: 30000
 ```
@@ -109,7 +110,8 @@ Patch-files can also be used to _remove_ keys from the output file. For example,
 _format_version: "1.0"
 
 patches:
-  - selector: $
+  - selectors:
+    - $
     remove:
       - _ignore
 ```
