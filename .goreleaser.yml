@@ -1,3 +1,6 @@
+release:
+  skip_upload: true
+
 universal_binaries:
 - replace: true
   #id: kced
