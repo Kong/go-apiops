@@ -74,7 +74,15 @@ func (ts *Plugger) SetData(data map[string]interface{}) {
 	if data == nil {
 		panic("data cannot be nil")
 	}
-	ts.data = jsonbasics.ConvertToYamlNode(data)
+	ts.SetYamlData(jsonbasics.ConvertToYamlNode(data))
+}
+
+// SetYamlData sets the Yaml document to operate on. Cannot be set to nil (panic).
+func (ts *Plugger) SetYamlData(data *yaml.Node) {
+	if data == nil {
+		panic("data cannot be nil")
+	}
+	ts.data = data
 	ts.pluginOwners = nil // clear previous JSONpointer search results
 	ts.pluginMain = nil
 }
@@ -83,6 +91,11 @@ func (ts *Plugger) SetData(data map[string]interface{}) {
 func (ts *Plugger) GetData() map[string]interface{} {
 	d := jsonbasics.ConvertToJSONInterface(ts.data)
 	return (*d).(map[string]interface{})
+}
+
+// GetYamlData returns the (modified) document.
+func (ts *Plugger) GetYamlData() *yaml.Node {
+	return ts.data
 }
 
 // SetSelectors sets the selectors to use. If empty (or nil), the default selectors

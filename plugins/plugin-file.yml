@@ -1,0 +1,17 @@
+# This file describes the possible format of the plugin operations by
+# the CLI command `kced add-plugin` etc.
+
+_format_version: "1.0"
+
+# plugins is an array of plugin operations, to be applied in order
+# for now only "add" is supported
+plugins:
+  - selectors:            # defaults to ["$"]
+    - "$.services[*]"
+    overwrite: false      # defaults to false
+    add-plugins:
+    - name: key-auth
+      config:
+        key_names: [api_key, apikey]
+        key_in_body: false
+        hide_credentials: true

@@ -10,6 +10,7 @@ import (
 
 	"github.com/kong/go-apiops/deckformat"
 	"github.com/kong/go-apiops/filebasics"
+	"github.com/kong/go-apiops/jsonbasics"
 	"github.com/kong/go-apiops/logbasics"
 	"github.com/kong/go-apiops/plugins"
 	"github.com/spf13/cobra"
@@ -70,18 +71,25 @@ func executeAddPlugins(cmd *cobra.Command, cfgFiles []string) error {
 		}
 	}
 
-	if len(cfgFiles) > 0 {
-		logbasics.Error(nil, "WARNING: 'config-files' are not yet implemented; ignoring")
+	var pluginFiles []plugins.DeckPluginFile
+	for _, filename := range cfgFiles {
+		var file plugins.DeckPluginFile
+		if err := file.ParseFile(filename); err != nil {
+			return fmt.Errorf("failed to parse plugin file '%s'; %w", filename, err)
+		}
+		pluginFiles = append(pluginFiles, file)
 	}
 
 	// do the work: read/add-plugins/write
-	data, err := filebasics.DeserializeFile(inputFilename)
+	jsondata, err := filebasics.DeserializeFile(inputFilename)
 	if err != nil {
 		return fmt.Errorf("failed to read input file '%s'; %w", inputFilename, err)
 	}
+	yamlNode := jsonbasics.ConvertToYamlNode(jsondata)
 
+	// apply CLI flags
 	plugger := plugins.Plugger{}
-	plugger.SetData(data)
+	plugger.SetYamlData(yamlNode)
 	err = plugger.SetSelectors(selectors)
 	if err != nil {
 		return fmt.Errorf("failed to set selectors; %w", err)
@@ -90,7 +98,16 @@ func executeAddPlugins(cmd *cobra.Command, cfgFiles []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to add plugins; %w", err)
 	}
-	data = plugger.GetData()
+	yamlNode = plugger.GetYamlData()
+
+	// apply plugin-files
+	for i, pluginFile := range pluginFiles {
+		err = pluginFile.Apply(yamlNode)
+		if err != nil {
+			return fmt.Errorf("failed to apply plugin file '%s'; %w", cfgFiles[i], err)
+		}
+	}
+	jsondata = plugger.GetData()
 
 	trackInfo := deckformat.HistoryNewEntry("add-plugins")
 	trackInfo["input"] = inputFilename
@@ -100,12 +117,12 @@ func executeAddPlugins(cmd *cobra.Command, cfgFiles []string) error {
 		trackInfo["configs"] = pluginConfigs
 	}
 	if len(cfgFiles) > 0 {
-		trackInfo["config-files"] = cfgFiles
+		trackInfo["pluginfiles"] = cfgFiles
 	}
 	trackInfo["selectors"] = selectors
-	deckformat.HistoryAppend(data, trackInfo)
+	deckformat.HistoryAppend(jsondata, trackInfo)
 
-	return filebasics.WriteSerializedFile(outputFilename, data, outputFormat)
+	return filebasics.WriteSerializedFile(outputFilename, jsondata, outputFormat)
 }
 
 //
@@ -120,7 +137,28 @@ var addPluginsCmd = &cobra.Command{
 	Long: `Adds plugins to objects in a decK file.
 
 The plugins are added to all objects that match the selector expressions. If no
-selectors are given, they will be added to the top-level 'plugins' array.`,
+selectors are given, they will be added to the top-level 'plugins' array.
+
+The plugin-files have the following format (JSON or YAML) and are applied in the
+order they are given;
+
+	{ "_format_version": "1.0",
+		"plugins": [
+			{ "selectors": [
+					"$..services[*]"
+				],
+				"overwrite": false,
+				"add-plugins": [
+					{ "name": "my-plugin",
+						"config": {
+							"my-property": "value"
+				 		}
+					}
+				],
+			}
+		]
+	}
+`,
 	RunE: executeAddPlugins,
 	Args: cobra.MinimumNArgs(0),
 }
