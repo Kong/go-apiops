@@ -1,5 +1,5 @@
 # This file describes the possible format of the plugin operations by
-# the CLI command `kced add-plugin` etc.
+# the CLI command `deck add-plugin` etc.
 
 _format_version: "1.0"
 

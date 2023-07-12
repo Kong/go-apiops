@@ -17,15 +17,15 @@ var COMMIT = "unknown"
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Print the kceD version",
-	Long: `The version command prints the version of kceD along with a Git short
+	Short: "Print the go-apiops version",
+	Long: `The version command prints the version of go-apiops along with a Git short
 commit hash of the source tree.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("kceD %s (%s) \n", VERSION, COMMIT)
+		fmt.Printf("go-apiops %s (%s) \n", VERSION, COMMIT)
 	},
 }
 
 func init() {
-	deckformat.ToolVersionSet("kceD", "", "") // VERSION, COMMIT) disabled for now
+	deckformat.ToolVersionSet("go-apiops", "", "") // VERSION, COMMIT) disabled for now
 	rootCmd.AddCommand(versionCmd)
 }

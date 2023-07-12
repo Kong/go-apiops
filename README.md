@@ -25,7 +25,7 @@ The library is under heavy development and is a public preview project under an 
 
 ## Installation & Usage
 
-Currently, the functionality is released as a library only. The repository contains a CLI named `kced` for local testing.
+Currently, the functionality is released as a library only. The repository contains a CLI named `go-apiops` for local testing.
 
 ### Local Build
 
@@ -35,7 +35,7 @@ Currently, the functionality is released as a library only. The repository conta
 
 ## Reporting issues
 
-Issues using `kced` or the library can be reported in the [Github repo](https://github.com/Kong/go-apiops/issues).
+Issues using the `go-apiops` CLI or the library can be reported in the [Github repo](https://github.com/Kong/go-apiops/issues).
 
 ## Releasing new versions
 

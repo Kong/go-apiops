@@ -11,9 +11,9 @@ import (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "kced",
-	Short: "A temporary CLI that drives the Kong go-apiops library",
-	Long: `A temporary CLI that drives the Kong go-apiops library.
+	Use:   "go-apiops",
+	Short: "A CLI for testing the Kong go-apiops library",
+	Long: `A CLI for testing the Kong go-apiops library.
 
 go-apiops houses an improved APIOps toolset for operating Kong Gateway deployments.`,
 	// Uncomment the following line if your bare application

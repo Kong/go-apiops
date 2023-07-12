@@ -1,11 +1,6 @@
 release:
   skip_upload: true
 
-universal_binaries:
-- replace: true
-  #id: kced
-  name_template: 'kced'
-
 builds:
 - env:
   - CGO_ENABLED=0
@@ -24,8 +19,6 @@ builds:
     goarch: arm64
   flags:
   - -trimpath
-  #id: kced
-  binary: kced
   ldflags:
   - -s -w -X github.com/kong/go-apiops/cmd.VERSION={{ .Tag }} -X github.com/kong/go-apiops/cmd.COMMIT={{ .ShortCommit }}
 snapshot:
