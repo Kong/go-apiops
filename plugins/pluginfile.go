@@ -39,9 +39,9 @@ func (patch *AddPluginPatch) Parse(patchData map[string]interface{}, source stri
 		return fmt.Errorf("%s.selectors: %w", source, err)
 	}
 
-	patch.Plugins, err = jsonbasics.GetObjectArrayField(patchData, "add-plugins")
+	patch.Plugins, err = jsonbasics.GetObjectArrayField(patchData, "plugins")
 	if err != nil {
-		return fmt.Errorf("%s.add-plugins is not an array; %w", source, err)
+		return fmt.Errorf("%s.plugins is not an array; %w", source, err)
 	}
 
 	patch.Overwrite = false
@@ -99,14 +99,14 @@ func (pluginFile *DeckPluginFile) ParseFile(filename string) error {
 		logbasics.Debug("parsed unversioned plugin-file", "file", filename)
 	}
 
-	patchesRead, err := jsonbasics.GetObjectArrayField(data, "plugins")
+	patchesRead, err := jsonbasics.GetObjectArrayField(data, "add-plugins")
 	if err != nil {
-		return fmt.Errorf("%s: field 'plugins' is not an array; %w", filename, err)
+		return fmt.Errorf("%s: field 'add-plugins' is not an array; %w", filename, err)
 	}
 
 	for i, patch := range patchesRead {
 		var addPluginPatch AddPluginPatch
-		err := addPluginPatch.Parse(patch, fmt.Sprintf("%s: plugins[%d]", filename, i))
+		err := addPluginPatch.Parse(patch, fmt.Sprintf("%s: add-plugins[%d]", filename, i))
 		if err != nil {
 			return err
 		}

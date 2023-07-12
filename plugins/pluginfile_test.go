@@ -18,7 +18,7 @@ var _ = Describe("plugin files", func() {
 							"$.services[*]"
 						],
 						"overwrite": true,
-						"add-plugins": [{
+						"plugins": [{
 							"name": "my-plugin"
 						}]
 					}`))
@@ -75,7 +75,7 @@ var _ = Describe("plugin files", func() {
 					{
 						"selectors": ["$.services[*]"],
 						"overwrite": true,
-						"add-plugins": [{
+						"plugins": [{
 							"name": "my-other-plugin"
 						}]
 					}`)), "test")

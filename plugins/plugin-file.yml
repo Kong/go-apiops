@@ -5,11 +5,11 @@ _format_version: "1.0"
 
 # plugins is an array of plugin operations, to be applied in order
 # for now only "add" is supported
-plugins:
+add-plugins:
   - selectors:            # defaults to ["$"]
     - "$.services[*]"
     overwrite: false      # defaults to false
-    add-plugins:
+    plugins:
     - name: key-auth
       config:
         key_names: [api_key, apikey]
