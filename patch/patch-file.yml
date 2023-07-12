@@ -1,5 +1,5 @@
 # This file describes the possible format of the supported patch operations by
-# the CLI command `kced patch`.
+# the CLI command `deck patch`.
 
 # The current version only implements 'deck' format
 _format_version: 1.0

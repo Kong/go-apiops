@@ -1,6 +1,6 @@
 .PHONY: all check-main-dependencies check-test-dependencies check-lint-dependencies build lint test coverage clean
 
-BINARY_NAME=kced
+BINARY_NAME=go-apiops
 
 echo_fail = printf "\e[31m✘ \033\e[0m$(1)\n"
 echo_pass = printf "\e[32m✔ \033\e[0m$(1)\n"
