@@ -11,21 +11,29 @@ Home of Kong's Go based APIOps library.
 
 ## What is APIOps
 
-API Lifecycle Automation, or APIOps, is the process of applying API best practices via automation frameworks. This library contains functions to aid the development of tools to apply APIOps to Kong Gateway deployments.
+API Lifecycle Automation, or APIOps, is the process of applying API best practices via automation frameworks.
+This library contains functions to aid the development of tools to apply APIOps to Kong Gateway deployments.
 
 See the [Kong Blog](https://konghq.com/blog/tag/apiops) for more information on APIOps concepts.
 
 ## What is this library?
 
-The [go-apiops](https://github.com/Kong/go-apiops) library provides a set of tools (validation and transformation) for working with API specifications and [Kong Gateway](https://docs.konghq.com/gateway/latest/) declarative configurations. Conceptually, these tools are intended to be organized into a pipeline of individual steps configured for a particular users needs. The overall purpose of the library is to enable users to build a CI/CD workflow which deliver APIs from specification to deployment. This pipeline design allows users to customize the delivery of APIs based on their specific needs.
+The [go-apiops](https://github.com/Kong/go-apiops) library provides a set of tools (validation and transformation)
+for working with API specifications and [Kong Gateway](https://docs.konghq.com/gateway/latest/) declarative configurations.
+Conceptually, these tools are intended to be organized into a pipeline of individual steps configured for a particular
+users needs. The overall purpose of the library is to enable users to build a CI/CD workflow which deliver APIs from
+specification to deployment. This pipeline design allows users to customize the delivery of APIs based on their specific needs.
 
 ## What is the current status of this library?
 
-The library is under heavy development and is a public preview project under an [Apache 2.0 license](LICENSE). The library is not currently supported by Kong Inc. Its functionality will be made available through the [deck](https://docs.konghq.com/deck/latest/) cli tool.
+The library is an [Apache 2.0 license](LICENSE).
+The library functionality will be be made available through
+the [deck](https://docs.konghq.com/deck/latest/) cli tool.
 
 ## Installation & Usage
 
 Currently, the functionality is released as a library only. The repository contains a CLI named `go-apiops` for local testing.
+For general CLI usage, see the [deck](https://docs.konghq.com/deck/latest/) cli tool which exposes the library functions.
 
 ### Local Build
 
