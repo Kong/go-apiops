@@ -12,10 +12,12 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+type OutputFormat string
+
 const (
-	defaultJSONIndent = "  "
-	OutputFormatYaml  = "YAML"
-	OutputFormatJSON  = "JSON"
+	defaultJSONIndent              = "  "
+	OutputFormatYaml  OutputFormat = "yaml"
+	OutputFormatJSON  OutputFormat = "json"
 )
 
 // ReadFile reads file contents.
@@ -82,12 +84,14 @@ func MustWriteFile(filename string, content []byte) {
 	}
 }
 
-// Serialize will serialize the result as a JSON/YAML.
-func Serialize(content map[string]interface{}, format string) ([]byte, error) {
+// Serialize will serialize the result as a JSON/YAML. Format parameter is case-insensitive.
+func Serialize(content map[string]interface{}, format OutputFormat) ([]byte, error) {
 	var (
 		str []byte
 		err error
 	)
+
+	format = OutputFormat(strings.ToLower(string(format)))
 
 	switch format {
 	case OutputFormatYaml:
@@ -102,7 +106,7 @@ func Serialize(content map[string]interface{}, format string) ([]byte, error) {
 		}
 	default:
 		return nil, fmt.Errorf("expected 'format' to be either '%s' or '%s', got: '%s'",
-			strings.ToLower(OutputFormatYaml), strings.ToLower(OutputFormatJSON), format)
+			OutputFormatYaml, OutputFormatJSON, format)
 	}
 
 	return str, nil
@@ -110,7 +114,7 @@ func Serialize(content map[string]interface{}, format string) ([]byte, error) {
 
 // MustSerialize will serialize the result as a JSON/YAML. Will panic
 // if serializing fails.
-func MustSerialize(content map[string]interface{}, format string) []byte {
+func MustSerialize(content map[string]interface{}, format OutputFormat) []byte {
 	result, err := Serialize(content, format)
 	if err != nil {
 		panic(err)
@@ -151,7 +155,7 @@ func MustDeserialize(data []byte) map[string]interface{} {
 
 // WriteSerializedFile will serialize the data and write it to a file.
 // Writes to stdout if filename == "-"
-func WriteSerializedFile(filename string, content map[string]interface{}, format string) error {
+func WriteSerializedFile(filename string, content map[string]interface{}, format OutputFormat) error {
 	serializedContent, err := Serialize(content, format)
 	if err != nil {
 		return err
@@ -165,7 +169,7 @@ func WriteSerializedFile(filename string, content map[string]interface{}, format
 
 // MustWriteSerializedFile will serialize the data and write it to a file. Will
 // panic if it fails. Writes to stdout if filename == "-"
-func MustWriteSerializedFile(filename string, content map[string]interface{}, format string) {
+func MustWriteSerializedFile(filename string, content map[string]interface{}, format OutputFormat) {
 	MustWriteFile(filename, MustSerialize(content, format))
 }
 

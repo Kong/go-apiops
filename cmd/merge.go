@@ -46,7 +46,7 @@ func executeMerge(cmd *cobra.Command, args []string) error {
 	deckformat.HistoryClear(merged)
 	deckformat.HistoryAppend(merged, historyEntry)
 
-	return filebasics.WriteSerializedFile(outputFilename, merged, outputFormat)
+	return filebasics.WriteSerializedFile(outputFilename, merged, filebasics.OutputFormat(outputFormat))
 }
 
 //
@@ -73,6 +73,6 @@ determined by the '_transform' and '_format_version' fields.`,
 func init() {
 	rootCmd.AddCommand(mergeCmd)
 	mergeCmd.Flags().StringP("output-file", "o", "-", "output file to write. Use - to write to stdout")
-	mergeCmd.Flags().StringP("format", "", filebasics.OutputFormatYaml, "output format: "+
-		filebasics.OutputFormatJSON+" or "+filebasics.OutputFormatYaml)
+	mergeCmd.Flags().StringP("format", "", string(filebasics.OutputFormatYaml), "output format: "+
+		string(filebasics.OutputFormatJSON)+" or "+string(filebasics.OutputFormatYaml))
 }
