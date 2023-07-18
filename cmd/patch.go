@@ -119,7 +119,7 @@ func executePatch(cmd *cobra.Command, args []string) error {
 
 	data = jsonbasics.ConvertToJSONobject(yamlNode)
 
-	return filebasics.WriteSerializedFile(outputFilename, data, outputFormat)
+	return filebasics.WriteSerializedFile(outputFilename, data, filebasics.OutputFormat(outputFormat))
 }
 
 //
@@ -173,8 +173,8 @@ func init() {
 	rootCmd.AddCommand(patchCmd)
 	patchCmd.Flags().StringP("state", "s", "-", "decK file to process. Use - to read from stdin")
 	patchCmd.Flags().StringP("output-file", "o", "-", "output file to write. Use - to write to stdout")
-	patchCmd.Flags().StringP("format", "", filebasics.OutputFormatYaml, "output format: "+
-		filebasics.OutputFormatJSON+" or "+filebasics.OutputFormatYaml)
+	patchCmd.Flags().StringP("format", "", string(filebasics.OutputFormatYaml), "output format: "+
+		string(filebasics.OutputFormatJSON)+" or "+string(filebasics.OutputFormatYaml))
 	patchCmd.Flags().StringArrayP("selector", "", []string{},
 		"json-pointer identifying element to patch (can be specified more than once)")
 	patchCmd.Flags().StringArrayP("value", "", []string{}, "a value to set in the selected entry in "+

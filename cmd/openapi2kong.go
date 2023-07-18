@@ -76,7 +76,7 @@ func executeOpenapi2Kong(cmd *cobra.Command, _ []string) error {
 		return fmt.Errorf("failed converting OpenAPI spec '%s'; %w", inputFilename, err)
 	}
 	deckformat.HistoryAppend(result, trackInfo)
-	return filebasics.WriteSerializedFile(outputFilename, result, outputFormat)
+	return filebasics.WriteSerializedFile(outputFilename, result, filebasics.OutputFormat(outputFormat))
 }
 
 //
@@ -101,8 +101,8 @@ func init() {
 	rootCmd.AddCommand(openapi2kongCmd)
 	openapi2kongCmd.Flags().StringP("spec", "s", "-", "OpenAPI spec file to process. Use - to read from stdin")
 	openapi2kongCmd.Flags().StringP("output-file", "o", "-", "output file to write. Use - to write to stdout")
-	openapi2kongCmd.Flags().StringP("format", "", filebasics.OutputFormatYaml, "output format: "+
-		filebasics.OutputFormatJSON+" or "+filebasics.OutputFormatYaml)
+	openapi2kongCmd.Flags().StringP("format", "", string(filebasics.OutputFormatYaml), "output format: "+
+		string(filebasics.OutputFormatJSON)+" or "+string(filebasics.OutputFormatYaml))
 	openapi2kongCmd.Flags().StringP("uuid-base", "", "",
 		`the unique base-string for uuid-v5 generation of enity id's (if omitted
 will use the root-level "x-kong-name" directive, or fall back to 'info.title')`)

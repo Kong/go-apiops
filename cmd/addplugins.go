@@ -122,7 +122,7 @@ func executeAddPlugins(cmd *cobra.Command, cfgFiles []string) error {
 	trackInfo["selectors"] = selectors
 	deckformat.HistoryAppend(jsondata, trackInfo)
 
-	return filebasics.WriteSerializedFile(outputFilename, jsondata, outputFormat)
+	return filebasics.WriteSerializedFile(outputFilename, jsondata, filebasics.OutputFormat(outputFormat))
 }
 
 //
@@ -143,12 +143,12 @@ The plugin-files have the following format (JSON or YAML) and are applied in the
 order they are given;
 
 	{ "_format_version": "1.0",
-		"plugins": [
+		"add-plugins": [
 			{ "selectors": [
 					"$..services[*]"
 				],
 				"overwrite": false,
-				"add-plugins": [
+				"plugins": [
 					{ "name": "my-plugin",
 						"config": {
 							"my-property": "value"
@@ -176,6 +176,6 @@ func init() {
 		"specifying this flag will overwrite plugins by the same name if they already\n"+
 			"exist in an array. The default is to skip existing plugins.")
 	addPluginsCmd.Flags().StringP("output-file", "o", "-", "output file to write. Use - to write to stdout")
-	addPluginsCmd.Flags().StringP("format", "", filebasics.OutputFormatYaml, "output format: "+
-		filebasics.OutputFormatJSON+" or "+filebasics.OutputFormatYaml)
+	addPluginsCmd.Flags().StringP("format", "", string(filebasics.OutputFormatYaml), "output format: "+
+		string(filebasics.OutputFormatJSON)+" or "+string(filebasics.OutputFormatYaml))
 }
