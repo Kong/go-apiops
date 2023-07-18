@@ -46,7 +46,7 @@ func executePatch(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return fmt.Errorf("failed to retrieve '--value' entries; %w", err)
 		}
-		valuesPatch.Values, valuesPatch.Remove, err = patch.ValidateValuesFlags(values)
+		valuesPatch.ObjValues, valuesPatch.Remove, err = patch.ValidateValuesFlags(values)
 		if err != nil {
 			return fmt.Errorf("failed parsing '--value' entry; %w", err)
 		}
@@ -75,11 +75,14 @@ func executePatch(cmd *cobra.Command, args []string) error {
 	trackInfo := deckformat.HistoryNewEntry("patch")
 	trackInfo["input"] = inputFilename
 	trackInfo["output"] = outputFilename
-	if len(valuesPatch.Values) != 0 || len(valuesPatch.Remove) != 0 {
+	if (len(valuesPatch.ObjValues) + len(valuesPatch.Remove) + len(valuesPatch.ArrValues)) > 0 {
 		trackInfo["selector"] = valuesPatch.SelectorSources
 	}
-	if len(valuesPatch.Values) != 0 {
-		trackInfo["values"] = valuesPatch.Values
+	if len(valuesPatch.ObjValues) != 0 {
+		trackInfo["values"] = valuesPatch.ObjValues
+	}
+	if len(valuesPatch.ArrValues) != 0 {
+		trackInfo["values"] = valuesPatch.ArrValues
 	}
 	if len(valuesPatch.Remove) != 0 {
 		trackInfo["remove"] = valuesPatch.Remove
@@ -97,7 +100,7 @@ func executePatch(cmd *cobra.Command, args []string) error {
 
 	yamlNode := jsonbasics.ConvertToYamlNode(data)
 
-	if (len(valuesPatch.Values) + len(valuesPatch.Remove)) > 0 {
+	if (len(valuesPatch.ObjValues) + len(valuesPatch.Remove) + len(valuesPatch.ArrValues)) > 0 {
 		// apply selector + value flags
 		logbasics.Debug("applying value-flags")
 		err = valuesPatch.ApplyToNodes(yamlNode)
@@ -141,6 +144,8 @@ When using '--selector' and '--values', the items will be selected by the 'selec
 a JSONpath query. From the array of nodes found, only the objects will be updated.
 The 'values' will be applied on each of the JSONobjects returned by the 'selector'.
 
+Objects:
+
 The value part must be a valid JSON snippet, so make sure to use single/double quotes
 appropriately. If the value is empty, the field will be removed from the object.
 Examples:
@@ -165,6 +170,11 @@ patches that will be applied in order;
       }
     ]
   }
+
+Arrays:
+
+If the 'values' object instead is an array, then any arrays returned by the selectors
+will get the 'values' appended to them.
 `,
 	RunE: executePatch,
 }

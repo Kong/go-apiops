@@ -15,7 +15,8 @@ type DeckPatch struct {
 	// Format         string                 // Name of the format specified
 	SelectorSources []string               // Source query for the JSONpath object
 	Selectors       []*yamlpath.Path       // JSONpath object
-	Values          map[string]interface{} // Values to set on target objects
+	ObjValues       map[string]interface{} // Values to set on target objects
+	ArrValues       []interface{}          // Values to set on target arrays
 	Remove          []string               // List of keys to remove from the target object
 	// Patch          map[string]interface{} // RFC-7396
 	// Operations     []interface{}          // RFC-6902
@@ -45,14 +46,20 @@ func (patch *DeckPatch) Parse(obj map[string]interface{}, breadCrumb string) (er
 		}
 	}
 
-	patch.Values, err = jsonbasics.ToObject(obj["values"])
+	patch.ObjValues, err = jsonbasics.ToObject(obj["values"])
 	if err != nil {
+		patch.ObjValues = make(map[string]interface{}) // set default; empty object
+
 		if obj["values"] != nil {
-			// selector is present, but not an object, error out
-			return fmt.Errorf("%s.values is not an object", breadCrumb)
+			// "values" is present, but wasn't an object,
+			patch.ArrValues, err = jsonbasics.ToArray(obj["values"])
+			if err != nil {
+				// It's also not an array, error out
+				return fmt.Errorf("%s.values is neither an object nor an array", breadCrumb)
+			}
 		}
-		// not present, so set default; empty object
-		patch.Values = make(map[string]interface{})
+	} else {
+		patch.ArrValues = make([]interface{}, 0) // set default; empty array
 	}
 
 	patch.Remove, err = jsonbasics.GetStringArrayField(obj, "remove")
@@ -61,7 +68,7 @@ func (patch *DeckPatch) Parse(obj map[string]interface{}, breadCrumb string) (er
 	}
 
 	for _, removeKey := range patch.Remove {
-		_, found := patch.Values[removeKey]
+		_, found := patch.ObjValues[removeKey]
 		if found {
 			return fmt.Errorf("%s is trying to change and remove '%s' at the same time", breadCrumb, removeKey)
 		}
@@ -70,9 +77,9 @@ func (patch *DeckPatch) Parse(obj map[string]interface{}, breadCrumb string) (er
 	return nil
 }
 
-// ApplyToNode applies the DeckPatch on a JSONobject. The yaml.Node MUST
+// ApplyToObjectNode applies the DeckPatch on a JSONobject. The yaml.Node MUST
 // be of type "MappingNode" (JSONobject), otherwise it panics.
-func (patch *DeckPatch) ApplyToNode(node *yaml.Node) error {
+func (patch *DeckPatch) ApplyToObjectNode(node *yaml.Node) error {
 	if node == nil || node.Kind != yaml.MappingNode {
 		panic("expected node to be a yaml.Node type MappingNode")
 	}
@@ -86,7 +93,7 @@ func (patch *DeckPatch) ApplyToNode(node *yaml.Node) error {
 		keyNode := node.Content[i]
 		key := keyNode.Value
 
-		newData, found := patch.Values[key]
+		newData, found := patch.ObjValues[key]
 		if found {
 			// we have an updated value for this key, set it
 			node.Content[i+1] = jsonbasics.ConvertToYamlNode(newData)
@@ -105,7 +112,7 @@ func (patch *DeckPatch) ApplyToNode(node *yaml.Node) error {
 	}
 
 	// add any field not handled yet (wasn't in the original object)
-	for fieldName, newValue := range patch.Values {
+	for fieldName, newValue := range patch.ObjValues {
 		if !handledFields[fieldName] {
 			keyNode := yaml.Node{
 				Kind:  yaml.ScalarNode,
@@ -120,11 +127,25 @@ func (patch *DeckPatch) ApplyToNode(node *yaml.Node) error {
 	return nil
 }
 
+// ApplyToArrayNode applies the DeckPatch on a JSONarray. The yaml.Node MUST
+// be of type "SequenceNode" (JSONarray), otherwise it panics.
+func (patch *DeckPatch) ApplyToArrayNode(node *yaml.Node) error {
+	if node == nil || node.Kind != yaml.SequenceNode {
+		panic("expected node to be a yaml.Node type SequenceNode")
+	}
+
+	for _, nodeToAppend := range patch.ArrValues {
+		node.Content = append(node.Content, jsonbasics.ConvertToYamlNode(nodeToAppend))
+	}
+
+	return nil
+}
+
 // ApplyToNodes queries the yamlData using the selector, and applies the patch on every Object
 // returned. Any non-objects returned by the selector will be ignored.
 // If Selector wasn't set yet, will try and create it from the SelectorSource.
 func (patch *DeckPatch) ApplyToNodes(yamlData *yaml.Node) (err error) {
-	if len(patch.Values) == 0 && len(patch.Remove) == 0 {
+	if len(patch.ObjValues) == 0 && len(patch.Remove) == 0 && len(patch.ArrValues) == 0 {
 		// return early if there are no changes to apply, to not trip on the selector
 		return nil
 	}
@@ -151,12 +172,23 @@ func (patch *DeckPatch) ApplyToNodes(yamlData *yaml.Node) (err error) {
 
 	// 'nodes' is an array of nodes matching the selectors
 	for _, node := range nodes {
-		// since we're updating object fields, we'll skip anything that is
-		// not a JSONobject
-		if node.Kind == yaml.MappingNode {
-			err = patch.ApplyToNode(node)
-			if err != nil {
-				return err
+		if len(patch.ArrValues) > 0 {
+			// since we're updating array fields, we'll skip anything that is
+			// not a JSONarray
+			if node.Kind == yaml.SequenceNode {
+				err = patch.ApplyToArrayNode(node)
+				if err != nil {
+					return err
+				}
+			}
+		} else {
+			// since we're updating object fields, we'll skip anything that is
+			// not a JSONobject
+			if node.Kind == yaml.MappingNode {
+				err = patch.ApplyToObjectNode(node)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
