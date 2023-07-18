@@ -10,7 +10,7 @@ import (
 
 var _ = Describe("Patch", func() {
 	Describe("Parse", func() {
-		It("parses a valid patch", func() {
+		It("parses a valid patch object based", func() {
 			jsonData := []byte(`{
 				"selectors": ["$"],
 				"values": {
@@ -26,12 +26,31 @@ var _ = Describe("Patch", func() {
 			Expect(err).To(BeNil())
 			Expect(patch.SelectorSources).To(BeEquivalentTo([]string{"$"}))
 			Expect(patch.Selectors).ToNot(BeNil())
-			Expect(patch.Values).To(BeEquivalentTo(map[string]interface{}{
+			Expect(patch.ObjValues).To(BeEquivalentTo(map[string]interface{}{
 				"field1": "value1",
 			}))
+			Expect(patch.ArrValues).To(BeEquivalentTo([]interface{}{}))
 			Expect(patch.Remove).To(BeEquivalentTo([]string{
 				"field2",
 			}))
+		})
+
+		It("parses a valid patch array based", func() {
+			jsonData := []byte(`{
+				"selectors": ["$"],
+				"values": [ "entry1", "entry2" ],
+			}`)
+			data := MustDeserialize(jsonData)
+
+			var patch patch.DeckPatch
+			err := patch.Parse(data, "breadcrumb-text")
+
+			Expect(err).To(BeNil())
+			Expect(patch.SelectorSources).To(BeEquivalentTo([]string{"$"}))
+			Expect(patch.Selectors).ToNot(BeNil())
+			Expect(patch.ObjValues).To(BeEquivalentTo(map[string]interface{}{}))
+			Expect(patch.ArrValues).To(BeEquivalentTo([]interface{}{"entry1", "entry2"}))
+			Expect(patch.Remove).To(BeEquivalentTo([]string{}))
 		})
 
 		It("fails on non-string-array selector", func() {
@@ -59,7 +78,7 @@ var _ = Describe("Patch", func() {
 				"expression; invalid character ' ' at position 3, following \"not\""))
 		})
 
-		It("fails on non-object 'values'", func() {
+		It("fails on non object/array 'values'", func() {
 			jsonData := []byte(`{
 				"selectors": ["$"],
 				"values": 123
@@ -69,7 +88,7 @@ var _ = Describe("Patch", func() {
 			var patch patch.DeckPatch
 			err := patch.Parse(data, "file1.yml:patches[1]")
 
-			Expect(err).To(MatchError("file1.yml:patches[1].values is not an object"))
+			Expect(err).To(MatchError("file1.yml:patches[1].values is neither an object nor an array"))
 		})
 
 		It("fails on non-array 'remove'", func() {
@@ -204,7 +223,7 @@ var _ = Describe("Patch", func() {
 		It("returns error on bad JSONpath", func() {
 			testPatch := patch.DeckPatch{
 				SelectorSources: []string{"bad JSONpath"},
-				Values:          nil,
+				ObjValues:       nil,
 				Remove:          []string{"test"},
 			}
 			data := []byte(`{}`)
@@ -214,7 +233,7 @@ var _ = Describe("Patch", func() {
 		})
 	})
 
-	Describe("Applying values", func() {
+	Describe("Applying values to objects", func() {
 		applyUpdates := func(data []byte, selector string, valueFlags []string) []byte {
 			jsonData := MustDeserialize(data)
 			parsedValues, remove, err := patch.ValidateValuesFlags(valueFlags)
@@ -222,7 +241,7 @@ var _ = Describe("Patch", func() {
 
 			testPatch := patch.DeckPatch{
 				SelectorSources: []string{selector},
-				Values:          parsedValues,
+				ObjValues:       parsedValues,
 				Remove:          remove,
 			}
 
@@ -373,6 +392,79 @@ var _ = Describe("Patch", func() {
 				"upstreams": [
 					{ "name": null }
 				]
+			}`))
+		})
+	})
+
+	Describe("Applying values to arrays", func() {
+		applyUpdates := func(data []byte, selector string, values []interface{}) []byte {
+			jsonData := MustDeserialize(data)
+
+			testPatch := patch.DeckPatch{
+				SelectorSources: []string{selector},
+				ArrValues:       values,
+			}
+
+			yamlNode := jsonbasics.ConvertToYamlNode(jsonData)
+			err := testPatch.ApplyToNodes(yamlNode)
+			Expect(err).To(BeNil())
+
+			updated := jsonbasics.ConvertToJSONobject(yamlNode)
+			result := MustSerialize(updated, OutputFormatJSON)
+			return result
+		}
+
+		It("to an object", func() {
+			data := []byte(`{
+				"services": [
+					{ "name": "one" }
+				]
+			}`)
+			selector := "$.services"
+			valueFlags := []interface{}{"hello", "world"}
+
+			Expect(applyUpdates(data, selector, valueFlags)).To(MatchJSON(`{
+				"services": [
+					{ "name": "one" },
+					"hello",
+					"world"
+				]
+			}`))
+		})
+
+		It("skips non-arrays", func() {
+			data := []byte(`{
+				"plugins": [
+					{ "name": "my name" },
+					true,
+					0,
+					["an array"],
+					"a string"
+				]
+			}`)
+			selector := "$.plugins[*]"
+			valueFlags := []interface{}{"hello", "world"}
+
+			Expect(applyUpdates(data, selector, valueFlags)).To(MatchJSON(`{
+				"plugins": [
+					{	"name": "my name" },
+					true,
+					0,
+					["an array", "hello", "world"],
+					"a string"
+				]
+			}`))
+		})
+
+		It("works on empty arrays", func() {
+			data := []byte(`{
+				"routes": []
+			}`)
+			selector := "$..routes"
+			valueFlags := []interface{}{"hello", "world"}
+
+			Expect(applyUpdates(data, selector, valueFlags)).To(MatchJSON(`{
+				"routes": ["hello", "world"]
 			}`))
 		})
 	})

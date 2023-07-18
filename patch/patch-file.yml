@@ -16,6 +16,8 @@ patches:
     selectors:
     - "a jsonpath query"  # defaults to "$"
     values:
+      # if values isn't an object but an array, then the array entries will be added
+      # to the target array selected by the selectors.
       field1: any-json-value
       field2: any-json-value
     remove: ["field3", "field4"] # removes the fields, same as an empty value in the CLI
