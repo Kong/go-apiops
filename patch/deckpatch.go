@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/kong/go-apiops/jsonbasics"
+	"github.com/kong/go-apiops/logbasics"
 	"github.com/vmware-labs/yaml-jsonpath/pkg/yamlpath"
 	"gopkg.in/yaml.v3"
 )
@@ -29,11 +30,12 @@ type DeckPatch struct {
 func (patch *DeckPatch) Parse(obj map[string]interface{}, breadCrumb string) (err error) {
 	patch.SelectorSources, err = jsonbasics.GetStringArrayField(obj, "selectors")
 	if err != nil {
-		if obj["selectors"] != nil {
-			// selector is present, but not a string-array, error out
-			return fmt.Errorf("%s.selectors is not a string-array", breadCrumb)
-		}
+		// selector is present, but not a string-array, error out
+		return fmt.Errorf("%s.selectors is not a string-array", breadCrumb)
+	}
+	if obj["selectors"] == nil {
 		// not present, so set default
+		logbasics.Info("No selectors specified", "key", breadCrumb+".selectors", "default", DefaultSelector)
 		patch.SelectorSources = DefaultSelector
 	}
 
@@ -148,6 +150,10 @@ func (patch *DeckPatch) ApplyToNodes(yamlData *yaml.Node) (err error) {
 	if len(patch.ObjValues) == 0 && len(patch.Remove) == 0 && len(patch.ArrValues) == 0 {
 		// return early if there are no changes to apply, to not trip on the selector
 		return nil
+	}
+
+	if len(patch.SelectorSources) == 0 {
+		logbasics.Info("Patch has no selectors specified")
 	}
 
 	if patch.Selectors == nil || len(patch.Selectors) == 0 {
