@@ -16,6 +16,12 @@ Kong will be expanding the library of available tools leading up to a GA release
 
 The below examples assume you have installed and are using the `deck` CLI tool.
 
+## Notes
+| :exclamation:  Important compatibility notes  :exclamation: |
+|:---------------------------|
+| The jsonpath library in use has a bug related to the "recursive decent" operator (`..`). Filter expressions following a recursive decent will not succeed unless prefixed with a generic wilcard (`[*]`).<br/><br/>Non-recursive-decent works as expected:<br/>> `$.plugins[?(@.regex_priority>100)]`</br>where recursive-decent will fail:<br/>> `$..plugins[?(@.regex_priority>100)]`</br>The workaround is to add an extra wildcard (`[*]`) before the filter expression like this:<br/>> `$..plugins[*][?(@.regex_priority>100)]`</br>|
+
+
 ## Commands
 
 ---
