@@ -18,7 +18,7 @@ See the [Kong Blog](https://konghq.com/blog/tag/apiops) for more information on 
 
 ## What is this library?
 
-The [go-apiops](https://github.com/Kong/go-apiops) library provides a set of tools (validation and transformation)
+The [go-apiops](https://github.com/Kong/go-apiops) library provides a set of tools (generation and transformation)
 for working with API specifications and [Kong Gateway](https://docs.konghq.com/gateway/latest/) declarative configurations.
 Conceptually, these tools are intended to be organized into a pipeline of individual steps configured for a particular
 users needs. The overall purpose of the library is to enable users to build a CI/CD workflow which deliver APIs from
