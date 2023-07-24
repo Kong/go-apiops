@@ -32,8 +32,8 @@ the [deck](https://docs.konghq.com/deck/latest/) cli tool.
 
 ## Installation & Usage
 
-Currently, the functionality is released as a library only. The repository contains a CLI named `go-apiops` for local testing.
-For general CLI usage, see the [deck](https://docs.konghq.com/deck/latest/) cli tool which exposes the library functions.
+Currently, the functionality is released as a library and as part of the [decK](https://github.com/Kong/deck) CLI tool. The repository also contains a CLI named `go-apiops` for local testing.
+For general CLI usage, prefer the decK tool [docs](https://docs.konghq.com/deck/latest/) tool.
 
 ### Local Build
 
