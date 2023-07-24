@@ -19,7 +19,7 @@ The below examples assume you have installed and are using the `deck` CLI tool.
 ## Notes
 | :exclamation:  Important compatibility notes  :exclamation: |
 |:---------------------------|
-| The jsonpath library in use has a bug related to the "recursive decent" operator (`..`). Filter expressions following a recursive decent will not succeed unless prefixed with a generic wilcard (`[*]`).<br/><br/>Non-recursive-decent works as expected:<br/>> `$.plugins[?(@.regex_priority>100)]`</br>where recursive-decent will fail:<br/>> `$..plugins[?(@.regex_priority>100)]`</br>The workaround is to add an extra wildcard (`[*]`) before the filter expression like this:<br/>> `$..plugins[*][?(@.regex_priority>100)]`</br>|
+| The [jsonpath library](https://github.com/vmware-labs/yaml-jsonpath) in use has [a bug](https://github.com/vmware-labs/yaml-jsonpath/issues/54) related to the "recursive decent" operator (`..`). Filter expressions following a recursive decent will not succeed unless prefixed with a generic wilcard (`[*]`).<br/><br/>Non-recursive-decent works as expected:<br/>> `$.plugins[?(@.regex_priority>100)]`</br>where recursive-decent will fail:<br/>> `$..plugins[?(@.regex_priority>100)]`</br>The workaround is to add an extra wildcard (`[*]`) before the filter expression like this:<br/>> `$..plugins[*][?(@.regex_priority>100)]`</br><br/>To test and debug selectors, you can use the library’s built in web UI by following the [Web Application Instructions](https://github.com/vmware-labs/yaml-jsonpath/tree/main/web).|
 
 
 ## Commands
