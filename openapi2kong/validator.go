@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/google/uuid"
 	"github.com/kong/go-apiops/jsonbasics"
 	"github.com/kong/go-apiops/logbasics"
-	uuid "github.com/satori/go.uuid"
 )
 
 const JSONSchemaVersion = "draft4"

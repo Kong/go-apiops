@@ -1,6 +1,7 @@
 package openapi2kong
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -9,10 +10,10 @@ import (
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/google/uuid"
 	"github.com/kong/go-apiops/jsonbasics"
 	"github.com/kong/go-apiops/logbasics"
 	"github.com/mozillazg/go-slugify"
-	uuid "github.com/satori/go.uuid"
 )
 
 const (
@@ -30,8 +31,9 @@ type O2kOptions struct {
 // setDefaults sets the defaults for the OpenAPI2Kong operation.
 func (opts *O2kOptions) setDefaults() {
 	var emptyUUID uuid.UUID
-	if uuid.Equal(emptyUUID, opts.UUIDNamespace) {
-		opts.UUIDNamespace = uuid.NamespaceDNS
+
+	if bytes.Equal(emptyUUID[:], opts.UUIDNamespace[:]) {
+		opts.UUIDNamespace = uuid.NameSpaceDNS
 	}
 }
 
@@ -220,7 +222,7 @@ func getRouteDefaults(props openapi3.ExtensionProps, components *map[string]inte
 func createPluginID(uuidNamespace uuid.UUID, baseName string, config map[string]interface{}) string {
 	pluginName := config["name"].(string) // safe because it was previously parsed
 
-	return uuid.NewV5(uuidNamespace, baseName+".plugin."+pluginName).String()
+	return uuid.NewSHA1(uuidNamespace, []byte(baseName+".plugin."+pluginName)).String()
 }
 
 // getPluginsList returns a list of plugins retrieved from the extension properties
@@ -475,7 +477,11 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 				docBaseName = doc.Info.Title
 			} else {
 				logbasics.Info("no document name, x-kong-name, nor Info.Title specified, generating random name")
-				docBaseName = uuid.NewV4().String()
+				id, err := uuid.NewRandom()
+				if err != nil {
+					return nil, fmt.Errorf("failed to generate UUID: %w", err)
+				}
+				docBaseName = id.String()
 			}
 		}
 	}
@@ -836,7 +842,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 				}
 			}
 			route["paths"] = []string{"~" + convertedPath + "$"}
-			route["id"] = uuid.NewV5(opts.UUIDNamespace, operationBaseName+".route").String()
+			route["id"] = uuid.NewSHA1(opts.UUIDNamespace, []byte(operationBaseName+".route")).String()
 			route["name"] = operationBaseName
 			route["methods"] = []string{method}
 			route["tags"] = kongTags

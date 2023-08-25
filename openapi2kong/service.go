@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
-	uuid "github.com/satori/go.uuid"
+	"github.com/google/uuid"
 )
 
 const (
@@ -134,7 +134,7 @@ func createKongUpstream(
 	}
 
 	upstreamName := baseName + ".upstream"
-	upstream["id"] = uuid.NewV5(uuidNamespace, upstreamName).String()
+	upstream["id"] = uuid.NewSHA1(uuidNamespace, []byte(upstreamName)).String()
 	upstream["name"] = upstreamName
 	upstream["tags"] = tags
 
@@ -195,7 +195,7 @@ func CreateKongService(
 	}
 
 	// add id, name and tags to the service
-	service["id"] = uuid.NewV5(uuidNamespace, baseName+".service").String()
+	service["id"] = uuid.NewSHA1(uuidNamespace, []byte(baseName+".service")).String()
 	service["name"] = baseName
 	service["tags"] = tags
 	service["plugins"] = make([]interface{}, 0)
