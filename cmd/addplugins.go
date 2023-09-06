@@ -154,7 +154,7 @@ order they are given;
 							"my-property": "value"
 				 		}
 					}
-				],
+				]
 			}
 		]
 	}
