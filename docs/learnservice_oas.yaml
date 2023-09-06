@@ -175,6 +175,11 @@ paths:
         schema:
           pattern: ^[a-f0-9]{12}1[a-f0-9]{3}[89ab][a-f0-9]{15}$
           type: string
+          # IMPORTANT: parameterschemas must have a type specified, otherwise they
+          # will be rejected by Kong. The top-level type entry is required for
+          # Kong to know how to deserialize the parameter value (which technically
+          # always is a string).
+          # see https://swagger.io/specification/v3/#style-examples
       - name: trackIds
         in: query
         description: track ids to get
