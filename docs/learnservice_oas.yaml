@@ -70,7 +70,7 @@ x-kong-plugin-correlation-id:
   config:
     generator: uuid#counter
 # Directive to add a plugin. The plugin name is derived from the extension name, so in
-# this case "correlation-id".
+# this case "correlation-id". This is a generic mechanism that can add any type of plugin.
 # This plugin is configured on a global level. As such it will be configured
 # on the Kong Service entity, and hence apply on all paths and operations in this spec.
 # It can be specified again on paths and operations to override the config for that
