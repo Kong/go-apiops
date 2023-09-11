@@ -55,7 +55,7 @@
           ],
           "plugins": [],
           "regex_priority": 200,
-          "strip_path": false,
+          "strip_path": true,
           "tags": [
             "OAS3_import",
             "OAS3file_08-route-defaults-overrides.yaml"

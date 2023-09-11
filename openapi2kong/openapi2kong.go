@@ -847,7 +847,9 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 			route["methods"] = []string{method}
 			route["tags"] = kongTags
 			route["regex_priority"] = regexPriority
-			route["strip_path"] = false // TODO: there should be some logic around defaults etc iirc
+			if _, found := route["strip_path"]; !found {
+				route["strip_path"] = false // Default to false since we do not want to strip full-regex paths by default
+			}
 
 			operationRoutes = append(operationRoutes, route)
 			operationService["routes"] = operationRoutes
