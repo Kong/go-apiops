@@ -39,6 +39,8 @@ paths:
         regex_priority: 300
         # routes cannot have a foreign key to a service (is set by the conversion)
         service: delete-me
+        # strip_path defaults to false, but can be set to true
+        strip_path: true
       operationId: uses-ops-defaults
       summary: List API versions
       responses:
