@@ -11,6 +11,7 @@ var EntityPointers = map[string][]string{
 	// list created from the deck source code, looking at: deck/types/*.go
 	"acls": {
 		"$.acls[*]",
+		"$.consumers[*].acls[*]", // decK specific format for handling many-2-many relationships (consumers <-> groups	)
 	},
 	"basicauth_credentials": {
 		"$.basicauth_credentials[*]",
