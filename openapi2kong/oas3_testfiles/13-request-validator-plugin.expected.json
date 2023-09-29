@@ -84,7 +84,7 @@
           ],
           "name": "Example-params__path-id-get",
           "paths": [
-            "~/params/(?\u003cpath_id\u003e[^#?/]+)$"
+            "~/params/(?<path_id>[^#?/]+)$"
           ],
           "plugins": [
             {

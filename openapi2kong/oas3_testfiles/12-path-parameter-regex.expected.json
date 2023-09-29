@@ -34,7 +34,7 @@
           ],
           "name": "Path_parameter_test-getBatchWithParams",
           "paths": [
-            "~/batchs\\(Material='(?\u003cmaterial\u003e[^#?/]+)',Batch='(?\u003cbatch\u003e[^#?/]+)'\\)$"
+            "~/batchs\\(Material='(?<material>[^#?/]+)',Batch='(?<batch>[^#?/]+)'\\)$"
           ],
           "plugins": [],
           "regex_priority": 100,
@@ -51,7 +51,7 @@
           ],
           "name": "Path_parameter_test-postBatchWithParams",
           "paths": [
-            "~/batchs\\(Material='(?\u003cmaterial\u003e[^#?/]+)',Batch='(?\u003cbatch\u003e[^#?/]+)'\\)$"
+            "~/batchs\\(Material='(?<material>[^#?/]+)',Batch='(?<batch>[^#?/]+)'\\)$"
           ],
           "plugins": [],
           "regex_priority": 100,
@@ -68,7 +68,7 @@
           ],
           "name": "Path_parameter_test-opsid",
           "paths": [
-            "~/demo/(?\u003csomething\u003e[^#?/]+)/else/(?\u003cto_do\u003e[^#?/]+)/$"
+            "~/demo/(?<something>[^#?/]+)/else/(?<to_do>[^#?/]+)/$"
           ],
           "plugins": [],
           "regex_priority": 100,
