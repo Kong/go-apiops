@@ -143,7 +143,7 @@ func generateContentTypes(operation *openapi3.Operation) []string {
 // on the JSON snippet, and the OAS inputs. This can return nil
 func generateValidatorPlugin(configJSON []byte, operation *openapi3.Operation,
 	uuidNamespace uuid.UUID,
-	baseName string,
+	baseName string, skipID bool,
 ) *map[string]interface{} {
 	if len(configJSON) == 0 {
 		return nil
@@ -154,7 +154,9 @@ func generateValidatorPlugin(configJSON []byte, operation *openapi3.Operation,
 	_ = json.Unmarshal(configJSON, &pluginConfig)
 
 	// create a new ID here based on the operation
-	pluginConfig["id"] = createPluginID(uuidNamespace, baseName, pluginConfig)
+	if !skipID {
+		pluginConfig["id"] = createPluginID(uuidNamespace, baseName, pluginConfig)
+	}
 
 	config, _ := jsonbasics.ToObject(pluginConfig["config"])
 	if config == nil {
