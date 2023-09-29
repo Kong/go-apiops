@@ -53,6 +53,8 @@ func Slugify(name ...string) string {
 // The returned name will be valid for PCRE regex captures; Alphanumeric + '_', starting
 // with [a-zA-Z].
 func sanitizeRegexCapture(varName string) string {
+	slugify.ToLower = true
+	slugify.Separator = "-"
 	varName = slugify.Slugify(varName)
 	varName = strings.ReplaceAll(varName, "-", "_")
 	if strings.HasPrefix(varName, "_") {
