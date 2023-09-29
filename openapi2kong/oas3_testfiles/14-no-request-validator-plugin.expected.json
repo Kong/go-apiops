@@ -3,19 +3,19 @@
   "services": [
     {
       "host": "httpbin.org",
-      "id": "069ec36b-308c-5cf4-8536-b7bad57907ea",
-      "name": "mock-target-api",
+      "id": "d2db261f-f226-50b2-b687-1f93e7fd6cc0",
+      "name": "Mock_Target_API",
       "path": "/anything",
       "plugins": [],
       "port": 80,
       "protocol": "http",
       "routes": [
         {
-          "id": "34dc34c8-2b0e-539b-9a6c-8b0ff4cd9fbb",
+          "id": "ac42f5d5-17a5-5a48-85ff-fa72043fb95b",
           "methods": [
             "GET"
           ],
-          "name": "mock-target-api_gethelp",
+          "name": "Mock_Target_API-getHelp",
           "paths": [
             "~/help$"
           ],
@@ -28,11 +28,11 @@
           ]
         },
         {
-          "id": "34dc34c8-2b0e-539b-9a6c-8b0ff4cd9fbb",
+          "id": "ac42f5d5-17a5-5a48-85ff-fa72043fb95b",
           "methods": [
             "GET"
           ],
-          "name": "mock-target-api_gethelp",
+          "name": "Mock_Target_API-getHelp",
           "paths": [
             "~/user$"
           ],
@@ -45,7 +45,7 @@
                 "body_schema": "{}",
                 "version": "draft4"
               },
-              "id": "40037e1a-ea6d-5d78-85b2-7f502e4a60e9",
+              "id": "5f8d13be-1d21-5c16-813c-99db74abf5d6",
               "name": "request-validator",
               "tags": [
                 "OAS3_import",

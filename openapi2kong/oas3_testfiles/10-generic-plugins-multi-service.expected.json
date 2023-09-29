@@ -3,8 +3,8 @@
   "services": [
     {
       "host": "server1.com",
-      "id": "0907c4ab-d9e4-5d21-813b-c57a97eeaad9",
-      "name": "simple-api-overview",
+      "id": "e3a95664-95d7-5b10-bc3d-11c9cc6c2b4e",
+      "name": "Simple_API_overview",
       "path": "/",
       "plugins": [
         {
@@ -12,7 +12,7 @@
             "message": "So long and thanks for all the fish!",
             "status_code": 403
           },
-          "id": "ef93d30f-dc7d-581b-8b1b-3f8942a0d171",
+          "id": "3a0a598e-5e31-570d-abcc-563876fa0a0b",
           "name": "request-termination",
           "tags": [
             "OAS3_import",
@@ -24,11 +24,11 @@
       "protocol": "https",
       "routes": [
         {
-          "id": "ef8405d9-7cbc-5574-901e-50a8cb63fe6f",
+          "id": "c7218170-3989-54f0-8f39-766c6a361a4a",
           "methods": [
             "GET"
           ],
-          "name": "simple-api-overview_uses-doc-service-and-plugins",
+          "name": "Simple_API_overview-uses-doc-service-and-plugins",
           "paths": [
             "~/path1$"
           ],
@@ -48,8 +48,8 @@
     },
     {
       "host": "server1.com",
-      "id": "a79c5a8c-0924-599e-9412-39f5a4ff0c3e",
-      "name": "simple-api-overview_path2",
+      "id": "736fd3ce-6b9e-5fd3-99f8-4ba04e2c5bfb",
+      "name": "Simple_API_overview-path2",
       "path": "/",
       "plugins": [
         {
@@ -57,7 +57,7 @@
             "message": "So long and thanks for all the fish!",
             "status_code": 403
           },
-          "id": "e1095950-df7f-5747-afd1-36355f4510ae",
+          "id": "e5e5bad1-4b75-50ea-a9d4-0c5f5b286186",
           "name": "request-termination",
           "tags": [
             "OAS3_import",
@@ -65,7 +65,7 @@
           ]
         },
         {
-          "id": "44b80499-0367-5fb6-b1b3-3d0e3281acad",
+          "id": "f35b17d9-4776-55a6-8921-37356801febe",
           "name": "some-plugin1",
           "tags": [
             "OAS3_import",
@@ -77,17 +77,17 @@
       "protocol": "https",
       "routes": [
         {
-          "id": "a065359f-f1b2-5bc3-b32a-4b97992cbd9b",
+          "id": "30e6d240-df1b-52fb-9454-4c9bb8e925fa",
           "methods": [
             "GET"
           ],
-          "name": "simple-api-overview_uses-doc-plugin-on-path-service",
+          "name": "Simple_API_overview-uses-doc-plugin-on-path-service",
           "paths": [
             "~/path2$"
           ],
           "plugins": [
             {
-              "id": "a9ddfff9-6672-5471-84a7-bfccae5d74b2",
+              "id": "b6e9d153-d9fa-5ed4-8ccf-dc2f804116b8",
               "name": "some-plugin2",
               "tags": [
                 "OAS3_import",
@@ -110,19 +110,19 @@
     },
     {
       "host": "server1.com",
-      "id": "95802912-cfa1-5edf-876b-0fd23729e46e",
-      "name": "simple-api-overview_uses-plugins-on-ops-level",
+      "id": "ae8bf3e0-20e4-5334-8d1d-269be9ae317e",
+      "name": "Simple_API_overview-uses-plugins-on-ops-level",
       "path": "/",
       "plugins": [],
       "port": 443,
       "protocol": "https",
       "routes": [
         {
-          "id": "042a9169-97e8-5177-9f53-0d5067f4f139",
+          "id": "559b1a1f-a52f-5135-969a-36f0618e29d6",
           "methods": [
             "POST"
           ],
-          "name": "simple-api-overview_uses-plugins-on-ops-level",
+          "name": "Simple_API_overview-uses-plugins-on-ops-level",
           "paths": [
             "~/path2$"
           ],
@@ -132,7 +132,7 @@
                 "message": "So long and thanks for all the fish!",
                 "status_code": 403
               },
-              "id": "4a6df652-011a-5f76-b1b4-460ab5c86da9",
+              "id": "d366808f-40f7-5959-9069-3b4fa8b2f6f8",
               "name": "request-termination",
               "tags": [
                 "OAS3_import",
@@ -140,7 +140,7 @@
               ]
             },
             {
-              "id": "2736254d-7317-5d57-a9e9-9b3cf1c6489e",
+              "id": "a6efc119-b231-586f-abdc-1add12976029",
               "name": "some-plugin1",
               "tags": [
                 "OAS3_import",
@@ -148,7 +148,7 @@
               ]
             },
             {
-              "id": "c8d30b7f-fc60-5791-b31a-7bf6eb83b0b3",
+              "id": "cf13025d-7a2d-5738-9347-d1b5f6de7746",
               "name": "some-plugin3",
               "tags": [
                 "OAS3_import",

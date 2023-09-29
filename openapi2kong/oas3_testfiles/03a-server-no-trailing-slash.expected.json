@@ -3,19 +3,19 @@
   "services": [
     {
       "host": "example.com",
-      "id": "5434f850-a000-5ad5-8772-1a3cd10811e6",
-      "name": "server-with-no-trailing-slash",
+      "id": "455bef07-544f-551a-b9c8-ac47ed3f35ca",
+      "name": "Server_with_no_trailing_slash",
       "path": "/",
       "plugins": [],
       "port": 443,
       "protocol": "https",
       "routes": [
         {
-          "id": "d44c95fe-dc1c-596c-8b4a-e18ff50607c4",
+          "id": "2f02798c-98f3-5d02-a9e4-3ff7285148ad",
           "methods": [
             "GET"
           ],
-          "name": "server-with-no-trailing-slash_myid",
+          "name": "Server_with_no_trailing_slash-myId",
           "paths": [
             "~/path$"
           ],
