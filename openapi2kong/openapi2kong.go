@@ -13,7 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/kong/go-apiops/jsonbasics"
 	"github.com/kong/go-apiops/logbasics"
-	"github.com/mozillazg/go-slugify"
+	"github.com/kong/go-slugify"
 )
 
 const (
@@ -40,11 +40,13 @@ func (opts *O2kOptions) setDefaults() {
 // Slugify converts a name to a valid Kong name by removing and replacing unallowed characters
 // and sanitizing non-latin characters. Multiple inputs will be concatenated using '_'.
 func Slugify(name ...string) string {
+	slugify.ToLower = false
+	slugify.Separator = "_"
 	for i, elem := range name {
 		name[i] = slugify.Slugify(elem)
 	}
 
-	return strings.Join(name, "_")
+	return strings.Join(name, "-")
 }
 
 // sanitizeRegexCapture will remove illegal characters from the path-variable name.
@@ -553,17 +555,24 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 			return nil, err
 		}
 		if pathBaseName == "" {
-			pathBaseName = Slugify(path)
-			if strings.HasSuffix(path, "/") {
-				// a common case is 2 paths, one with and one without a trailing "/" so to prevent
-				// duplicate names being generated, we add a "~" suffix as a special case to cater
-				// for different names. Better user solution is to use operation-id's.
-				pathBaseName = pathBaseName + "~"
+			// create name from the path itself
+			if path == "/" {
+				// there is no path, so skip it
+				pathBaseName = docBaseName
+			} else {
+				pathBaseName = Slugify(path)
+				if strings.HasSuffix(path, "/") {
+					// a common case is 2 paths, one with and one without a trailing "/" so to prevent
+					// duplicate names being generated, we add a "~" suffix as a special case to cater
+					// for different names. Better user solution is to use operation-id's.
+					pathBaseName = pathBaseName + "~"
+				}
+				pathBaseName = docBaseName + "-" + pathBaseName
 			}
 		} else {
-			pathBaseName = Slugify(pathBaseName)
+			// use x-kong-name
+			pathBaseName = docBaseName + "-" + Slugify(pathBaseName)
 		}
-		pathBaseName = docBaseName + "_" + pathBaseName
 		logbasics.Debug("path name (namespace for UUID generation)", "name", pathBaseName)
 
 		// Set up the defaults on the Path level
@@ -690,15 +699,15 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 			}
 			if operationBaseName != "" {
 				// an x-kong-name was provided, so build as "doc-path-name"
-				operationBaseName = pathBaseName + "_" + Slugify(operationBaseName)
+				operationBaseName = pathBaseName + "-" + Slugify(operationBaseName)
 			} else {
 				operationBaseName = operation.OperationID
 				if operationBaseName == "" {
 					// no operation ID provided, so build as "doc-path-method"
-					operationBaseName = pathBaseName + "_" + Slugify(method)
+					operationBaseName = pathBaseName + "-" + Slugify(strings.ToLower(method))
 				} else {
 					// operation ID is provided, so build as "doc-operationid"
-					operationBaseName = docBaseName + "_" + Slugify(operationBaseName)
+					operationBaseName = docBaseName + "-" + Slugify(operationBaseName)
 				}
 			}
 			logbasics.Debug("operation base name (namespace for UUID generation)", "name", operationBaseName)

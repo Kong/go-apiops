@@ -37,6 +37,8 @@ github.com/inconshreveable/mousetrap v1.0.1 h1:U3uMjPSQEBMNp1lFxmllqCPM6P5u/Xq7P
 github.com/inconshreveable/mousetrap v1.0.1/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
 github.com/invopop/yaml v0.1.0 h1:YW3WGUoJEXYfzWBjn00zIlrw7brGVD0fUKRYDPAPhrc=
 github.com/invopop/yaml v0.1.0/go.mod h1:2XuRLgs/ouIrW3XNzuNj7J3Nvu/Dig5MXvbCEdiBN3Q=
+github.com/kong/go-slugify v0.0.0-20230929094618-0386fb4d426f h1:ckkce39E0whuMO9DHH8t95JSRiqzLvjBJuLNWVzt8UI=
+github.com/kong/go-slugify v0.0.0-20230929094618-0386fb4d426f/go.mod h1:dbR2h3J2QKXQ1k0aww6cN7o4cIcwlWflr6RKRdcoaiw=
 github.com/kr/pretty v0.1.0 h1:L/CwN0zerZDmRFUapSPitk6f+Q3+0za1rQkzVuMiMFI=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
@@ -47,8 +49,6 @@ github.com/mailru/easyjson v0.0.0-20190626092158-b2ccc519800e h1:hB2xlXdHp/pmPZq
 github.com/mailru/easyjson v0.0.0-20190626092158-b2ccc519800e/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=
 github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 h1:RWengNIwukTxcDr9M+97sNutRR1RKhG96O6jWumTTnw=
 github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826/go.mod h1:TaXosZuwdSHYgviHp1DAtfrULt5eUgsSMsZf+YrPgl8=
-github.com/mozillazg/go-slugify v0.2.0 h1:SIhqDlnJWZH8OdiTmQgeXR28AOnypmAXPeOTcG7b9lk=
-github.com/mozillazg/go-slugify v0.2.0/go.mod h1:z7dPH74PZf2ZPFkyxx+zjPD8CNzRJNa1CGacv0gg8Ns=
 github.com/mozillazg/go-unidecode v0.2.0 h1:vFGEzAH9KSwyWmXCOblazEWDh7fOkpmy/Z4ArmamSUc=
 github.com/mozillazg/go-unidecode v0.2.0/go.mod h1:zB48+/Z5toiRolOZy9ksLryJ976VIwmDmpQ2quyt1aA=
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
