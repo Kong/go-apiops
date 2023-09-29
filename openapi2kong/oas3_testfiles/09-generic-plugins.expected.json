@@ -3,8 +3,8 @@
   "services": [
     {
       "host": "server1.com",
-      "id": "0907c4ab-d9e4-5d21-813b-c57a97eeaad9",
-      "name": "simple-api-overview",
+      "id": "e3a95664-95d7-5b10-bc3d-11c9cc6c2b4e",
+      "name": "Simple_API_overview",
       "path": "/",
       "plugins": [
         {
@@ -12,7 +12,7 @@
             "message": "So long and thanks for all the fish!",
             "status_code": 403
           },
-          "id": "ef93d30f-dc7d-581b-8b1b-3f8942a0d171",
+          "id": "3a0a598e-5e31-570d-abcc-563876fa0a0b",
           "name": "request-termination",
           "tags": [
             "OAS3_import",
@@ -24,11 +24,11 @@
       "protocol": "https",
       "routes": [
         {
-          "id": "d020c736-e762-5dad-8415-1684ee4f2061",
+          "id": "8062e64f-dce4-5ae1-aa55-b2c3a1ae9422",
           "methods": [
             "GET"
           ],
-          "name": "simple-api-overview_uses-doc-plugin",
+          "name": "Simple_API_overview-uses-doc-plugin",
           "paths": [
             "~/path1$"
           ],
@@ -41,11 +41,11 @@
           ]
         },
         {
-          "id": "ef2ca083-29b3-5d7b-87c5-e4315d830c33",
+          "id": "f875b5f9-2e16-52ef-9f83-a407a1b73a32",
           "methods": [
             "GET"
           ],
-          "name": "simple-api-overview_uses-path-plugin",
+          "name": "Simple_API_overview-uses-path-plugin",
           "paths": [
             "~/path2$"
           ],
@@ -55,7 +55,7 @@
                 "message": "The answer to life, the universe, and everything!",
                 "status_code": 403
               },
-              "id": "aa56031e-7155-599f-a9e9-93e6b271ba58",
+              "id": "c518bbe3-0e8b-53bc-b845-733fc4e98fe8",
               "name": "request-termination",
               "tags": [
                 "OAS3_import",
@@ -71,11 +71,11 @@
           ]
         },
         {
-          "id": "f9c8a7d7-3518-5c25-b66b-40943e59f91b",
+          "id": "32e8ee5a-df88-5e35-888d-ef404543a91d",
           "methods": [
             "POST"
           ],
-          "name": "simple-api-overview_uses-ops-plugin",
+          "name": "Simple_API_overview-uses-ops-plugin",
           "paths": [
             "~/path2$"
           ],
@@ -85,7 +85,7 @@
                 "message": "For a moment, nothing happened. Then, after a second or so, nothing continued to happen.",
                 "status_code": 403
               },
-              "id": "ead16074-ccb0-52dd-9f56-4193529e8ffa",
+              "id": "c2294326-c1e8-55ae-8f2f-e1a612556beb",
               "name": "request-termination",
               "tags": [
                 "OAS3_import",
