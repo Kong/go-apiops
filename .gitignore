@@ -20,6 +20,7 @@ dist/
 # generated test files
 openapi2kong/oas3_testfiles/*.generated.json
 merge/merge_testfiles/*_generated.json
+openapi2kong/oas3_testfiles/*.generated_noid.json
 
 # the binary
 go-apiops

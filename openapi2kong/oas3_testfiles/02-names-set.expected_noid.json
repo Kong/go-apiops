@@ -1,0 +1,140 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "oas-spec-name.upstream",
+      "name": "oas-spec-name",
+      "path": "/some/path",
+      "plugins": [],
+      "port": 80,
+      "protocol": "http",
+      "routes": [
+        {
+          "methods": [
+            "GET"
+          ],
+          "name": "oas-spec-name-opsid1",
+          "paths": [
+            "~/app1$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_02-names-set.yaml"
+          ]
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "name": "oas-spec-name-path-name-post",
+          "paths": [
+            "~/app1$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_02-names-set.yaml"
+          ]
+        },
+        {
+          "methods": [
+            "PUT"
+          ],
+          "name": "oas-spec-name-path-name-my-put-operation",
+          "paths": [
+            "~/app1$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_02-names-set.yaml"
+          ]
+        },
+        {
+          "methods": [
+            "GET"
+          ],
+          "name": "oas-spec-name-opsid2",
+          "paths": [
+            "~/app2$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_02-names-set.yaml"
+          ]
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "name": "oas-spec-name-app2-post",
+          "paths": [
+            "~/app2$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_02-names-set.yaml"
+          ]
+        },
+        {
+          "methods": [
+            "PUT"
+          ],
+          "name": "oas-spec-name-app2-my-put-operation",
+          "paths": [
+            "~/app2$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_02-names-set.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_02-names-set.yaml"
+      ]
+    }
+  ],
+  "upstreams": [
+    {
+      "name": "oas-spec-name.upstream",
+      "tags": [
+        "OAS3_import",
+        "OAS3file_02-names-set.yaml"
+      ],
+      "targets": [
+        {
+          "tags": [
+            "OAS3_import",
+            "OAS3file_02-names-set.yaml"
+          ],
+          "target": "backend1.com:80"
+        },
+        {
+          "tags": [
+            "OAS3_import",
+            "OAS3file_02-names-set.yaml"
+          ],
+          "target": "backend2.com:80"
+        }
+      ]
+    }
+  ]
+}
