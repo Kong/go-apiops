@@ -93,7 +93,7 @@
           "methods": [
             "POST"
           ],
-          "name": "Simple_API_overview-application~-post",
+          "name": "Simple_API_overview-application-~-post",
           "paths": [
             "~/application/$"
           ],

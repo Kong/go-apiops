@@ -45,11 +45,11 @@
           ]
         },
         {
-          "id": "6c573ebb-44d2-5e36-be1a-6aa5e6fc8868",
+          "id": "de13eea4-754a-5219-9dad-ee16f9632d63",
           "methods": [
             "PUT"
           ],
-          "name": "oas-spec-name-path-name-my-put-operation",
+          "name": "oas-spec-name-my-put-operation",
           "paths": [
             "~/app1$"
           ],
@@ -96,11 +96,11 @@
           ]
         },
         {
-          "id": "b9b808a1-29e6-596e-8980-f5218aee5440",
+          "id": "de13eea4-754a-5219-9dad-ee16f9632d63",
           "methods": [
             "PUT"
           ],
-          "name": "oas-spec-name-app2-my-put-operation",
+          "name": "oas-spec-name-my-put-operation",
           "paths": [
             "~/app2$"
           ],
