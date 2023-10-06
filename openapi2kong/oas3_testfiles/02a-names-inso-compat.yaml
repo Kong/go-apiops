@@ -1,0 +1,103 @@
+# top-name
+# - path
+#     - x-kong-name set
+#     - no x-kong-name (defaults to path)
+#     - no x-kong-name + regex (defaults to path)
+#   - Operation
+#     - operationId set
+#     - x-kong-name set
+#     - neither set (defaults to method)
+
+
+openapi: 3.0.0
+
+info:
+  description: Learn service
+  version: 1.0.0
+  title: Learn Service
+  contact: {}
+
+servers:
+- url: http://somewhere
+
+x-kong-name: documentname
+
+paths:
+  /:
+    put:
+      responses:
+        '200':
+          description: description
+
+  /weird/p-a_th:
+    put:
+      responses:
+        '200':
+          description: description
+
+  /plain/path:
+    get:
+      operationId: Ops1
+      responses:
+        '200':
+          description: description
+    put:
+      responses:
+        '200':
+          description: description
+    post:
+      x-kong-name: "x-kong-ops"
+      responses:
+        '200':
+          description: description
+
+  /named/path:
+    x-kong-name: "x-kong-path"
+    get:
+      operationId: Ops2
+      responses:
+        '200':
+          description: description
+    put:
+      responses:
+        '200':
+          description: description
+    post:
+      x-kong-name: "x-kong-ops"
+      responses:
+        '200':
+          description: description
+
+  /regex/path/{userid}:
+    get:
+      operationId: Ops3
+      parameters:
+      - name: userid
+        in: path
+        description: Id of the Track to delete
+        required: true
+        schema: {}
+      responses:
+        '200':
+          description: description
+    put:
+      parameters:
+      - name: userid
+        in: path
+        description: Id of the Track to delete
+        required: true
+        schema: {}
+      responses:
+        '200':
+          description: description
+    post:
+      x-kong-name: "x-kong-ops"
+      parameters:
+      - name: userid
+        in: path
+        description: Id of the Track to delete
+        required: true
+        schema: {}
+      responses:
+        '200':
+          description: description

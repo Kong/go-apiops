@@ -96,11 +96,11 @@
           ]
         },
         {
-          "id": "47527799-6eee-56a4-9f70-fd4e0b1a5867",
+          "id": "0879ed2e-2aa4-57ce-8359-733a266f3ab9",
           "methods": [
             "POST"
           ],
-          "name": "Simple_API_overview-application~-post",
+          "name": "Simple_API_overview-application-~-post",
           "paths": [
             "~/application/$"
           ],
