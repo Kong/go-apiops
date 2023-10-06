@@ -64,6 +64,7 @@ x-kong-name: awesome_learnservice
 # Names are converted into valid identifiers. For example,
 # "Learn Service" becomes "Learn_Service".
 # This directive can also be used on "path" and "operation" objects to name them.
+# Similar to operationId, each x-kong-name must be unique within the spec file.
 
 
 x-kong-plugin-correlation-id:
@@ -125,11 +126,13 @@ paths:
       operationId: upsertTracks
       # Kong routes are generated from the top-level Service name (x-kong-name or info.title
       # if x-kong-name is not set), and then the operationId gets appended (with '-' as separator)
-      # so the generated route name here is "awesome-learnservice-upserttracks"
+      # so the generated route name here is "awesome_learnservice-upserttracks".
       # If operationId is not specified, the default name will be the global x-kong-name
-      # with the path name and operation type.
-      # [specname]-[operationId]
-      # [specname]-[x-kong-name on path level]-[operation] --> if no "operationId" provided
+      # with the path name and operation type. On this level the operationId can also be overridden
+      # by an x-kong-name directive.
+      # [specname]-[x-kong-name(operation)]               - if x-kong-name is provided on operation level
+      # [specname]-[operationId]                          - if operationId is provided (and no x-kong-name)
+      # [specname]-[x-kong-name(path) | path]-[operation] - if neither is provided
       # where [specname] is the x-kong-name on global level (or in its absence "info.title")
       x-kong-plugin-request-termination:
         # the "x-kong-plugin-<plugin name>" directive can be used to add plugins
