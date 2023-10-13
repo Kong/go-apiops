@@ -19,7 +19,7 @@ Note: all names will be 'slugified' to ensure illegal characters are removed.
 # Best practices
 
 * for a document name use the `--uuid-base` flag to set it in the pipeline.
-  This will ensure a unique document ID (without having to trust the OpenAPI spec author).
+  This will ensure a unique document ID (prevents collisions across multiple OAS documents from mutiple authors).
 * use Operation IDs in the OpenAPI spec. Operation IDs are already unique within on OpenAPI spec.
   By using the Operation IDs there will be no need to have Kong-specific knowledge (only the more
   general OpenAPI knowledge) when cross-referencing between systems.
@@ -47,14 +47,14 @@ documents the Operation IDs might overlap.
 
 Hence the top level is the OAS document level. So how is the name derived? In order of precedence:
 
-1. the command-line flag `--uuid-base`. This allows platform operators that do not necessarily trust input from developer
-   teams to set their own unique document ID that they control.
+1. the command-line flag `--uuid-base`. This allows platform operators to set the UUID namespace to prevent collisions
+   if multiple authors use the same names and IDs in their OpenAPI specs.
 2. the `x-kong-name` directive in the document root, if present
 3. the `info.title` field, if present
 4. a random ID (UUIDv4)
 
 Options 3 and 4 are fallbacks and make for a nice first experience using the tools, but for production usage, one should
-either use option 1 or 2. The difference is that option 2 requires that the developer team can be trusted.
+either use option 1 or 2. The difference is that option 2 implicitly assumes that multiple developer teams will not use the same name.
 
 This should be chosen carefully, since changing this top-level name, will impact all generated entity names derived from
 the same document, as well as their IDs.
