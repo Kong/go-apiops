@@ -123,7 +123,7 @@ var _ = Describe("Patch", func() {
 
 	Describe("validating --value flags", func() {
 		It("validates a number", func() {
-			val, rem, err := patch.ValidateValuesFlags([]string{"key1:1", "key2:2"})
+			val, rem, arr, err := patch.ValidateValuesFlags([]string{"key1:1", "key2:2"})
 
 			Expect(err).To(BeNil())
 			Expect(val).To(BeEquivalentTo(map[string]interface{}{
@@ -131,10 +131,11 @@ var _ = Describe("Patch", func() {
 				"key2": 2.0,
 			}))
 			Expect(rem).To(BeEquivalentTo([]string{}))
+			Expect(arr).To(BeEquivalentTo([]interface{}{}))
 		})
 
 		It("validates a string", func() {
-			val, rem, err := patch.ValidateValuesFlags([]string{"key1:\"hi\"", "key2:\"there\""})
+			val, rem, arr, err := patch.ValidateValuesFlags([]string{"key1:\"hi\"", "key2:\"there\""})
 
 			Expect(err).To(BeNil())
 			Expect(val).To(BeEquivalentTo(map[string]interface{}{
@@ -142,10 +143,11 @@ var _ = Describe("Patch", func() {
 				"key2": "there",
 			}))
 			Expect(rem).To(BeEquivalentTo([]string{}))
+			Expect(arr).To(BeEquivalentTo([]interface{}{}))
 		})
 
 		It("validates a boolean", func() {
-			val, rem, err := patch.ValidateValuesFlags([]string{"key1:true", "key2:false"})
+			val, rem, arr, err := patch.ValidateValuesFlags([]string{"key1:true", "key2:false"})
 
 			Expect(err).To(BeNil())
 			Expect(val).To(BeEquivalentTo(map[string]interface{}{
@@ -153,10 +155,11 @@ var _ = Describe("Patch", func() {
 				"key2": false,
 			}))
 			Expect(rem).To(BeEquivalentTo([]string{}))
+			Expect(arr).To(BeEquivalentTo([]interface{}{}))
 		})
 
 		It("validates an object", func() {
-			val, rem, err := patch.ValidateValuesFlags([]string{"key1:{\"hello\": 123}", "key2:false"})
+			val, rem, arr, err := patch.ValidateValuesFlags([]string{"key1:{\"hello\": 123}", "key2:false"})
 
 			Expect(err).To(BeNil())
 			Expect(val).To(BeEquivalentTo(map[string]interface{}{
@@ -166,10 +169,11 @@ var _ = Describe("Patch", func() {
 				"key2": false,
 			}))
 			Expect(rem).To(BeEquivalentTo([]string{}))
+			Expect(arr).To(BeEquivalentTo([]interface{}{}))
 		})
 
 		It("validates an array", func() {
-			val, rem, err := patch.ValidateValuesFlags([]string{"key1:[true]", "key2:false"})
+			val, rem, arr, err := patch.ValidateValuesFlags([]string{"key1:[true]", "key2:false"})
 
 			Expect(err).To(BeNil())
 			Expect(val).To(BeEquivalentTo(map[string]interface{}{
@@ -177,44 +181,72 @@ var _ = Describe("Patch", func() {
 				"key2": false,
 			}))
 			Expect(rem).To(BeEquivalentTo([]string{}))
+			Expect(arr).To(BeEquivalentTo([]interface{}{}))
 		})
 
 		It("validates an empty value (delete the key)", func() {
-			val, rem, err := patch.ValidateValuesFlags([]string{"key1:", "key2:"})
+			val, rem, arr, err := patch.ValidateValuesFlags([]string{"key1:", "key2:"})
 
 			Expect(err).To(BeNil())
 			Expect(val).To(BeEquivalentTo(map[string]interface{}{}))
 			Expect(rem).To(BeEquivalentTo([]string{"key1", "key2"}))
+			Expect(arr).To(BeEquivalentTo([]interface{}{}))
+		})
+
+		It("validates an array input", func() {
+			val, rem, arr, err := patch.ValidateValuesFlags([]string{"[true, \"false\"]"})
+
+			Expect(err).To(BeNil())
+			Expect(val).To(BeEquivalentTo(map[string]interface{}{}))
+			Expect(rem).To(BeEquivalentTo([]string{}))
+			Expect(arr).To(BeEquivalentTo([]interface{}{
+				true,
+				"false",
+			}))
 		})
 
 		Describe("returns error on", func() {
 			It("missing ':'", func() {
-				val, rem, err := patch.ValidateValuesFlags([]string{"key1:true", "key2_false"})
+				val, rem, arr, err := patch.ValidateValuesFlags([]string{"key1:true", "key2_false"})
 
-				Expect(err).To(MatchError("expected '--value' entry to have format 'key:json-string', got: 'key2_false'"))
+				Expect(err).To(MatchError("expected '--value' entry to have format 'key:json-string', or " +
+					"'[ json-array ], got: 'key2_false'"))
 				Expect(val).To(BeNil())
 				Expect(rem).To(BeNil())
+				Expect(arr).To(BeNil())
 			})
 
-			It("invalid JSON", func() {
-				val, rem, err := patch.ValidateValuesFlags([]string{"key1:true", "key2:{not valid this stuff...}"})
+			It("invalid JSON in field", func() {
+				val, rem, arr, err := patch.ValidateValuesFlags([]string{"key1:true", "key2:{not valid this stuff...}"})
 
 				Expect(err).To(MatchError("expected '--value' entry to have format 'key:json-string', failed parsing " +
 					"json-string in 'key2:{not valid this stuff...}' (did you forget to wrap a json-string-value in quotes?)"))
 				Expect(val).To(BeNil())
 				Expect(rem).To(BeNil())
+				Expect(arr).To(BeNil())
+			})
+
+			It("invalid JSON as array", func() {
+				val, rem, arr, err := patch.ValidateValuesFlags([]string{"[not a valid array...]"})
+
+				Expect(err).To(MatchError("expected '--value' entry to be a valid json array '[ entry1, entry2, ... ]', " +
+					"failed parsing json-string in '[not a valid array...]'"))
+				Expect(val).To(BeNil())
+				Expect(rem).To(BeNil())
+				Expect(arr).To(BeNil())
 			})
 		})
 
 		Describe("allows for", func() {
 			It("multiple ':' characters (splits only by first one)", func() {
-				val, rem, err := patch.ValidateValuesFlags([]string{"key1:\":::\""})
+				val, rem, arr, err := patch.ValidateValuesFlags([]string{"key1:\":::\""})
 
 				Expect(err).To(BeNil())
 				Expect(val).To(BeEquivalentTo(map[string]interface{}{
 					"key1": ":::",
 				}))
 				Expect(rem).To(BeEquivalentTo([]string{}))
+				Expect(arr).To(BeEquivalentTo([]interface{}{}))
 			})
 		})
 	})
@@ -236,13 +268,14 @@ var _ = Describe("Patch", func() {
 	Describe("Applying values to objects", func() {
 		applyUpdates := func(data []byte, selector string, valueFlags []string) []byte {
 			jsonData := MustDeserialize(data)
-			parsedValues, remove, err := patch.ValidateValuesFlags(valueFlags)
+			parsedValues, remove, arr, err := patch.ValidateValuesFlags(valueFlags)
 			Expect(err).To(BeNil())
 
 			testPatch := patch.DeckPatch{
 				SelectorSources: []string{selector},
 				ObjValues:       parsedValues,
 				Remove:          remove,
+				ArrValues:       arr,
 			}
 
 			yamlNode := jsonbasics.ConvertToYamlNode(jsonData)

@@ -46,7 +46,7 @@ func executePatch(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return fmt.Errorf("failed to retrieve '--value' entries; %w", err)
 		}
-		valuesPatch.ObjValues, valuesPatch.Remove, err = patch.ValidateValuesFlags(values)
+		valuesPatch.ObjValues, valuesPatch.Remove, valuesPatch.ArrValues, err = patch.ValidateValuesFlags(values)
 		if err != nil {
 			return fmt.Errorf("failed parsing '--value' entry; %w", err)
 		}
