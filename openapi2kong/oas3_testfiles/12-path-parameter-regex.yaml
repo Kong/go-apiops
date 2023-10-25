@@ -9,9 +9,8 @@ servers:
   - url: "https://example.com"
 
 paths:
-  # note that '-to-do' is not a valid regex capture name, hence it must be sanitized
-  # in the output.
-  /demo/{something}/else/{-to-do}/:
+  # simple regex capture names. Also the path has a trailing slash.
+  /demo/{something}/else/{todo}/:
     get:
       operationId: opsid
       parameters:
@@ -22,6 +21,30 @@ paths:
             type: string
         - in: path
           name: todo
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  # note that the names are not valid regex capture names, hence they must be sanitized
+  # in the output. Also the path has NO trailing slash.
+  /demo/{ white space }/{x*()_-+=x}/{-To_Do}:
+    get:
+      operationId: opsid
+      parameters:
+        - in: path
+          name: " white space "
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: "x*()_-+=x"
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: -To_Do
           required: true
           schema:
             type: string
@@ -54,7 +77,7 @@ paths:
           description: An echo message.
       operationId: getBatchWithParams
     post:
-      # test vaildating not escaping the path twice; we have 2 methods on 1 path
+      # test validating not escaping the path twice; we have 2 methods on 1 path
       parameters:
         - in: path
           name: Material

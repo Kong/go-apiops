@@ -1,0 +1,110 @@
+{
+    "_format_version": "3.0",
+    "services": [
+        {
+            "host": "Simple_API_overview.upstream",
+            "name": "Simple_API_overview",
+            "path": "/some/path",
+            "plugins": [],
+            "port": 80,
+            "protocol": "http",
+            "routes": [
+                {
+                    "methods": [
+                        "GET"
+                    ],
+                    "name": "Simple_API_overview-opsid1",
+                    "paths": [
+                        "~/$"
+                    ],
+                    "plugins": [],
+                    "regex_priority": 200,
+                    "strip_path": false,
+                    "tags": []
+                },
+                {
+                    "methods": [
+                        "POST"
+                    ],
+                    "name": "Simple_API_overview-post",
+                    "paths": [
+                        "~/$"
+                    ],
+                    "plugins": [],
+                    "regex_priority": 200,
+                    "strip_path": false,
+                    "tags": []
+                },
+                {
+                    "methods": [
+                        "GET"
+                    ],
+                    "name": "Simple_API_overview-opsid2",
+                    "paths": [
+                        "~/application$"
+                    ],
+                    "plugins": [],
+                    "regex_priority": 200,
+                    "strip_path": false,
+                    "tags": []
+                },
+                {
+                    "methods": [
+                        "POST"
+                    ],
+                    "name": "Simple_API_overview-application-post",
+                    "paths": [
+                        "~/application$"
+                    ],
+                    "plugins": [],
+                    "regex_priority": 200,
+                    "strip_path": false,
+                    "tags": []
+                },
+                {
+                    "methods": [
+                        "GET"
+                    ],
+                    "name": "Simple_API_overview-opsid3",
+                    "paths": [
+                        "~/application/$"
+                    ],
+                    "plugins": [],
+                    "regex_priority": 200,
+                    "strip_path": false,
+                    "tags": []
+                },
+                {
+                    "methods": [
+                        "POST"
+                    ],
+                    "name": "Simple_API_overview-application-~-post",
+                    "paths": [
+                        "~/application/$"
+                    ],
+                    "plugins": [],
+                    "regex_priority": 200,
+                    "strip_path": false,
+                    "tags": []
+                }
+            ],
+            "tags": []
+        }
+    ],
+    "upstreams": [
+        {
+            "name": "Simple_API_overview.upstream",
+            "tags": [],
+            "targets": [
+                {
+                    "tags": [],
+                    "target": "backend1.com:80"
+                },
+                {
+                    "tags": [],
+                    "target": "backend2.com:80"
+                }
+            ]
+        }
+    ]
+}

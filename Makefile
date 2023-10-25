@@ -32,6 +32,7 @@ coverage: check-test-dependencies
 
 clean: check-main-dependencies
 	$(RM) ./openapi2kong/oas3_testfiles/*.generated.json
+	$(RM) ./openapi2kong/oas3_testfiles/*.generated_inso.json
 	$(RM) ./${BINARY_NAME}
 	$(RM) ./go-apiops
 	go mod tidy

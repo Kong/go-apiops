@@ -1,0 +1,110 @@
+{
+  "_format_version": "3.0",
+  "services": [
+      {
+          "host": "oas-spec-name.upstream",
+          "name": "oas-spec-name",
+          "path": "/some/path",
+          "plugins": [],
+          "port": 80,
+          "protocol": "http",
+          "routes": [
+              {
+                  "methods": [
+                      "GET"
+                  ],
+                  "name": "oas-spec-name-opsid1",
+                  "paths": [
+                      "~/app1$"
+                  ],
+                  "plugins": [],
+                  "regex_priority": 200,
+                  "strip_path": false,
+                  "tags": []
+              },
+              {
+                  "methods": [
+                      "POST"
+                  ],
+                  "name": "oas-spec-name-path-name-post",
+                  "paths": [
+                      "~/app1$"
+                  ],
+                  "plugins": [],
+                  "regex_priority": 200,
+                  "strip_path": false,
+                  "tags": []
+              },
+              {
+                  "methods": [
+                      "PUT"
+                  ],
+                  "name": "oas-spec-name-my-put-operation",
+                  "paths": [
+                      "~/app1$"
+                  ],
+                  "plugins": [],
+                  "regex_priority": 200,
+                  "strip_path": false,
+                  "tags": []
+              },
+              {
+                  "methods": [
+                      "GET"
+                  ],
+                  "name": "oas-spec-name-opsid2",
+                  "paths": [
+                      "~/app2$"
+                  ],
+                  "plugins": [],
+                  "regex_priority": 200,
+                  "strip_path": false,
+                  "tags": []
+              },
+              {
+                  "methods": [
+                      "POST"
+                  ],
+                  "name": "oas-spec-name-app2-post",
+                  "paths": [
+                      "~/app2$"
+                  ],
+                  "plugins": [],
+                  "regex_priority": 200,
+                  "strip_path": false,
+                  "tags": []
+              },
+              {
+                  "methods": [
+                      "PUT"
+                  ],
+                  "name": "oas-spec-name-my-put-operation",
+                  "paths": [
+                      "~/app2$"
+                  ],
+                  "plugins": [],
+                  "regex_priority": 200,
+                  "strip_path": false,
+                  "tags": []
+              }
+          ],
+          "tags": []
+      }
+  ],
+  "upstreams": [
+      {
+          "name": "oas-spec-name.upstream",
+          "tags": [],
+          "targets": [
+              {
+                  "tags": [],
+                  "target": "backend1.com:80"
+              },
+              {
+                  "tags": [],
+                  "target": "backend2.com:80"
+              }
+          ]
+      }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "name": "Path_parameter_test",
+      "protocol": "https",
+      "host": "example.com",
+      "port": 443,
+      "path": "/",
+      "plugins": [],
+      "routes": [
+        {
+          "tags": [
+            "OAS3_import"
+          ],
+          "name": "Path_parameter_test-opsid",
+          "methods": [
+            "GET"
+          ],
+          "paths": [
+            "~/demo/(?<something>[^/]+)/else/(?<todo>[^/]+)/$"
+          ],
+          "strip_path": false
+        },
+        {
+          "tags": "a1",
+          "name": "Path_parameter_test-opsid",
+          "methods": [
+            "GET"
+          ],
+          "paths": [
+            "~/demo/(?< white space >[^/]+)/(?<x*\\(\\)__+=x>[^/]+)/(?<_To_Do>[^/]+)$"
+          ],
+          "strip_path": false
+        },
+        {
+          "tags": "a1",
+          "name": "Path_parameter_test-getBatchNoParams",
+          "methods": [
+            "GET"
+          ],
+          "paths": [
+            "~/batchs\\(Material='iron',Batch='10'\\)$"
+          ],
+          "strip_path": false
+        },
+        {
+          "tags": "a1",
+          "name": "Path_parameter_test-getBatchWithParams",
+          "methods": [
+            "GET"
+          ],
+          "paths": [
+            "~/batchs\\(Material='(?<Material>[^/]+)',Batch='(?<Batch>[^/]+)'\\)$"
+          ],
+          "strip_path": false
+        },
+        {
+          "tags": "a1",
+          "name": "Path_parameter_test-postBatchWithParams",
+          "methods": [
+            "POST"
+          ],
+          "paths": [
+            "~/batchs\\(Material='(?<Material>[^/]+)',Batch='(?<Batch>[^/]+)'\\)$"
+          ],
+          "strip_path": false
+        }
+      ],
+      "tags": "a1"
+    }
+  ]
+}

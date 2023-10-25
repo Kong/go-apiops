@@ -68,7 +68,24 @@
           ],
           "name": "path-parameter-test_opsid",
           "paths": [
-            "~/demo/(?<something>[^#?/]+)/else/(?<to_do>[^#?/]+)/$"
+            "~/demo/(?<white_space>[^#?/]+)/(?<x_x>[^#?/]+)/(?<to_do>[^#?/]+)$"
+          ],
+          "plugins": [],
+          "regex_priority": 100,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_12-path-parameter-regex.yaml"
+          ]
+        },
+        {
+          "id": "0da1f8dc-e918-5379-b3b0-ffc061ae1691",
+          "methods": [
+            "GET"
+          ],
+          "name": "path-parameter-test_opsid",
+          "paths": [
+            "~/demo/(?<something>[^#?/]+)/else/(?<todo>[^#?/]+)/$"
           ],
           "plugins": [],
           "regex_priority": 100,

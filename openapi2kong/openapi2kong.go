@@ -26,6 +26,8 @@ type O2kOptions struct {
 	Tags          []string  // Array of tags to mark all generated entities with, taken from 'x-kong-tags' if omitted.
 	DocName       string    // Base document name, will be taken from x-kong-name, or info.title (for UUID generation!)
 	UUIDNamespace uuid.UUID // Namespace for UUID generation, defaults to DNS namespace for UUID v5
+	InsoCompat    bool      // Enable Inso compatibility mode
+	SkipID        bool      // Skip ID generation (UUIDs)
 }
 
 // setDefaults sets the defaults for the OpenAPI2Kong operation.
