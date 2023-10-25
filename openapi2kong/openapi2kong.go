@@ -237,6 +237,7 @@ func getPluginsList(
 	baseName string,
 	components *map[string]interface{},
 	tags []string,
+	skipID bool,
 ) (*[]*map[string]interface{}, error) {
 	plugins := make(map[string]*map[string]interface{})
 
@@ -247,8 +248,9 @@ func getPluginsList(
 			configCopy := jsonbasics.DeepCopyObject(*config)
 
 			// generate a new ID, for a new plugin, based on new basename
-			configCopy["id"] = createPluginID(uuidNamespace, baseName, configCopy)
-
+			if !skipID {
+				configCopy["id"] = createPluginID(uuidNamespace, baseName, configCopy)
+			}
 			configCopy["tags"] = tags
 
 			plugins[pluginName] = &configCopy
@@ -273,7 +275,9 @@ func getPluginsList(
 				}
 
 				pluginConfig["name"] = pluginName
-				pluginConfig["id"] = createPluginID(uuidNamespace, baseName, pluginConfig)
+				if !skipID {
+					pluginConfig["id"] = createPluginID(uuidNamespace, baseName, pluginConfig)
+				}
 				pluginConfig["tags"] = tags
 
 				// foreign keys to service+route are not allowed (consumer is allowed)
@@ -507,7 +511,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 
 	// create the top-level docService and (optional) docUpstream
 	docService, docUpstream, err = CreateKongService(docBaseName, docServers, docServiceDefaults,
-		docUpstreamDefaults, kongTags, opts.UUIDNamespace)
+		docUpstreamDefaults, kongTags, opts.UUIDNamespace, opts.SkipID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create service/upstream from document root: %w", err)
 	}
@@ -517,7 +521,8 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 	}
 
 	// attach plugins
-	docPluginList, err = getPluginsList(doc.ExtensionProps, nil, opts.UUIDNamespace, docBaseName, kongComponents, kongTags)
+	docPluginList, err = getPluginsList(doc.ExtensionProps, nil, opts.UUIDNamespace, docBaseName,
+		kongComponents, kongTags, opts.SkipID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create plugins list from document root: %w", err)
 	}
@@ -616,14 +621,15 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 				pathServiceDefaults,
 				pathUpstreamDefaults,
 				kongTags,
-				opts.UUIDNamespace)
+				opts.UUIDNamespace,
+				opts.SkipID)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create service/updstream from path '%s': %w", path, err)
 			}
 
 			// collect path plugins, including the doc-level plugins since we have a new service entity
 			pathPluginList, err = getPluginsList(pathitem.ExtensionProps, docPluginList,
-				opts.UUIDNamespace, pathBaseName, kongComponents, kongTags)
+				opts.UUIDNamespace, pathBaseName, kongComponents, kongTags, opts.SkipID)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create plugins list from path item: %w", err)
 			}
@@ -654,7 +660,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 
 			// collect path plugins, only the path level, since we're on the doc-level service-entity
 			pathPluginList, err = getPluginsList(pathitem.ExtensionProps, nil,
-				opts.UUIDNamespace, pathBaseName, kongComponents, kongTags)
+				opts.UUIDNamespace, pathBaseName, kongComponents, kongTags, opts.SkipID)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create plugins list from path item: %w", err)
 			}
@@ -753,7 +759,8 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 					operationServiceDefaults,
 					operationUpstreamDefaults,
 					kongTags,
-					opts.UUIDNamespace)
+					opts.UUIDNamespace,
+					opts.SkipID)
 				if err != nil {
 					return nil, fmt.Errorf("failed to create service/updstream from operation '%s %s': %w", path, method, err)
 				}
@@ -779,21 +786,21 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 				// we're operating on the doc-level service entity, so we need the plugins
 				// from the path and operation
 				operationPluginList, err = getPluginsList(operation.ExtensionProps, pathPluginList,
-					opts.UUIDNamespace, operationBaseName, kongComponents, kongTags)
+					opts.UUIDNamespace, operationBaseName, kongComponents, kongTags, opts.SkipID)
 			} else if newOperationService {
 				// we're operating on an operation-level service entity, so we need the plugins
 				// from the document, path, and operation.
 				operationPluginList, _ = getPluginsList(doc.ExtensionProps, nil, opts.UUIDNamespace,
-					operationBaseName, kongComponents, kongTags)
+					operationBaseName, kongComponents, kongTags, opts.SkipID)
 				operationPluginList, _ = getPluginsList(pathitem.ExtensionProps, operationPluginList, opts.UUIDNamespace,
-					operationBaseName, kongComponents, kongTags)
+					operationBaseName, kongComponents, kongTags, opts.SkipID)
 				operationPluginList, err = getPluginsList(operation.ExtensionProps, operationPluginList, opts.UUIDNamespace,
-					operationBaseName, kongComponents, kongTags)
+					operationBaseName, kongComponents, kongTags, opts.SkipID)
 			} else if newPathService {
 				// we're operating on a path-level service entity, so we only need the plugins
 				// from the operation.
 				operationPluginList, err = getPluginsList(operation.ExtensionProps, nil, opts.UUIDNamespace,
-					operationBaseName, kongComponents, kongTags)
+					operationBaseName, kongComponents, kongTags, opts.SkipID)
 			}
 			if err != nil {
 				return nil, fmt.Errorf("failed to create plugins list from operation item: %w", err)
@@ -802,7 +809,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 			// Extract the request-validator config from the plugin list, generate it and reinsert
 			operationValidatorConfig, operationPluginList = getValidatorPlugin(operationPluginList, pathValidatorConfig)
 			validatorPlugin := generateValidatorPlugin(operationValidatorConfig, operation, opts.UUIDNamespace,
-				operationBaseName)
+				operationBaseName, opts.SkipID)
 			operationPluginList = insertPlugin(operationPluginList, validatorPlugin)
 
 			// construct the route
@@ -844,7 +851,9 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 				}
 			}
 			route["paths"] = []string{"~" + convertedPath + "$"}
-			route["id"] = uuid.NewSHA1(opts.UUIDNamespace, []byte(operationBaseName+".route")).String()
+			if !opts.SkipID {
+				route["id"] = uuid.NewSHA1(opts.UUIDNamespace, []byte(operationBaseName+".route")).String()
+			}
 			route["name"] = operationBaseName
 			route["methods"] = []string{method}
 			route["tags"] = kongTags

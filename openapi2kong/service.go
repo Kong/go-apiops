@@ -122,6 +122,7 @@ func createKongUpstream(
 	upstreamDefaults []byte, // defaults to use (JSON string) or empty if no defaults
 	tags []string, // tags to attach to the new upstream
 	uuidNamespace uuid.UUID,
+	skipID bool,
 ) (map[string]interface{}, error) {
 	var upstream map[string]interface{}
 
@@ -134,7 +135,9 @@ func createKongUpstream(
 	}
 
 	upstreamName := baseName + ".upstream"
-	upstream["id"] = uuid.NewSHA1(uuidNamespace, []byte(upstreamName)).String()
+	if !skipID {
+		upstream["id"] = uuid.NewSHA1(uuidNamespace, []byte(upstreamName)).String()
+	}
 	upstream["name"] = upstreamName
 	upstream["tags"] = tags
 
@@ -181,6 +184,7 @@ func CreateKongService(
 	upstreamDefaults []byte,
 	tags []string,
 	uuidNamespace uuid.UUID,
+	skipID bool,
 ) (map[string]interface{}, map[string]interface{}, error) {
 	var (
 		service  map[string]interface{}
@@ -195,7 +199,9 @@ func CreateKongService(
 	}
 
 	// add id, name and tags to the service
-	service["id"] = uuid.NewSHA1(uuidNamespace, []byte(baseName+".service")).String()
+	if !skipID {
+		service["id"] = uuid.NewSHA1(uuidNamespace, []byte(baseName+".service")).String()
+	}
 	service["name"] = baseName
 	service["tags"] = tags
 	service["plugins"] = make([]interface{}, 0)
@@ -245,7 +251,7 @@ func CreateKongService(
 			service["host"] = targets[0].Hostname()
 		} else {
 			// have to create an upstream with targets
-			upstream, err = createKongUpstream(baseName, servers, upstreamDefaults, tags, uuidNamespace)
+			upstream, err = createKongUpstream(baseName, servers, upstreamDefaults, tags, uuidNamespace, skipID)
 			if err != nil {
 				return nil, nil, err
 			}
