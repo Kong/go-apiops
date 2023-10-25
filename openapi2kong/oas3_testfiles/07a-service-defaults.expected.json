@@ -3,19 +3,19 @@
   "services": [
     {
       "host": "myhost.com",
-      "id": "e3a95664-95d7-5b10-bc3d-11c9cc6c2b4e",
-      "name": "Simple_API_overview",
+      "id": "0907c4ab-d9e4-5d21-813b-c57a97eeaad9",
+      "name": "simple-api-overview",
       "path": "/something",
       "plugins": [],
       "port": 123,
       "protocol": "http",
       "routes": [
         {
-          "id": "5f917263-5851-5850-923f-06a35814bb61",
+          "id": "663104d8-7e60-525d-b506-e42971b4466b",
           "methods": [
             "GET"
           ],
-          "name": "Simple_API_overview-uses-doc-service",
+          "name": "simple-api-overview_uses-doc-service",
           "paths": [
             "~/path1$"
           ],
