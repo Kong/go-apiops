@@ -45,7 +45,7 @@
           "methods": [
             "PUT"
           ],
-          "name": "oas-spec-name-my-put-operation",
+          "name": "oas-spec-name-path-name-my-put-operation",
           "paths": [
             "~/app1$"
           ],
@@ -93,7 +93,7 @@
           "methods": [
             "PUT"
           ],
-          "name": "oas-spec-name-my-put-operation",
+          "name": "oas-spec-name-app2-my-put-operation",
           "paths": [
             "~/app2$"
           ],
