@@ -15,18 +15,18 @@ paths:
     get:
       # operation with an ID
       operationId: opsid1
-      responses: 
+      responses:
         '200':
           description: 200 ok
     post:
       # operation without an ID, and without name
-      responses: 
+      responses:
         '200':
           description: 200 ok
     put:
       # operation without an ID, with name
       x-kong-name: my-put-operation
-      responses: 
+      responses:
         '200':
           description: 200 ok
   /app2:
@@ -34,18 +34,18 @@ paths:
     get:
       # operation with an ID
       operationId: opsid2
-      responses: 
+      responses:
         '200':
           description: 200 ok
     post:
       # operation without an ID
-      responses: 
+      responses:
         '200':
           description: 200 ok
     put:
       # operation without an ID, with name
       x-kong-name: my-put-operation
-      responses: 
+      responses:
         '200':
           description: 200 ok
 

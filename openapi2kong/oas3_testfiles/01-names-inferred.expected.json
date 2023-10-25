@@ -77,6 +77,40 @@
             "OAS3_import",
             "OAS3file_01-names-inferred.yaml"
           ]
+        },
+        {
+          "id": "63973e08-181f-53b7-8dbb-b9acad0930e3",
+          "methods": [
+            "GET"
+          ],
+          "name": "simple-api-overview_opsid3",
+          "paths": [
+            "~/application/$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_01-names-inferred.yaml"
+          ]
+        },
+        {
+          "id": "f8102b40-3925-5071-9333-82334952cd8c",
+          "methods": [
+            "POST"
+          ],
+          "name": "simple-api-overview_application~_post",
+          "paths": [
+            "~/application/$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_01-names-inferred.yaml"
+          ]
         }
       ],
       "tags": [

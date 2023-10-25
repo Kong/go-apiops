@@ -28,11 +28,14 @@ function singlefile() {
     postfix="$2"
     destname="${filename%.generated"$postfix".json}.expected$postfix.json"
     echo "$filename  ->  $destname"
-    cat "$filename" | sed 's/\\u003c/</g' | sed 's/\\u003e/>/g' > "$destname"
+    sed 's/\\u003c/</g' "$filename" | sed 's/\\u003e/>/g' > "$destname"
 }
 
 # ls -la
 
 for f in ./*.generated.json; do
     singlefile "$f" ""
+done
+for f in ./*.generated_inso.json; do
+    singlefile "$f" "_inso"
 done
