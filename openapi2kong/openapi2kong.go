@@ -50,27 +50,6 @@ func Slugify(name ...string) string {
 	return strings.Join(name, "-")
 }
 
-// SlugifyPath will slugify a path similar to Inso did for compatibility reasons.
-func SlugifyPath(path string) string {
-	// first deal with path parameters in curly braces (drop the curly braces)
-	re, _ := regexp.Compile("{([^}]+)}")
-	result := path
-	if matches := re.FindAllStringSubmatch(path, -1); matches != nil {
-		for _, match := range matches {
-			varName := match[1]
-			result = strings.Replace(result, "{"+varName+"}", varName, 1)
-		}
-	}
-
-	// strip the leading slash
-	result = strings.TrimPrefix(result, "/")
-
-	// replace all '/' characters
-	result = strings.ReplaceAll(result, "/", "-")
-
-	return Slugify(result)
-}
-
 // sanitizeRegexCapture will remove illegal characters from the path-variable name.
 // The returned name will be valid for PCRE regex captures; Alphanumeric + '_', starting
 // with [a-zA-Z].
@@ -590,7 +569,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 				// there is no path, so skip it
 				pathBaseName = docBaseName
 			} else {
-				pathBaseName = SlugifyPath(path)
+				pathBaseName = Slugify(path)
 				if strings.HasSuffix(path, "/") {
 					// a common case is 2 paths, one with and one without a trailing "/" so to prevent
 					// duplicate names being generated, we add a "~" suffix as a special case to cater
@@ -729,8 +708,8 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 				return nil, err
 			}
 			if operationBaseName != "" {
-				// an x-kong-name was provided, so build as "doc-name"
-				operationBaseName = docBaseName + "-" + Slugify(operationBaseName)
+				// an x-kong-name was provided, so build as "doc-path-name"
+				operationBaseName = pathBaseName + "-" + Slugify(operationBaseName)
 			} else {
 				operationBaseName = operation.OperationID
 				if operationBaseName == "" {
