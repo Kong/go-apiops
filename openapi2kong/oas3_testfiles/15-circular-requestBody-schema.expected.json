@@ -3,19 +3,19 @@
   "services": [
     {
       "host": "some.random.url",
-      "id": "1939ff6a-077c-5499-9f65-5d2f4d8d7e37",
-      "name": "Testing_Circular",
+      "id": "68804eaf-310b-508e-ae22-fe6a7b9ab716",
+      "name": "testing-circular",
       "path": "/",
       "plugins": [],
       "port": 443,
       "protocol": "https",
       "routes": [
         {
-          "id": "b2a6949f-c6fa-5446-97b5-92d9fde0be4e",
+          "id": "761badfc-6c93-585c-a5ed-cee7559aad27",
           "methods": [
             "POST"
           ],
-          "name": "Testing_Circular-testing-post",
+          "name": "testing-circular_testing_post",
           "paths": [
             "~/testing$"
           ],
@@ -30,7 +30,7 @@
                 "version": "draft4"
               },
               "enabled": true,
-              "id": "1b028a78-49dd-51ef-9ffa-1ac75ce99d91",
+              "id": "72eaa98a-0562-5669-9ee8-45d0fa479e7d",
               "name": "request-validator",
               "tags": [
                 "OAS3_import",

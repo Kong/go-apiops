@@ -3,19 +3,19 @@
   "services": [
     {
       "host": "example.com",
-      "id": "3e0fefa1-06b5-589a-ab2d-2d01c70bf55a",
-      "name": "Path_parameter_test",
+      "id": "520e4991-2d1a-59b8-bf2e-579cca0969a0",
+      "name": "path-parameter-test",
       "path": "/",
       "plugins": [],
       "port": 443,
       "protocol": "https",
       "routes": [
         {
-          "id": "d24ac8a3-d744-5952-89a9-79cffecbf8dd",
+          "id": "38dcec89-d67c-5f67-ab5e-b38cc2180f77",
           "methods": [
             "GET"
           ],
-          "name": "Path_parameter_test-getBatchNoParams",
+          "name": "path-parameter-test_getbatchnoparams",
           "paths": [
             "~/batchs\\(Material='iron',Batch='10'\\)$"
           ],
@@ -28,11 +28,11 @@
           ]
         },
         {
-          "id": "928231e6-951a-50ff-8891-bc9f9d12538b",
+          "id": "2af1536a-706a-5941-b3fe-2682e031edf9",
           "methods": [
             "GET"
           ],
-          "name": "Path_parameter_test-getBatchWithParams",
+          "name": "path-parameter-test_getbatchwithparams",
           "paths": [
             "~/batchs\\(Material='(?<material>[^#?/]+)',Batch='(?<batch>[^#?/]+)'\\)$"
           ],
@@ -45,11 +45,11 @@
           ]
         },
         {
-          "id": "95358c02-e755-5a0c-9044-bf9a9b4e1561",
+          "id": "8438e81a-7724-53a2-9b5b-5bb400ac8531",
           "methods": [
             "POST"
           ],
-          "name": "Path_parameter_test-postBatchWithParams",
+          "name": "path-parameter-test_postbatchwithparams",
           "paths": [
             "~/batchs\\(Material='(?<material>[^#?/]+)',Batch='(?<batch>[^#?/]+)'\\)$"
           ],
@@ -62,11 +62,11 @@
           ]
         },
         {
-          "id": "2f9299ba-2694-52a8-8e82-bd2d3446bc41",
+          "id": "0da1f8dc-e918-5379-b3b0-ffc061ae1691",
           "methods": [
             "GET"
           ],
-          "name": "Path_parameter_test-opsid",
+          "name": "path-parameter-test_opsid",
           "paths": [
             "~/demo/(?<something>[^#?/]+)/else/(?<to_do>[^#?/]+)/$"
           ],

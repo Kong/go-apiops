@@ -3,19 +3,19 @@
   "services": [
     {
       "host": "server1.com",
-      "id": "e3a95664-95d7-5b10-bc3d-11c9cc6c2b4e",
-      "name": "Simple_API_overview",
+      "id": "0907c4ab-d9e4-5d21-813b-c57a97eeaad9",
+      "name": "simple-api-overview",
       "path": "/",
       "plugins": [],
       "port": 443,
       "protocol": "https",
       "routes": [
         {
-          "id": "d0aae8cc-da4b-53db-9236-484de50e7624",
+          "id": "44777959-fdbe-5873-a5c1-beabbc822656",
           "methods": [
             "GET"
           ],
-          "name": "Simple_API_overview-uses-doc-defaults",
+          "name": "simple-api-overview_uses-doc-defaults",
           "paths": [
             "~/path1$"
           ],
@@ -28,11 +28,11 @@
           ]
         },
         {
-          "id": "4762d9cd-18b9-5ab6-9751-f729317f3099",
+          "id": "a8cf87ef-dae0-5948-93e4-48f579fe12a0",
           "methods": [
             "GET"
           ],
-          "name": "Simple_API_overview-uses-path-defaults",
+          "name": "simple-api-overview_uses-path-defaults",
           "paths": [
             "~/path2$"
           ],
@@ -45,11 +45,11 @@
           ]
         },
         {
-          "id": "90e714b1-7668-51c4-9a3e-ade66ba2b57f",
+          "id": "5a98eef7-b0d2-572e-8656-4654a89c4179",
           "methods": [
             "POST"
           ],
-          "name": "Simple_API_overview-uses-ops-defaults",
+          "name": "simple-api-overview_uses-ops-defaults",
           "paths": [
             "~/path2$"
           ],

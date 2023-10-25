@@ -2,20 +2,20 @@
   "_format_version": "3.0",
   "services": [
     {
-      "host": "Simple_API_overview.upstream",
-      "id": "e3a95664-95d7-5b10-bc3d-11c9cc6c2b4e",
-      "name": "Simple_API_overview",
+      "host": "simple-api-overview.upstream",
+      "id": "0907c4ab-d9e4-5d21-813b-c57a97eeaad9",
+      "name": "simple-api-overview",
       "path": "/",
       "plugins": [],
       "port": 443,
       "protocol": "https",
       "routes": [
         {
-          "id": "5f917263-5851-5850-923f-06a35814bb61",
+          "id": "663104d8-7e60-525d-b506-e42971b4466b",
           "methods": [
             "GET"
           ],
-          "name": "Simple_API_overview-uses-doc-service",
+          "name": "simple-api-overview_uses-doc-service",
           "paths": [
             "~/path1$"
           ],
@@ -34,20 +34,20 @@
       ]
     },
     {
-      "host": "Simple_API_overview-path2.upstream",
-      "id": "736fd3ce-6b9e-5fd3-99f8-4ba04e2c5bfb",
-      "name": "Simple_API_overview-path2",
+      "host": "simple-api-overview_path2.upstream",
+      "id": "a79c5a8c-0924-599e-9412-39f5a4ff0c3e",
+      "name": "simple-api-overview_path2",
       "path": "/",
       "plugins": [],
       "port": 443,
       "protocol": "https",
       "routes": [
         {
-          "id": "348c51b0-4d2d-5f9f-ba1a-59d35f9bc690",
+          "id": "c1b84366-8ff8-57b9-b118-bedd1b9ab1c8",
           "methods": [
             "GET"
           ],
-          "name": "Simple_API_overview-uses-path-service",
+          "name": "simple-api-overview_uses-path-service",
           "paths": [
             "~/path2$"
           ],
@@ -66,20 +66,20 @@
       ]
     },
     {
-      "host": "Simple_API_overview-uses-ops-service.upstream",
-      "id": "735eee51-e5e6-5280-8aaa-544f407f14b6",
-      "name": "Simple_API_overview-uses-ops-service",
+      "host": "simple-api-overview_uses-ops-service.upstream",
+      "id": "5d05e040-c551-50a1-90e7-6af5d3a7c0dc",
+      "name": "simple-api-overview_uses-ops-service",
       "path": "/",
       "plugins": [],
       "port": 443,
       "protocol": "https",
       "routes": [
         {
-          "id": "3a12e644-b346-5d53-873f-673fd16cf522",
+          "id": "ca1c6faa-7076-5a09-9346-9c9dc3e019cb",
           "methods": [
             "POST"
           ],
-          "name": "Simple_API_overview-uses-ops-service",
+          "name": "simple-api-overview_uses-ops-service",
           "paths": [
             "~/path2$"
           ],
@@ -100,8 +100,8 @@
   ],
   "upstreams": [
     {
-      "id": "dca5eafe-311a-520f-87bc-0e695b01eab6",
-      "name": "Simple_API_overview.upstream",
+      "id": "811c42d6-ef18-5296-a550-7dca2262b4d8",
+      "name": "simple-api-overview.upstream",
       "slots": 1000,
       "tags": [
         "OAS3_import",
@@ -118,8 +118,8 @@
       ]
     },
     {
-      "id": "bd23de0b-b8cd-5b71-9fa3-b3b4f32938b2",
-      "name": "Simple_API_overview-path2.upstream",
+      "id": "ef3215c6-42e1-5380-ad2d-24f3b2d05972",
+      "name": "simple-api-overview_path2.upstream",
       "slots": 2000,
       "tags": [
         "OAS3_import",
@@ -136,8 +136,8 @@
       ]
     },
     {
-      "id": "d7507c89-41bd-5eca-8f7b-874d06af6670",
-      "name": "Simple_API_overview-uses-ops-service.upstream",
+      "id": "e2aac4d8-a96f-50ec-b71e-980e6e581a50",
+      "name": "simple-api-overview_uses-ops-service.upstream",
       "slots": 3000,
       "tags": [
         "OAS3_import",

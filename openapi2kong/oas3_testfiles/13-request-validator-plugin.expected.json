@@ -3,19 +3,19 @@
   "services": [
     {
       "host": "backend.com",
-      "id": "9f542908-e00d-55bc-a260-3864a9b6b8d2",
-      "name": "Example",
+      "id": "730d612d-914b-5fe8-8ead-e6aa654318ef",
+      "name": "example",
       "path": "/path",
       "plugins": [],
       "port": 80,
       "protocol": "http",
       "routes": [
         {
-          "id": "3b43a41e-036b-58c8-9692-af14ba57ed81",
+          "id": "2a2f7451-7df1-5c42-8f6c-5319ae6e4936",
           "methods": [
             "POST"
           ],
-          "name": "Example-body-post",
+          "name": "example_body_post",
           "paths": [
             "~/body$"
           ],
@@ -29,7 +29,7 @@
                 "body_schema": "{\"$ref\":\"#/definitions/jsonSchema\",\"definitions\":{\"jsonSchema\":{\"properties\":{\"id\":{\"type\":\"integer\"},\"name\":{\"type\":\"string\"}},\"type\":\"object\"}}}",
                 "version": "draft4"
               },
-              "id": "9ca9813e-4a6e-59e1-ad10-2d33908b8190",
+              "id": "ce17156b-dfb5-55f0-86b4-9abeb919bae3",
               "name": "request-validator",
               "tags": [
                 "OAS3_import",
@@ -45,11 +45,11 @@
           ]
         },
         {
-          "id": "19b82973-eb82-5a24-b6e9-6f5930dbf9eb",
+          "id": "6d59c2fe-e723-5238-a847-d87d8e8bb7fc",
           "methods": [
             "GET"
           ],
-          "name": "Example-global-get",
+          "name": "example_global_get",
           "paths": [
             "~/global$"
           ],
@@ -62,7 +62,7 @@
                 "body_schema": "{\"$ref\":\"#/definitions/jsonSchema\",\"definitions\":{\"jsonSchema\":{\"properties\":{\"id\":{\"type\":\"integer\"},\"name\":{\"type\":\"string\"}},\"type\":\"object\"}}}",
                 "version": "draft4"
               },
-              "id": "a122ed01-a687-50e1-b6b4-10f0c42b2b85",
+              "id": "2b68c247-3cab-54a1-a98b-cb6100caf370",
               "name": "request-validator",
               "tags": [
                 "OAS3_import",
@@ -78,13 +78,13 @@
           ]
         },
         {
-          "id": "26d60104-349e-5fa3-af66-5d08ff5c4fbe",
+          "id": "6d4dfd63-5d87-5c9d-84dc-9e146b27e4fb",
           "methods": [
             "GET"
           ],
-          "name": "Example-params__path-id-get",
+          "name": "example_params-path-id_get",
           "paths": [
-            "~/params/(?<path_id>[^#?/]+)$"
+            "~/params/(?\u003cpath_id\u003e[^#?/]+)$"
           ],
           "plugins": [
             {
@@ -127,7 +127,7 @@
                 "version": "draft4"
               },
               "enabled": true,
-              "id": "c5bbae2e-9948-5a51-93b2-9051187cb543",
+              "id": "98eedac8-4afc-5f2b-aaa2-d73a1297bca5",
               "name": "request-validator",
               "tags": [
                 "OAS3_import",

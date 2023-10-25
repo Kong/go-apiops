@@ -11,11 +11,11 @@
       "protocol": "http",
       "routes": [
         {
-          "id": "8a772dcd-7622-5904-8bda-c4753598afbf",
+          "id": "48ab920f-d500-53e2-a5e6-d368b9a4b99c",
           "methods": [
             "GET"
           ],
-          "name": "oas-spec-name-opsid1",
+          "name": "oas-spec-name_opsid1",
           "paths": [
             "~/app1$"
           ],
@@ -28,11 +28,11 @@
           ]
         },
         {
-          "id": "5b3c73d7-0816-53a0-a9ab-3914f16fca06",
+          "id": "85bf9417-31c3-57d4-89e5-5daf7e45869e",
           "methods": [
             "POST"
           ],
-          "name": "oas-spec-name-path-name-post",
+          "name": "oas-spec-name_path-name_post",
           "paths": [
             "~/app1$"
           ],
@@ -45,11 +45,11 @@
           ]
         },
         {
-          "id": "6c573ebb-44d2-5e36-be1a-6aa5e6fc8868",
+          "id": "c70d6bba-42cb-552d-8c9a-5e6587b80099",
           "methods": [
             "PUT"
           ],
-          "name": "oas-spec-name-path-name-my-put-operation",
+          "name": "oas-spec-name_path-name_my-put-operation",
           "paths": [
             "~/app1$"
           ],
@@ -62,11 +62,11 @@
           ]
         },
         {
-          "id": "38ac897f-100e-5e62-b93c-f4ea6bede9d1",
+          "id": "56d986d8-4385-5e7c-82b4-895c6c6ea21b",
           "methods": [
             "GET"
           ],
-          "name": "oas-spec-name-opsid2",
+          "name": "oas-spec-name_opsid2",
           "paths": [
             "~/app2$"
           ],
@@ -79,11 +79,11 @@
           ]
         },
         {
-          "id": "92d898bf-4bee-5dfe-8dae-4602533ca241",
+          "id": "0f165a29-0674-58e8-be6c-19968f287dc0",
           "methods": [
             "POST"
           ],
-          "name": "oas-spec-name-app2-post",
+          "name": "oas-spec-name_app2_post",
           "paths": [
             "~/app2$"
           ],
@@ -96,11 +96,11 @@
           ]
         },
         {
-          "id": "b9b808a1-29e6-596e-8980-f5218aee5440",
+          "id": "88084ff7-bde0-5954-bbcc-d8e563543a5d",
           "methods": [
             "PUT"
           ],
-          "name": "oas-spec-name-app2-my-put-operation",
+          "name": "oas-spec-name_app2_my-put-operation",
           "paths": [
             "~/app2$"
           ],

@@ -14,38 +14,25 @@ paths:
     get:
       # operation with an ID
       operationId: opsid1
-      responses:
+      responses: 
         '200':
           description: 200 ok
     post:
       # operation without an ID
-      responses:
+      responses: 
         '200':
           description: 200 ok
   /application:
-    # non-empty path, without trailing /
+    # non-empty path
     get:
       # operation with an ID
       operationId: opsid2
-      responses:
+      responses: 
         '200':
           description: 200 ok
     post:
       # operation without an ID
-      responses:
-        '200':
-          description: 200 ok
-  /application/:
-    # non-empty path, same as above, but with trailing /
-    get:
-      # operation with an ID
-      operationId: opsid3
-      responses:
-        '200':
-          description: 200 ok
-    post:
-      # operation without an ID
-      responses:
+      responses: 
         '200':
           description: 200 ok
 
