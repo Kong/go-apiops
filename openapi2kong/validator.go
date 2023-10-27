@@ -32,7 +32,7 @@ func getDefaultParamStyle(givenStyle string, paramType string) string {
 // generateParameterSchema returns the given schema if there is one, a generated
 // schema if it was specified, or nil if there is none.
 // Parameters include path, query, and headers
-func generateParameterSchema(operation *openapi3.Operation) []map[string]interface{} {
+func generateParameterSchema(operation *openapi3.Operation, insoCompat bool) []map[string]interface{} {
 	parameters := operation.Parameters
 	if parameters == nil {
 		return nil
@@ -59,7 +59,7 @@ func generateParameterSchema(operation *openapi3.Operation) []map[string]interfa
 			paramConf["explode"] = explode
 			paramConf["in"] = paramValue.In
 			if paramValue.In == "path" {
-				paramConf["name"] = sanitizeRegexCapture(paramValue.Name)
+				paramConf["name"] = sanitizeRegexCapture(paramValue.Name, insoCompat)
 			} else {
 				paramConf["name"] = paramValue.Name
 			}
@@ -142,8 +142,7 @@ func generateContentTypes(operation *openapi3.Operation) []string {
 // generateValidatorPlugin generates the validator plugin configuration, based
 // on the JSON snippet, and the OAS inputs. This can return nil
 func generateValidatorPlugin(configJSON []byte, operation *openapi3.Operation,
-	uuidNamespace uuid.UUID,
-	baseName string, skipID bool,
+	uuidNamespace uuid.UUID, baseName string, skipID bool, insoCompat bool,
 ) *map[string]interface{} {
 	if len(configJSON) == 0 {
 		return nil
@@ -165,7 +164,7 @@ func generateValidatorPlugin(configJSON []byte, operation *openapi3.Operation,
 	}
 
 	if config["parameter_schema"] == nil {
-		parameterSchema := generateParameterSchema(operation)
+		parameterSchema := generateParameterSchema(operation, insoCompat)
 		if parameterSchema != nil {
 			config["parameter_schema"] = parameterSchema
 			config["version"] = JSONSchemaVersion

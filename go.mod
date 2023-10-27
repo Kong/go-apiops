@@ -8,7 +8,7 @@ require (
 	github.com/go-logr/stdr v1.2.2
 	github.com/google/go-cmp v0.5.9
 	github.com/google/uuid v1.3.1
-	github.com/kong/go-slugify v0.0.0-20231023144100-b0b749c16418
+	github.com/kong/go-slugify v0.0.0-20231027194833-8e212cc29c16
 	github.com/onsi/ginkgo/v2 v2.9.2
 	github.com/onsi/gomega v1.27.6
 	github.com/spf13/cobra v1.6.1
