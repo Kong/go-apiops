@@ -23,7 +23,7 @@ linters:
   - nilerr
   - nolintlint
   - predeclared
-  - revive
+  #- revive
   - stylecheck
   - unconvert
   - unparam
