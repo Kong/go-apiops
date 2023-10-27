@@ -11,30 +11,9 @@
       "routes": [
         {
           "tags": [
-            "OAS3_import"
+            "OAS3_import",
+            "OAS3file_12-path-parameter-regex.yaml"
           ],
-          "name": "Path_parameter_test-opsid",
-          "methods": [
-            "GET"
-          ],
-          "paths": [
-            "~/demo/(?<something>[^/]+)/else/(?<todo>[^/]+)/$"
-          ],
-          "strip_path": false
-        },
-        {
-          "tags": "a1",
-          "name": "Path_parameter_test-opsid",
-          "methods": [
-            "GET"
-          ],
-          "paths": [
-            "~/demo/(?< white space >[^/]+)/(?<x*\\(\\)__+=x>[^/]+)/(?<_To_Do>[^/]+)$"
-          ],
-          "strip_path": false
-        },
-        {
-          "tags": "a1",
           "name": "Path_parameter_test-getBatchNoParams",
           "methods": [
             "GET"
@@ -42,32 +21,80 @@
           "paths": [
             "~/batchs\\(Material='iron',Batch='10'\\)$"
           ],
+          "plugins": [],
+          "regex_priority": 200,
           "strip_path": false
         },
         {
-          "tags": "a1",
+          "tags": [
+            "OAS3_import",
+            "OAS3file_12-path-parameter-regex.yaml"
+          ],
           "name": "Path_parameter_test-getBatchWithParams",
           "methods": [
             "GET"
           ],
           "paths": [
-            "~/batchs\\(Material='(?<Material>[^/]+)',Batch='(?<Batch>[^/]+)'\\)$"
+            "~/batchs\\(Material='(?<Material>[^#?/]+)',Batch='(?<Batch>[^#?/]+)'\\)$"
           ],
+          "plugins": [],
+          "regex_priority": 100,
           "strip_path": false
         },
         {
-          "tags": "a1",
+          "tags": [
+            "OAS3_import",
+            "OAS3file_12-path-parameter-regex.yaml"
+          ],
           "name": "Path_parameter_test-postBatchWithParams",
           "methods": [
             "POST"
           ],
           "paths": [
-            "~/batchs\\(Material='(?<Material>[^/]+)',Batch='(?<Batch>[^/]+)'\\)$"
+            "~/batchs\\(Material='(?<Material>[^#?/]+)',Batch='(?<Batch>[^#?/]+)'\\)$"
           ],
+          "plugins": [],
+          "regex_priority": 100,
+          "strip_path": false
+        },
+        {
+          "tags": [
+            "OAS3_import",
+            "OAS3file_12-path-parameter-regex.yaml"
+          ],
+          "name": "Path_parameter_test-opsid",
+          "methods": [
+            "GET"
+          ],
+          "paths": [
+            "~/demo/(?<white_space>[^#?/]+)/(?<x_x>[^#?/]+)/(?<To_Do>[^#?/]+)$"
+          ],
+          "plugins": [],
+          "regex_priority": 100,
+          "strip_path": false
+        },
+        {
+          "tags": [
+            "OAS3_import",
+            "OAS3file_12-path-parameter-regex.yaml"
+          ],
+          "name": "Path_parameter_test-opsid",
+          "methods": [
+            "GET"
+          ],
+          "paths": [
+            "~/demo/(?<something>[^#?/]+)/else/(?<todo>[^#?/]+)/$"
+          ],
+          "plugins": [],
+          "regex_priority": 100,
           "strip_path": false
         }
       ],
-      "tags": "a1"
+      "tags": [
+        "OAS3_import",
+        "OAS3file_12-path-parameter-regex.yaml"
+      ]
     }
-  ]
+  ],
+  "upstreams": []
 }

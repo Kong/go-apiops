@@ -41,21 +41,45 @@ func (opts *O2kOptions) setDefaults() {
 
 // Slugify converts a name to a valid Kong name by removing and replacing unallowed characters
 // and sanitizing non-latin characters. Multiple inputs will be concatenated using '_'.
-func Slugify(name ...string) string {
-	slugifier := (&slugify.Slugifier{}).ToLower(true).InvalidChar("-").WordSeparator("-")
+func Slugify(insoCompat bool, name ...string) string {
+	var (
+		slugifier *slugify.Slugifier
+		concatBy  string
+	)
+	if insoCompat {
+		slugifier = (&slugify.Slugifier{}).ToLower(false).InvalidChar("_").WordSeparator("_")
+		slugifier.AllowedSet("a-zA-Z0-9\\-")
+		concatBy = "-"
+	} else {
+		slugifier = (&slugify.Slugifier{}).ToLower(true).InvalidChar("-").WordSeparator("-")
+		concatBy = "_"
+	}
 
 	for i, elem := range name {
 		name[i] = slugifier.Slugify(elem)
 	}
 
-	return strings.Join(name, "_")
+	// drop empty strings from the array
+	for i := 0; i < len(name); i++ {
+		if name[i] == "" {
+			name = append(name[:i], name[i+1:]...)
+			i--
+		}
+	}
+
+	return strings.Join(name, concatBy)
 }
 
 // sanitizeRegexCapture will remove illegal characters from the path-variable name.
 // The returned name will be valid for PCRE regex captures; Alphanumeric + '_', starting
 // with [a-zA-Z].
-func sanitizeRegexCapture(varName string) string {
-	regexName := (&slugify.Slugifier{}).ToLower(true).InvalidChar("_").WordSeparator("_")
+func sanitizeRegexCapture(varName string, insoCompat bool) string {
+	var regexName *slugify.Slugifier
+	if insoCompat {
+		regexName = (&slugify.Slugifier{}).ToLower(false).InvalidChar("_").WordSeparator("_")
+	} else {
+		regexName = (&slugify.Slugifier{}).ToLower(true).InvalidChar("_").WordSeparator("_")
+	}
 	return regexName.Slugify(varName)
 }
 
@@ -413,6 +437,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 		doc            *openapi3.T             // the OAS3 document we're operating on
 		kongComponents *map[string]interface{} // contents of OAS key `/components/x-kong/`
 		kongTags       []string                // tags to attach to Kong entities
+		nameConcatChar string                  // character to use for concatenating names
 
 		docBaseName         string                     // the slugified basename for the document
 		docServers          *openapi3.Servers          // servers block on document level
@@ -445,6 +470,11 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 		operationPluginList       *[]*map[string]interface{} // array of plugin configs, sorted by plugin name
 		operationValidatorConfig  []byte                     // JSON string representation of validator config to generate
 	)
+	if opts.InsoCompat {
+		nameConcatChar = "-"
+	} else {
+		nameConcatChar = "_"
+	}
 
 	// Load and parse the OAS file
 	loader := openapi3.NewLoader()
@@ -489,7 +519,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 			}
 		}
 	}
-	docBaseName = Slugify(docBaseName)
+	docBaseName = Slugify(opts.InsoCompat, docBaseName)
 	logbasics.Info("document name (namespace for UUID generation)", "name", docBaseName)
 
 	if kongComponents, err = getXKongComponents(doc); err != nil {
@@ -558,17 +588,33 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 			return nil, err
 		}
 		if pathBaseName == "" {
-			pathBaseName = Slugify(path)
-			if strings.HasSuffix(path, "/") {
-				// a common case is 2 paths, one with and one without a trailing "/" so to prevent
-				// duplicate names being generated, we add a "~" suffix as a special case to cater
-				// for different names. Better user solution is to use operation-id's.
-				pathBaseName = pathBaseName + "~"
+			// no given name, so use the path itself to construct the name
+			if !opts.InsoCompat {
+				pathBaseName = Slugify(opts.InsoCompat, path)
+				if strings.HasSuffix(path, "/") {
+					// a common case is 2 paths, one with and one without a trailing "/" so to prevent
+					// duplicate names being generated, we add a "~" suffix as a special case to cater
+					// for different names. Better user solution is to use operation-id's.
+					pathBaseName = pathBaseName + "~"
+				}
+			} else {
+				// we need inso compatibility
+				pathBaseName = Slugify(opts.InsoCompat, path)
+				// if strings.HasSuffix(path, "/") {
+				// 	// a common case is 2 paths, one with and one without a trailing "/" so to prevent
+				// 	// duplicate names being generated, we add a "~" suffix as a special case to cater
+				// 	// for different names. Better user solution is to use operation-id's.
+				// 	pathBaseName = pathBaseName + "~"
+				// }
 			}
 		} else {
-			pathBaseName = Slugify(pathBaseName)
+			pathBaseName = Slugify(opts.InsoCompat, pathBaseName)
 		}
-		pathBaseName = docBaseName + "_" + pathBaseName
+		if pathBaseName != "" {
+			pathBaseName = docBaseName + nameConcatChar + pathBaseName
+		} else {
+			pathBaseName = docBaseName
+		}
 		logbasics.Debug("path name (namespace for UUID generation)", "name", pathBaseName)
 
 		// Set up the defaults on the Path level
@@ -695,16 +741,25 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 				return nil, err
 			}
 			if operationBaseName != "" {
-				// an x-kong-name was provided, so build as "doc-path-name"
-				operationBaseName = pathBaseName + "_" + Slugify(operationBaseName)
+				if opts.InsoCompat {
+					// an x-kong-name was provided, so build as "doc-name"
+					operationBaseName = docBaseName + nameConcatChar + Slugify(opts.InsoCompat, operationBaseName)
+				} else {
+					// an x-kong-name was provided, so build as "doc-path-name"
+					operationBaseName = pathBaseName + nameConcatChar + Slugify(opts.InsoCompat, operationBaseName)
+				}
 			} else {
 				operationBaseName = operation.OperationID
 				if operationBaseName == "" {
 					// no operation ID provided, so build as "doc-path-method"
-					operationBaseName = pathBaseName + "_" + Slugify(method)
+					if opts.InsoCompat {
+						operationBaseName = pathBaseName + nameConcatChar + Slugify(opts.InsoCompat, strings.ToLower(method))
+					} else {
+						operationBaseName = pathBaseName + nameConcatChar + Slugify(opts.InsoCompat, method)
+					}
 				} else {
 					// operation ID is provided, so build as "doc-operationid"
-					operationBaseName = docBaseName + "_" + Slugify(operationBaseName)
+					operationBaseName = docBaseName + nameConcatChar + Slugify(opts.InsoCompat, operationBaseName)
 				}
 			}
 			logbasics.Debug("operation base name (namespace for UUID generation)", "name", operationBaseName)
@@ -807,7 +862,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 			// Extract the request-validator config from the plugin list, generate it and reinsert
 			operationValidatorConfig, operationPluginList = getValidatorPlugin(operationPluginList, pathValidatorConfig)
 			validatorPlugin := generateValidatorPlugin(operationValidatorConfig, operation, opts.UUIDNamespace,
-				operationBaseName, opts.SkipID)
+				operationBaseName, opts.SkipID, opts.InsoCompat)
 			operationPluginList = insertPlugin(operationPluginList, validatorPlugin)
 
 			// construct the route
@@ -842,7 +897,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 					varName := match[1]
 					// match single segment; '/', '?', and '#' can mark the end of a segment
 					// see https://github.com/OAI/OpenAPI-Specification/issues/291#issuecomment-316593913
-					regexMatch := "(?<" + sanitizeRegexCapture(varName) + ">[^#?/]+)"
+					regexMatch := "(?<" + sanitizeRegexCapture(varName, opts.InsoCompat) + ">[^#?/]+)"
 					placeHolder := "{" + varName + "}"
 					logbasics.Debug("replacing path parameter", "parameter", placeHolder, "regex", regexMatch)
 					convertedPath = strings.Replace(convertedPath, placeHolder, regexMatch, 1)
