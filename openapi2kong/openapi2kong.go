@@ -13,7 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/kong/go-apiops/jsonbasics"
 	"github.com/kong/go-apiops/logbasics"
-	"github.com/mozillazg/go-slugify"
+	"github.com/kong/go-slugify"
 )
 
 const (
@@ -42,8 +42,10 @@ func (opts *O2kOptions) setDefaults() {
 // Slugify converts a name to a valid Kong name by removing and replacing unallowed characters
 // and sanitizing non-latin characters. Multiple inputs will be concatenated using '_'.
 func Slugify(name ...string) string {
+	slugifier := (&slugify.Slugifier{}).ToLower(true).InvalidChar("-").WordSeparator("-")
+
 	for i, elem := range name {
-		name[i] = slugify.Slugify(elem)
+		name[i] = slugifier.Slugify(elem)
 	}
 
 	return strings.Join(name, "_")
@@ -53,12 +55,8 @@ func Slugify(name ...string) string {
 // The returned name will be valid for PCRE regex captures; Alphanumeric + '_', starting
 // with [a-zA-Z].
 func sanitizeRegexCapture(varName string) string {
-	varName = slugify.Slugify(varName)
-	varName = strings.ReplaceAll(varName, "-", "_")
-	if strings.HasPrefix(varName, "_") {
-		varName = "a" + varName
-	}
-	return varName
+	regexName := (&slugify.Slugifier{}).ToLower(true).InvalidChar("_").WordSeparator("_")
+	return regexName.Slugify(varName)
 }
 
 // getKongTags returns the provided tags or if nil, then the `x-kong-tags` property,
