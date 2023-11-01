@@ -151,6 +151,66 @@ patches:
 ```
 
 ---
+### `lint`
+
+The `lint` command is used as a validation tool to analyze declarative configuration files for errors or undesirable configurations. 
+`lint` is compatible with [Spectral](https://github.com/stoplightio/spectral) rulesets and can operate on either JSON or YAML format files including
+OpenAPI specifications or decK configuration files. 
+
+The command is invoked by providing a ruleset file as an argument which is evaluated against an input file using the `-s` flag.
+
+```sh
+Usage:
+  deck file lint [flags] ruleset-file
+
+Flags:
+  -D, --display-only-failures   only output results equal to or greater than --fail-severity
+  -F, --fail-severity string    results of this level or above will trigger a failure exit code
+                                [choices: "error", "warn", "info", "hint"] (default "error")
+      --format string           output format [choices: "plain", "json", "yaml"] (default "plain")
+  -h, --help                    help for lint
+  -o, --output-file string      Output file to write to. Use - to write to stdout. (default "-")
+  -s, --state string            decK file to process. Use - to read from stdin. (default "-")
+```
+
+For example, to verify that a decK file contains the `3.1` version, create a ruleset file containing the following:
+
+```yaml
+rules:
+  version-check:
+    description: "Validate version 3.1 for decK files"
+    given: $._format_version
+    severity: error
+    then:
+      function: pattern
+      functionOptions:
+        match: "^3.1$"
+```
+
+The following decK file snippet would result in a fatal error as the `_format_version` does not match the specified pattern.
+
+```yaml
+_format_version: "1.0"
+```
+
+```sh
+echo '_format_version: "1.0"' | deck file lint -s - ./docs/lint/version.yaml
+Linting Violations: 1
+Failures: 1
+
+[error][1:18] Validate version 3.1 for decK files: `1.0` does not match the expression `^3.1$`
+```
+
+In order for the decK file to pass the linting validation, the `_format_version` would need to be updated:
+
+```sh
+echo '_format_version: "3.1"' | deck file lint -s - ./docs/lint/version.yaml && echo $?
+0
+```
+
+See the [docs/lint](docs/lint) folder for example rulesets that may provide common APIOps validations you may wish to perform.
+
+---
 ## Example Workflow
 
 ### Transform Pipeline
