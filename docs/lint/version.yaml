@@ -1,0 +1,16 @@
+# This example rule will validate the decK file version
+# which is specified in the _format_version key at the root
+# of the document
+rules:
+  version-check:
+    description: "Validate version 3.1 for decK files"
+    # From the root, select the _format_version key
+    given: $._format_version
+    # Fatal error if rule is violated
+    severity: error
+    then:
+      # Match on a regex pattern for the value selected from
+      # JSON Path in the given field
+      function: pattern
+      functionOptions:
+        match: "^3.1$"

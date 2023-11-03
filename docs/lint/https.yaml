@@ -1,0 +1,16 @@
+# This example rule will validate a decK file
+# ensuring that all Kong Gateway services
+# utilize https protocol only
+rules:
+  version-check:
+    description: "Ensure https usage in Kong GW Services"
+    # From the root, select all services key
+    given: $.services[*].protocol
+    # Fatal error if rule is violated
+    severity: error
+    then:
+      # Match on a regex pattern for the value selected from
+      # JSON Path in the given field
+      function: pattern
+      functionOptions:
+        match: "^https$"
