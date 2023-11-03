@@ -194,7 +194,7 @@ _format_version: "1.0"
 ```
 
 ```sh
-echo '_format_version: "1.0"' | deck file lint -s - ./docs/lint/version.yaml
+echo '_format_version: "1.0"' | deck file lint ./docs/lint/version.yaml
 Linting Violations: 1
 Failures: 1
 
@@ -204,7 +204,7 @@ Failures: 1
 In order for the decK file to pass the linting validation, the `_format_version` would need to be updated:
 
 ```sh
-echo '_format_version: "3.1"' | deck file lint -s - ./docs/lint/version.yaml && echo $?
+echo '_format_version: "3.1"' | deck file lint ./docs/lint/version.yaml && echo $?
 0
 ```
 
