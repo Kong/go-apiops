@@ -157,7 +157,7 @@ The `lint` command is used as a validation tool to analyze declarative configura
 `lint` is compatible with [Spectral](https://github.com/stoplightio/spectral) rulesets and can operate on either JSON or YAML format files including
 OpenAPI specifications or decK configuration files. 
 
-The command is invoked by providing a ruleset file as an argument which is evaluated against an input file using the `-s` flag.
+The command is invoked by providing a ruleset file as an argument which is evaluated against an input file.
 
 ```sh
 Usage:
