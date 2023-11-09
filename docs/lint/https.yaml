@@ -2,7 +2,7 @@
 # ensuring that all Kong Gateway services
 # utilize https protocol only
 rules:
-  version-check:
+  service-https-check:
     description: "Ensure https usage in Kong GW Services"
     # From the root, select all services key
     given: $.services[*].protocol
