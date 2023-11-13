@@ -230,7 +230,11 @@ func CreateKongService(
 	if service["port"] == nil {
 		if targets[0].Port() != "" {
 			// port is provided, so parse it
-			service["port"], _ = strconv.ParseInt(targets[0].Port(), 10, 16)
+			parsedPort, err := strconv.ParseUint(targets[0].Port(), 10, 16)
+			if err != nil {
+				return nil, nil, err
+			}
+			service["port"] = parsedPort
 		} else {
 			// no port provided, so set it based on scheme, where https/443 is the default
 			if scheme != httpScheme {
