@@ -1,0 +1,17 @@
+# properly parses ports, see issue #104
+# https://github.com/Kong/go-apiops/issues/104
+openapi: '3.0.0'
+info:
+  title: Simple API overview
+  version: v2
+servers:
+  - url: https://server2.com:65000/
+paths:
+  /:
+    get:
+      operationId: OpsId
+      summary: List API versions
+      responses:
+        '200':
+          description: |-
+            200 response

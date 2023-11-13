@@ -230,7 +230,7 @@ func CreateKongService(
 	if service["port"] == nil {
 		if targets[0].Port() != "" {
 			// port is provided, so parse it
-			parsedPort, err := strconv.ParseInt(targets[0].Port(), 10, 64)
+			parsedPort, err := strconv.ParseUint(targets[0].Port(), 10, 16)
 			if err != nil {
 				return nil, nil, err
 			}
