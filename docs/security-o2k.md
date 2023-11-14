@@ -12,22 +12,24 @@ This document documents the use of `security` directives within the `deck` subco
 Within OpenAPI the security directives can be specified on the document root (the `OpenAPI` object). It can also be specified on the `Operation` object, in which case it will override the document level one.
 Specifically; it cannot be specified on the `path` object level, the level in between document and operation.
 
+Nice explanation is here: https://swagger.io/docs/specification/authentication/
+
 ## Format
 
-The `security` property is an array of `Security Requirement` objects.
+The `security` property is an array of `securityRequirement` objects.
 
 ## Behaviour
 
-- The requirements listed are a logical `OR`; passing any one requirement listed is enough to be allowed access.
+- The requirements listed are a logical `OR`; passing any one `securityRequirement` listed is enough to be allowed access.
 - The default value is `[]`; an empty array
 - An empty array allows access without authentication
 - An empty array (on the `Operation` level) can override a non-empty array (document level)
 
 ## Security Requirement
 
-A `security requirement` object lists (as properties) `security scheme` objects that MUST all be satisfied to allow access.
+A `securityRequirement` object lists (as properties) `securityScheme` objects that MUST all be satisfied to allow access (a logical `AND`).
 
-Example of a `security` directive listing 2 `security requirements`, each having 2 `security scheme` names :
+Example of a `security` directive listing 2 `securityRequirements`, each having 2 `securityScheme` names :
 ```yaml
 security:
   - myOpenId: [ "scope3" ]
@@ -36,7 +38,7 @@ security:
     myKeyAuth: []
 ```
 To authenticate a request must either pass:
-- `myOpenId` (with 'scope3') **AND** `myBasicAuth`, or
+- `myOpenId` (with 'scope3') **AND** `myBasicAuth`, **OR**
 - `myBasicAuth` **AND** `myKeyAuth`
 
 **NOTE**: the values (the arrays), contain scope names to use for `oauth2` and `openIdConnect` security schemes.
@@ -44,7 +46,7 @@ To authenticate a request must either pass:
 
 ## Security Scheme
 
-The `security scheme` object specifies a single security/authication mechanism to validate. The schemes are defined as properties on the `components.securitySchemes` object.
+The `securityScheme` object specifies a single security/authentication mechanism to validate. The schemes are defined as properties (key/value) on the `components.securitySchemes` object.
 
 ```yaml
 components:
@@ -77,7 +79,7 @@ Type | supported | Kong plugin
 
 ## Boolean logic
 
-No boolean AND/OR logic is supported. So a `security` directive can only have 1 `security requirement`, and with in that only a single `securityScheme`.
+No boolean AND/OR logic is supported. So a `security` directive can only have 1 `security requirement`, and within that only a single `securityScheme`.
 
 ## Extensions
 
