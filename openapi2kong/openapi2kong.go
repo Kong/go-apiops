@@ -11,6 +11,7 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/google/uuid"
+	"github.com/kong/go-apiops/filebasics"
 	"github.com/kong/go-apiops/jsonbasics"
 	"github.com/kong/go-apiops/logbasics"
 	"github.com/kong/go-slugify"
@@ -28,6 +29,7 @@ type O2kOptions struct {
 	UUIDNamespace uuid.UUID // Namespace for UUID generation, defaults to DNS namespace for UUID v5
 	InsoCompat    bool      // Enable Inso compatibility mode
 	SkipID        bool      // Skip ID generation (UUIDs)
+	OIDC          bool      // Enable OIDC plugin generation
 }
 
 // setDefaults sets the defaults for the OpenAPI2Kong operation.
@@ -242,6 +244,125 @@ func getRouteDefaults(props openapi3.ExtensionProps, components *map[string]inte
 	return getXKongObject(props, "x-kong-route-defaults", components)
 }
 
+// getOIDCdefaults returns a JSON string containing the defaults from the SecurityRequirements. The type must
+// be "openIdConnect" or an error is returned. If there are no security requirements, it returns the "inherited" value.
+// If the extension is not there it will return an empty map. If the entry is not a
+// Json object, it will return an error.
+func getOIDCdefaults(
+	requirementsp *openapi3.SecurityRequirements, // the security requirements to parse
+	doc *openapi3.T, // the complete OAS document
+	inherited []byte, // the inherited OIDC defaults
+) ([]byte, error) {
+	// Collect the OAS specific properties
+	var (
+		requirements openapi3.SecurityRequirements // the security requirements to parse
+		schemeName   string                        // the name of the security-scheme
+		scopes       []string                      // the scopes required for the security-scheme
+		scheme       *openapi3.SecurityScheme      // the security-scheme object
+	)
+	{
+		if requirementsp != nil {
+			requirements = *requirementsp
+		} else {
+			// no security requirements, so return inherited (can be nil)
+			return inherited, nil
+		}
+		if len(requirements) == 0 {
+			return inherited, nil // there is nothing defined, so return inherited (can be nil)
+		}
+		if len(requirements) > 1 {
+			// multiple requirements are a logical OR, which is not supported
+			return nil, fmt.Errorf("only a single security-requirement is supported")
+		}
+		requirement := requirements[0]
+		if len(requirement) == 0 {
+			return inherited, nil // there is nothing defined, so return inherited (can be nil)
+		}
+		if len(requirement) > 1 {
+			// multiple schemes are a logical AND, which is not supported
+			return nil, fmt.Errorf("within a security-requirement only a single security-scheme is supported")
+		}
+
+		for k, v := range requirement { // has only 1 entry, so executes only once
+			schemeName = k
+			scopes = v
+		}
+
+		scheme = doc.Components.SecuritySchemes[schemeName].Value
+		if scheme.Type != "openIdConnect" {
+			return nil, fmt.Errorf("only security-schemes of type 'openIdConnect' are supported")
+		}
+	}
+
+	// Construct the base plugin object from x-kong-security...
+	var (
+		pluginBase   map[string]interface{} // the plugin object
+		pluginConfig map[string]interface{} // the plugin.config object
+	)
+	{
+		kongComponents, err := getXKongComponents(doc)
+		if err != nil {
+			return nil, err
+		}
+
+		// grab the base plugin config from the x-kong-... directive
+		pluginBaseData, err := getXKongObject(scheme.ExtensionProps, "x-kong-security-openid-connect", kongComponents)
+		if err != nil {
+			return nil, err
+		}
+		if pluginBaseData == nil {
+			// no x-kong-... plugin config, so create an empty one
+			pluginBase = make(map[string]interface{})
+		} else {
+			pluginBase, _ = filebasics.Deserialize(pluginBaseData)
+		}
+
+		// ensure we have a plugin.config object
+		if pluginBase["config"] == nil {
+			pluginBase["config"] = make(map[string]interface{})
+		}
+		pluginConfig, err = jsonbasics.ToObject(pluginBase["config"])
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Collect all required scopes, from OAS and x-kong-security..
+	var ScopesRequired []string
+	{
+		var err error
+		ScopesRequired, err = jsonbasics.GetStringArrayField(pluginConfig, "scopes_required")
+		if err != nil {
+			return nil, err
+		}
+
+		// merge the scopes from the security-requirement with the scopes from the plugin config
+		for _, scope1 := range scopes {
+			duplicate := false
+			for _, scope2 := range ScopesRequired {
+				if scope1 == scope2 {
+					duplicate = true
+					break
+				}
+			}
+			if !duplicate {
+				ScopesRequired = append(ScopesRequired, scope1)
+			}
+		}
+		// sort scopesRequired array for deterministic output
+		sort.Strings(ScopesRequired)
+	}
+
+	// construct the final plugin
+	pluginBase["name"] = "openid-connect"
+	pluginConfig["scopes_required"] = ScopesRequired
+	if scheme.OpenIdConnectUrl != "" {
+		pluginConfig["issuer"] = scheme.OpenIdConnectUrl
+	}
+
+	return filebasics.Serialize(pluginBase, filebasics.OutputFormatJSON)
+}
+
 // create plugin id
 func createPluginID(uuidNamespace uuid.UUID, baseName string, config map[string]interface{}) string {
 	pluginName := config["name"].(string) // safe because it was previously parsed
@@ -448,6 +569,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 		docRouteDefaults    []byte                     // JSON string representation of route-defaults on document level
 		docPluginList       *[]*map[string]interface{} // array of plugin configs, sorted by plugin name
 		docValidatorConfig  []byte                     // JSON string representation of validator config to generate
+		docOIDCdefaults     []byte                     // JSON string representation of OIDC config to generate
 		foreignKeyPlugins   *[]*map[string]interface{} // top-level array of plugin configs, sorted by plugin name+id
 
 		pathBaseName         string                     // the slugified basename for the path
@@ -553,6 +675,14 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 		kongComponents, kongTags, opts.SkipID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create plugins list from document root: %w", err)
+	}
+
+	// get the OIDC stuff from top level, bail out if the requirements are unsupported
+	if opts.OIDC {
+		docOIDCdefaults, err = getOIDCdefaults(&doc.Security, doc, nil)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Extract the request-validator config from the plugin list
@@ -857,6 +987,19 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 			}
 			if err != nil {
 				return nil, fmt.Errorf("failed to create plugins list from operation item: %w", err)
+			}
+
+			if opts.OIDC {
+				// get the OIDC stuff from operation level, bail out if the requirements are unsupported
+				operationOIDCplugin, err := getOIDCdefaults(operation.Security, doc, docOIDCdefaults)
+				if err != nil {
+					return nil, err
+				}
+				if operationOIDCplugin != nil {
+					// we have OIDC defaults, so we need to add the plugin to the list
+					pluginConfig, _ := filebasics.Deserialize(operationOIDCplugin)
+					operationPluginList = insertPlugin(operationPluginList, &pluginConfig)
+				}
 			}
 
 			// Extract the request-validator config from the plugin list, generate it and reinsert

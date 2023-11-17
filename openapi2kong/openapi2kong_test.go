@@ -43,6 +43,7 @@ func Test_Openapi2kong(t *testing.T) {
 		dataIn, _ := os.ReadFile(fixturePath + fileNameIn)
 		dataOut, err := Convert(dataIn, O2kOptions{
 			Tags: []string{"OAS3_import", "OAS3file_" + fileNameIn},
+			OIDC: true,
 		})
 		if err != nil {
 			t.Error(fmt.Sprintf("'%s' didn't expect error: %%w", fixturePath+fileNameIn), err)
