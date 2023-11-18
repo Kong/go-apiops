@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"golang.org/x/term"
 	"sigs.k8s.io/yaml"
 )
 
@@ -29,6 +30,9 @@ func ReadFile(filename string) ([]byte, error) {
 	)
 
 	if filename == "-" {
+		if term.IsTerminal(int(os.Stdin.Fd())) && term.IsTerminal(int(os.Stderr.Fd())) {
+			fmt.Fprintf(os.Stderr, "Warn: reading input from stdin...\n")
+		}
 		body, err = io.ReadAll(os.Stdin)
 	} else {
 		body, err = os.ReadFile(filename)
