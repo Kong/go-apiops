@@ -157,10 +157,10 @@ paths:
       summary: Get the tracks of a user
       operationId: getUserTracks
       security:
-        - openId: [ "scope3" ]
-        # TODO: validate security generated all together!!! report about it being broken
+        - myOpenId: [ "scope3" ]
         # See #/components/securitySchemes for the definition
-        # NOTE: only a single scheme per security object is supported!
+        # NOTE: only a single scheme per security object and only
+        # type "OpenIdConnect" is supported.
       x-kong-plugin-file-log:
         "$ref": "#/components/x-kong/plugins/log_to_file"
         # Adding another plugin, but in this case we use a reference so any updates
@@ -208,10 +208,9 @@ paths:
       - learn
       summary: Gets system tracks for a user
       operationId: getSystemTracks
-      security:
-        - basicAuth: []
-        # TODO: validate security generated all together!!! report about it being broken
-        # See #/components/securitySchemes for the definition
+      # security:
+      #   - myBasicAuth: []
+      # This security scheme is not supported
       parameters:
       - name: userId
         in: query
@@ -236,10 +235,9 @@ paths:
       - learn
       summary: Delete a Track by Id
       operationId: deleteTrack
-      security:
-        - keyAuth: []
-        # TODO: validate security generated all together!!! report about it being broken
-        # See #/components/securitySchemes for the definition
+      # security:
+      #   - myKeyAuth: []
+      # This security scheme is not supported
       parameters:
       - name: track-id
         in: path
@@ -309,6 +307,7 @@ components:
     # - x-kong-upstream-defaults
     # - x-kong-route-defaults
     # - x-kong-plugin-[...] plugin configurations
+    # - x-kong-security-[...] plugin configurations
     plugins:
       log_to_file:
         # reusable file-log plugin configuration
@@ -316,35 +315,18 @@ components:
           path: "/dev/stderr"
 
   securitySchemes:
-    basicAuth:
+    myBasicAuth:
       type: http
       scheme: basic
-      x-kong-security-basic-auth:
-        # using this directive, the scheme can be extended with Kong-specific
-        # configuration options.
-        # NOTE: the directive name is "security", not "plugin"! because it
-        # extends the existing OAS security directives
-        config:
-          hide_credentials: true
-    keyAuth:
+    myKeyAuth:
       type: apiKey
       name: apikey
       in: header
-      # NOTE: 'in' will be ignored since Kong will always look in header and
-      # query anyway for key-auth.
-      x-kong-security-key-auth:
-        config:
-          key_names: [ "mykey", "yourkey" ]
-          # the "key_names" will be merged with the name specified in OAS above
-          # so effectively keynames that will be accepted are now: "apikey",
-          # "mykey", and "yourkey".
-          hide_credentials: true
-          run_on_preflight: false
-    openId:
+    myOpenId:
       type: openIdConnect
       openIdConnectUrl: https://konghq.com/oauth2/.well-known/openid-configuration
       x-kong-security-openid-connect:
-        # we specify that the Kong OpenID COnnect plugin is to be used to implement this
+        # we specify that the Kong OpenID Connect plugin is to be used to implement this
         # "security scheme object". Any custom configuration can be added as usual
         # for plugins.
         config:

@@ -1,0 +1,114 @@
+# security directives can generate oidc plugin configs
+
+openapi: '3.0.0'
+info:
+  title: OIDC tests
+  version: v2
+servers:
+  - url: /
+
+# defining a toplevel security spec
+security:
+  - doclevel-oidc: ["top-scope"]
+
+# overriding the top level with per operation ones below
+paths:
+  /path1:
+    get:
+      operationId: OpsId1
+      # this should get the plugin per doclevel-oidc specs, since we do not override
+      summary: List API versions
+      responses:
+        '200':
+          description: |-
+            200 response
+  /path2:
+    get:
+      operationId: OpsId2
+      # this should get the plugin per "oidc2" specs, NO additional scopes
+      summary: List API versions
+      security:
+        - oidc2: [] # no additional scopes
+      responses:
+        '200':
+          description: |-
+            200 response
+  /path3:
+    get:
+      operationId: OpsId3
+      # this should get the plugin per "oidc3" specs, with additional scopes
+      summary: List API versions
+      security:
+        - oidc3: [ "extra-scope" ] # with additional scopes
+      responses:
+        '200':
+          description: |-
+            200 response
+  /path4:
+    get:
+      operationId: OpsId4
+      # this should get the plugin per "oidc4" specs, without references
+      summary: List API versions
+      security:
+        - oidc4: [ "oidc4-scope" ]
+      responses:
+        '200':
+          description: |-
+            200 response
+  /path5:
+    get:
+      operationId: OpsId5
+      # same as no 4, but a different scope
+      summary: List API versions
+      security:
+        - oidc4: [ "oidc5-scope" ] # different scope; 5
+      responses:
+        '200':
+          description: |-
+            200 response
+
+
+components:
+  x-kong:
+    plugins:
+      oidc2:
+        config:
+          run_on_preflight: true
+          scopes_required: ["oidc2-plugin-ref"]
+    security:
+      oidc3:
+        config:
+          run_on_preflight: true
+          scopes_required: ["oidc3-security-ref"]
+
+
+  securitySchemes:
+    doclevel-oidc:
+      type: openIdConnect
+      openIdConnectUrl: https://konghq.com/top-level
+      x-kong-security-openid-connect:
+        config:
+          run_on_preflight: false
+          scopes_required: ["scope2", "scope1"]  # reversed order to test sorting!
+
+    oidc2:
+      type: openIdConnect
+      openIdConnectUrl: https://konghq.com/oidc2
+      # using a reference to a security scheme, in the "plugins" section
+      x-kong-security-openid-connect:
+        "$ref": "#/components/x-kong/plugins/oidc2"
+
+    oidc3:
+      type: openIdConnect
+      openIdConnectUrl: https://konghq.com/oidc3
+      # using a reference to a security scheme, in the "security" section
+      x-kong-security-openid-connect:
+        "$ref": "#/components/x-kong/security/oidc3"
+
+    oidc4:
+      type: openIdConnect
+      openIdConnectUrl: https://konghq.com/oidc4
+      x-kong-security-openid-connect:
+        config:
+          run_on_preflight: false
+          scopes_required: []

@@ -1,0 +1,164 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "localhost",
+      "id": "bcda787b-18bc-5f83-85f2-1cf83b5f8eb3",
+      "name": "oidc-tests",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "558eb5de-46b9-5500-ae2a-9a8e321e9d65",
+          "methods": [
+            "GET"
+          ],
+          "name": "oidc-tests_opsid1",
+          "paths": [
+            "~/path1$"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "issuer": "https://konghq.com/top-level",
+                "run_on_preflight": false,
+                "scopes_required": [
+                  "scope1",
+                  "scope2",
+                  "top-scope"
+                ]
+              },
+              "name": "openid-connect"
+            }
+          ],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_16-security-oidc-generation.yaml"
+          ]
+        },
+        {
+          "id": "dac8f025-ad7b-52f3-8755-8b15ab97b57e",
+          "methods": [
+            "GET"
+          ],
+          "name": "oidc-tests_opsid2",
+          "paths": [
+            "~/path2$"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "issuer": "https://konghq.com/oidc2",
+                "run_on_preflight": true,
+                "scopes_required": [
+                  "oidc2-plugin-ref"
+                ]
+              },
+              "name": "openid-connect"
+            }
+          ],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_16-security-oidc-generation.yaml"
+          ]
+        },
+        {
+          "id": "5d712419-79fa-5ed0-90fb-acd005490af5",
+          "methods": [
+            "GET"
+          ],
+          "name": "oidc-tests_opsid3",
+          "paths": [
+            "~/path3$"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "issuer": "https://konghq.com/oidc3",
+                "run_on_preflight": true,
+                "scopes_required": [
+                  "extra-scope",
+                  "oidc3-security-ref"
+                ]
+              },
+              "name": "openid-connect"
+            }
+          ],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_16-security-oidc-generation.yaml"
+          ]
+        },
+        {
+          "id": "47dad727-b8ab-5bbc-93db-40c50c9e107d",
+          "methods": [
+            "GET"
+          ],
+          "name": "oidc-tests_opsid4",
+          "paths": [
+            "~/path4$"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "issuer": "https://konghq.com/oidc4",
+                "run_on_preflight": false,
+                "scopes_required": [
+                  "oidc4-scope"
+                ]
+              },
+              "name": "openid-connect"
+            }
+          ],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_16-security-oidc-generation.yaml"
+          ]
+        },
+        {
+          "id": "16cf13af-2905-5493-93fd-bbe399e2e494",
+          "methods": [
+            "GET"
+          ],
+          "name": "oidc-tests_opsid5",
+          "paths": [
+            "~/path5$"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "issuer": "https://konghq.com/oidc4",
+                "run_on_preflight": false,
+                "scopes_required": [
+                  "oidc5-scope"
+                ]
+              },
+              "name": "openid-connect"
+            }
+          ],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_16-security-oidc-generation.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_16-security-oidc-generation.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}
