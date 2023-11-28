@@ -24,12 +24,20 @@ const (
 
 // O2KOptions defines the options for an O2K conversion operation
 type O2kOptions struct {
-	Tags          []string  // Array of tags to mark all generated entities with, taken from 'x-kong-tags' if omitted.
-	DocName       string    // Base document name, will be taken from x-kong-name, or info.title (for UUID generation!)
-	UUIDNamespace uuid.UUID // Namespace for UUID generation, defaults to DNS namespace for UUID v5
-	InsoCompat    bool      // Enable Inso compatibility mode
-	SkipID        bool      // Skip ID generation (UUIDs)
-	OIDC          bool      // Enable OIDC plugin generation
+	// Array of tags to mark all generated entities with, taken from 'x-kong-tags' if omitted.
+	Tags []string
+	// Base document name, will be taken from x-kong-name, or info.title (for UUID generation!)
+	DocName string
+	// Namespace for UUID generation, defaults to DNS namespace for UUID v5
+	UUIDNamespace uuid.UUID
+	// Enable Inso compatibility mode
+	InsoCompat bool
+	// Skip ID generation (UUIDs)
+	SkipID bool
+	// Enable OIDC plugin generation
+	OIDC bool
+	// Ignore security errors (non-OIDC and AND/OR logic)
+	IgnoreSecurityErrors bool
 }
 
 // setDefaults sets the defaults for the OpenAPI2Kong operation.
@@ -252,6 +260,7 @@ func getOIDCdefaults(
 	requirementsp *openapi3.SecurityRequirements, // the security requirements to parse
 	doc *openapi3.T, // the complete OAS document
 	inherited []byte, // the inherited OIDC defaults
+	ignoreSecurityErrors bool, // ignore unsupported security requirements (return "inherited" instead of error)
 ) ([]byte, error) {
 	// Collect the OAS specific properties
 	var (
@@ -272,7 +281,11 @@ func getOIDCdefaults(
 		}
 		if len(requirements) > 1 {
 			// multiple requirements are a logical OR, which is not supported
-			return nil, fmt.Errorf("only a single security-requirement is supported")
+			if !ignoreSecurityErrors {
+				return nil, fmt.Errorf("only a single security-requirement is supported")
+			} else {
+				return inherited, nil
+			}
 		}
 		requirement := requirements[0]
 		if len(requirement) == 0 {
@@ -280,7 +293,11 @@ func getOIDCdefaults(
 		}
 		if len(requirement) > 1 {
 			// multiple schemes are a logical AND, which is not supported
-			return nil, fmt.Errorf("within a security-requirement only a single security-scheme is supported")
+			if !ignoreSecurityErrors {
+				return nil, fmt.Errorf("within a security-requirement only a single security-scheme is supported")
+			} else {
+				return inherited, nil
+			}
 		}
 
 		for k, v := range requirement { // has only 1 entry, so executes only once
@@ -290,7 +307,12 @@ func getOIDCdefaults(
 
 		scheme = doc.Components.SecuritySchemes[schemeName].Value
 		if scheme.Type != "openIdConnect" {
-			return nil, fmt.Errorf("only security-schemes of type 'openIdConnect' are supported")
+			// non-OIDC security directives are not supported
+			if !ignoreSecurityErrors {
+				return nil, fmt.Errorf("only security-schemes of type 'openIdConnect' are supported")
+			} else {
+				return inherited, nil
+			}
 		}
 	}
 
@@ -679,7 +701,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 
 	// get the OIDC stuff from top level, bail out if the requirements are unsupported
 	if opts.OIDC {
-		docOIDCdefaults, err = getOIDCdefaults(&doc.Security, doc, nil)
+		docOIDCdefaults, err = getOIDCdefaults(&doc.Security, doc, nil, opts.IgnoreSecurityErrors)
 		if err != nil {
 			return nil, err
 		}
@@ -991,7 +1013,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 
 			if opts.OIDC {
 				// get the OIDC stuff from operation level, bail out if the requirements are unsupported
-				operationOIDCplugin, err := getOIDCdefaults(operation.Security, doc, docOIDCdefaults)
+				operationOIDCplugin, err := getOIDCdefaults(operation.Security, doc, docOIDCdefaults, opts.IgnoreSecurityErrors)
 				if err != nil {
 					return nil, err
 				}

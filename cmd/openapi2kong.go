@@ -56,9 +56,27 @@ func executeOpenapi2Kong(cmd *cobra.Command, _ []string) error {
 		outputFormat = strings.ToUpper(outputFormat)
 	}
 
+	var generateSecurity bool
+	{
+		generateSecurity, err = cmd.Flags().GetBool("generate-security")
+		if err != nil {
+			return fmt.Errorf("failed getting cli argument 'generate-security'; %w", err)
+		}
+	}
+
+	var ignoreSecurityErrors bool
+	{
+		ignoreSecurityErrors, err = cmd.Flags().GetBool("ignore-security-errors")
+		if err != nil {
+			return fmt.Errorf("failed getting cli argument 'ignore-security-errors'; %w", err)
+		}
+	}
+
 	options := openapi2kong.O2kOptions{
-		Tags:    entityTags,
-		DocName: docName,
+		Tags:                 entityTags,
+		DocName:              docName,
+		OIDC:                 generateSecurity,
+		IgnoreSecurityErrors: ignoreSecurityErrors,
 	}
 
 	trackInfo := deckformat.HistoryNewEntry("openapi2kong")
@@ -109,4 +127,7 @@ will use the root-level "x-kong-name" directive, or fall back to 'info.title')`)
 	openapi2kongCmd.Flags().StringSlice("select-tag", nil,
 		`select tags to apply to all entities (if omitted will use the "x-kong-tags"
 directive from the file)`)
+	openapi2kongCmd.Flags().BoolP("generate-security", "", false, "generate OpenIDConnect plugins from the "+
+		"security directives")
+	openapi2kongCmd.Flags().BoolP("ignore-security-errors", "", false, "ignore errors for unsupported security schemes")
 }
