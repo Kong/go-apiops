@@ -12,60 +12,13 @@ This document documents the use of `security` directives within the `deck` subco
 Within OpenAPI the security directives can be specified on the document root (the `OpenAPI` object). It can also be specified on the `Operation` object, in which case it will override the document level one.
 Specifically; it cannot be specified on the `path` object level, the level in between document and operation.
 
-Nice explanation is here: https://swagger.io/docs/specification/authentication/
-
-## Format
-
-The `security` property is an array of `securityRequirement` objects.
-
-## Behaviour
-
-- The requirements listed are a logical `OR`; passing any one `securityRequirement` listed is enough to be allowed access.
-- The default value is `[]`; an empty array
-- An empty array allows access without authentication
-- An empty array (on the `Operation` level) can override a non-empty array (document level)
-
-## Security Requirement
-
-A `securityRequirement` object lists (as properties) `securityScheme` objects that MUST all be satisfied to allow access (a logical `AND`).
-
-Example of a `security` directive listing 2 `securityRequirements`, each having 2 `securityScheme` names :
-```yaml
-security:
-  - myOpenId: [ "scope3" ]
-    myBasicAuth: []
-  - myBasicAuth: []
-    myKeyAuth: []
-```
-To authenticate a request must either pass:
-- `myOpenId` (with 'scope3') **AND** `myBasicAuth`, **OR**
-- `myBasicAuth` **AND** `myKeyAuth`
-
-**NOTE**: the values (the arrays), contain scope names to use for `oauth2` and `openIdConnect` security schemes.
-(for all other types the array must be empty).
-
-## Security Scheme
-
-The `securityScheme` object specifies a single security/authentication mechanism to validate. The schemes are defined as properties (key/value) on the `components.securitySchemes` object.
-
-```yaml
-components:
-  securitySchemes:
-    myBasicAuth:
-      type: http
-      scheme: basic
-    myKeyAuth:
-      type: apiKey
-      name: apikey
-      in: header
-    myOpenId:
-      type: openIdConnect
-      openIdConnectUrl: https://konghq.com/oauth2/.well-known/openid-configuration
-```
+A nice explanation is here: https://swagger.io/docs/specification/authentication/
 
 ---
 
 # Conversion logic to Kong plugins
+
+To enable the generation of Kong plugins the `deck` flag `--generate-security` must be specified.
 
 The `securityScheme` object has a `type` property. These are the possible values
 and their support for Kong plugins conversions:
@@ -77,14 +30,17 @@ Type | supported | Kong plugin
 `openIdConnect`| yes | `openid-connect` |
 `oauth2`| no |
 
+The non-supported types will result in errors when doing a conversion. To ignore those the flag `--ignore-security-errors` can be specified.
+
 ## Boolean logic
 
 No boolean AND/OR logic is supported. So a `security` directive can only have 1 `security requirement`, and within that only a single `securityScheme`.
+Again; the errors generated can be ignored by specifying the `--ignore-security-errors` flag.
 
 ## Extensions
 
 Within a `securityScheme` of type `openIdConnect`, the extension `x-kong-security-openid-connect` can be used to configure the plugin options.
-(The name is the plugin-name, prefixed with `x-kong-security-`)
+(The name is the plugin-name, prefixed with "`x-kong-security-`")
 
 ## Conversion
 The following table describes property behaviour:
