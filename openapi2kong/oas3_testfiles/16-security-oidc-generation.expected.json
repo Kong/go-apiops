@@ -6,7 +6,20 @@
       "id": "bcda787b-18bc-5f83-85f2-1cf83b5f8eb3",
       "name": "oidc-tests",
       "path": "/",
-      "plugins": [],
+      "plugins": [
+        {
+          "config": {
+            "issuer": "https://konghq.com/top-level",
+            "run_on_preflight": false,
+            "scopes_required": [
+              "scope1",
+              "scope2",
+              "top-scope"
+            ]
+          },
+          "name": "openid-connect"
+        }
+      ],
       "port": 443,
       "protocol": "https",
       "routes": [
@@ -19,20 +32,7 @@
           "paths": [
             "~/path1$"
           ],
-          "plugins": [
-            {
-              "config": {
-                "issuer": "https://konghq.com/top-level",
-                "run_on_preflight": false,
-                "scopes_required": [
-                  "scope1",
-                  "scope2",
-                  "top-scope"
-                ]
-              },
-              "name": "openid-connect"
-            }
-          ],
+          "plugins": [],
           "regex_priority": 200,
           "strip_path": false,
           "tags": [

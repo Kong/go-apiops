@@ -705,6 +705,11 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
+		if docOIDCdefaults != nil {
+			// we have OIDC defaults, so we need to add the plugin to the doc-level list
+			pluginConfig, _ := filebasics.Deserialize(docOIDCdefaults)
+			docPluginList = insertPlugin(docPluginList, &pluginConfig)
+		}
 	}
 
 	// Extract the request-validator config from the plugin list
@@ -1017,8 +1022,8 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 				if err != nil {
 					return nil, err
 				}
-				if operationOIDCplugin != nil {
-					// we have OIDC defaults, so we need to add the plugin to the list
+				if string(operationOIDCplugin) != string(docOIDCdefaults) {
+					// we have OIDC config different from the doc-level one, so we need to add the plugin to the Operation
 					pluginConfig, _ := filebasics.Deserialize(operationOIDCplugin)
 					operationPluginList = insertPlugin(operationPluginList, &pluginConfig)
 				}
