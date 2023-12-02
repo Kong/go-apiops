@@ -2,92 +2,92 @@
   "_format_version": "3.0",
   "services": [
     {
-      "name": "Path_parameter_test",
-      "protocol": "https",
       "host": "example.com",
-      "port": 443,
+      "name": "Path_parameter_test",
       "path": "/",
       "plugins": [],
+      "port": 443,
+      "protocol": "https",
       "routes": [
         {
-          "tags": [
-            "OAS3_import",
-            "OAS3file_12-path-parameter-regex.yaml"
-          ],
-          "name": "Path_parameter_test-getBatchNoParams",
           "methods": [
             "GET"
           ],
+          "name": "Path_parameter_test-getBatchNoParams",
           "paths": [
             "~/batchs\\(Material='iron',Batch='10'\\)$"
           ],
           "plugins": [],
           "regex_priority": 200,
-          "strip_path": false
-        },
-        {
+          "strip_path": false,
           "tags": [
             "OAS3_import",
             "OAS3file_12-path-parameter-regex.yaml"
-          ],
-          "name": "Path_parameter_test-getBatchWithParams",
+          ]
+        },
+        {
           "methods": [
             "GET"
           ],
+          "name": "Path_parameter_test-getBatchWithParams",
           "paths": [
             "~/batchs\\(Material='(?<Material>[^#?/]+)',Batch='(?<Batch>[^#?/]+)'\\)$"
           ],
           "plugins": [],
           "regex_priority": 100,
-          "strip_path": false
-        },
-        {
+          "strip_path": false,
           "tags": [
             "OAS3_import",
             "OAS3file_12-path-parameter-regex.yaml"
-          ],
-          "name": "Path_parameter_test-postBatchWithParams",
+          ]
+        },
+        {
           "methods": [
             "POST"
           ],
+          "name": "Path_parameter_test-postBatchWithParams",
           "paths": [
             "~/batchs\\(Material='(?<Material>[^#?/]+)',Batch='(?<Batch>[^#?/]+)'\\)$"
           ],
           "plugins": [],
           "regex_priority": 100,
-          "strip_path": false
-        },
-        {
+          "strip_path": false,
           "tags": [
             "OAS3_import",
             "OAS3file_12-path-parameter-regex.yaml"
-          ],
-          "name": "Path_parameter_test-opsid",
+          ]
+        },
+        {
           "methods": [
             "GET"
           ],
+          "name": "Path_parameter_test-opsid",
           "paths": [
             "~/demo/(?<white_space>[^#?/]+)/(?<x_x>[^#?/]+)/(?<To_Do>[^#?/]+)$"
           ],
           "plugins": [],
           "regex_priority": 100,
-          "strip_path": false
-        },
-        {
+          "strip_path": false,
           "tags": [
             "OAS3_import",
             "OAS3file_12-path-parameter-regex.yaml"
-          ],
-          "name": "Path_parameter_test-opsid",
+          ]
+        },
+        {
           "methods": [
             "GET"
           ],
+          "name": "Path_parameter_test-opsid",
           "paths": [
             "~/demo/(?<something>[^#?/]+)/else/(?<todo>[^#?/]+)/$"
           ],
           "plugins": [],
           "regex_priority": 100,
-          "strip_path": false
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_12-path-parameter-regex.yaml"
+          ]
         }
       ],
       "tags": [
