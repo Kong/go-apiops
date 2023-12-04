@@ -378,7 +378,10 @@ func getOIDCdefaults(
 	// construct the final plugin
 	pluginBase["name"] = "openid-connect"
 	pluginConfig["scopes_required"] = ScopesRequired
-	if scheme.OpenIdConnectUrl != "" {
+	if scheme.OpenIdConnectUrl != "" && pluginConfig["issuer"] == nil {
+		// only set the issuer if it wasn't already set in the plugin config, because the
+		// x-kong-... specifies the Kong behaviour, the OAS specifies the service-behind-kong
+		// behaviour. So the former should win.
 		pluginConfig["issuer"] = scheme.OpenIdConnectUrl
 	}
 

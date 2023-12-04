@@ -109,7 +109,7 @@
           "plugins": [
             {
               "config": {
-                "issuer": "https://konghq.com/oidc4",
+                "issuer": "https://konghq.com/oidc4/overridden",
                 "run_on_preflight": false,
                 "scopes_required": [
                   "oidc4-scope"
@@ -137,7 +137,7 @@
           "plugins": [
             {
               "config": {
-                "issuer": "https://konghq.com/oidc4",
+                "issuer": "https://konghq.com/oidc4/overridden",
                 "run_on_preflight": false,
                 "scopes_required": [
                   "oidc5-scope"

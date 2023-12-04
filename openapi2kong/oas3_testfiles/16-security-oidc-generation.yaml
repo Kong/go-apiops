@@ -112,3 +112,4 @@ components:
         config:
           run_on_preflight: false
           scopes_required: []
+          issuer: "https://konghq.com/oidc4/overridden"
