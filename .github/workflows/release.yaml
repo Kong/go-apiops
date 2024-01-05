@@ -22,7 +22,7 @@ jobs:
           git config --global url."https://api:${{ secrets.PAT }}@github.com/".insteadOf "https://github.com/"
 
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: 1.19
 
