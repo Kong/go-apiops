@@ -1,6 +1,12 @@
 package deckformat
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+
+	"github.com/vmware-labs/yaml-jsonpath/pkg/yamlpath"
+	"gopkg.in/yaml.v3"
+)
 
 // EntityPointers is a map of entity names to an array of JSONpointers that can be used to find
 // all of those entities in a deck file. For example; credentials typically can be under
@@ -127,4 +133,46 @@ func initPointerCollections() {
 	// Store them in the overall list, capitalized to prevent colissions
 	EntityPointers["TagOwners"] = TagOwners
 	EntityPointers["PluginOwners"] = PluginOwners
+}
+
+// getAvailableEntities returns a list of all entity types that can be found in the data.
+// This is a list of the keys in the EntityPointers map.
+func getAvailableEntities() []string {
+	availableEntities := make([]string, 0)
+	for entity := range EntityPointers {
+		availableEntities = append(availableEntities, entity)
+	}
+	return availableEntities
+}
+
+// GetEntities returns all entities of a given type found within the yamlNode.
+// The result will never be nil, but can be an empty array. The deckfile may be nil, the
+// entityType must be a valid entity type, or it will panic.
+func GetEntities(deckfile *yaml.Node, entityType string) []*yaml.Node {
+	entitySelectors, ok := EntityPointers[entityType]
+	if !ok {
+		// programmer error, specified a bad name; let's be helpful and list the valid ones...
+		panic(fmt.Sprintf("invalid entity type: '%s', valid ones are: %s", entityType, getAvailableEntities()))
+	}
+
+	allEntities := make([]*yaml.Node, 0)
+	if deckfile == nil {
+		return allEntities
+	}
+
+	for _, entitySelector := range entitySelectors {
+		query, err := yamlpath.NewPath(entitySelector)
+		if err != nil {
+			panic("failed compiling " + entityType + " selector")
+		}
+
+		entities, err := query.Find(deckfile)
+		if err != nil {
+			panic("failed to collect " + entityType + " from the input data")
+		}
+
+		allEntities = append(allEntities, entities...)
+	}
+
+	return allEntities
 }
