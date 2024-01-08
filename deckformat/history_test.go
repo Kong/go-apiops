@@ -7,7 +7,6 @@ import (
 )
 
 var _ = Describe("deckformat", func() {
-
 	Describe("history", func() {
 		It("the key is set to '_ignore'", func() {
 			Expect(HistoryKey).To(Equal("_ignore"))
