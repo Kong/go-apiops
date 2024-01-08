@@ -9,7 +9,7 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/google/uuid v1.5.0
 	github.com/kong/go-slugify v0.0.0-20231027194833-8e212cc29c16
-	github.com/onsi/ginkgo/v2 v2.13.0
+	github.com/onsi/ginkgo/v2 v2.13.2
 	github.com/onsi/gomega v1.30.0
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.1
@@ -36,6 +36,6 @@ require (
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
-	golang.org/x/tools v0.12.0 // indirect
+	golang.org/x/tools v0.14.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
