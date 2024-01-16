@@ -227,16 +227,6 @@ func findServiceByRoute(route *yaml.Node, deckfile *yaml.Node) *yaml.Node {
 func InjectNamespaceStripping(deckfile *yaml.Node, namespace string,
 	routesNeedStripping []*yaml.Node, routesNoStripping []*yaml.Node,
 ) {
-	pluginconfig := `{
-		"name": "pre-function",
-		"config": {
-			"access": [
-				"local u,s,e=ngx.var.upstream_uri s,e=u:find('` + namespace + `',1,true)` +
-		`ngx.var.upstream_uri=u:sub(1,s)..u:sub(e+1,-1)"
-			]
-		}
-	}`
-
 	serviceToUpdate := make(map[*yaml.Node][]*yaml.Node) // service -> routes
 	routesToUpdate := make([]*yaml.Node, 0)
 
@@ -260,32 +250,50 @@ func InjectNamespaceStripping(deckfile *yaml.Node, namespace string,
 		}
 	}
 
-	// use a new name for the slice to reflect changed use.
-	// routes that need the plugin, service will be added as well
-	entitiesToAddPluginTo := routesToUpdate
-
-	for service := range serviceToUpdate {
-		entitiesToAddPluginTo = append(entitiesToAddPluginTo, service)
+	// inject stripping logic into the entities
+	for _, route := range routesToUpdate {
+		injectRouteNamespaceStripping(route, namespace)
 	}
 
-	// inject the plugin into the routes and services
-	for _, entity := range entitiesToAddPluginTo {
-		pluginsIdx := yamlbasics.FindFieldKeyIndex(entity, "plugins")
-		if pluginsIdx == -1 {
-			// no plugins array, add a new array
-			pluginsIdx = len(entity.Content)
-			yamlbasics.SetFieldValue(entity, "plugins", yamlbasics.NewArray())
+	for service := range serviceToUpdate {
+		injectServiceNamespaceStripping(service, namespace)
+	}
+}
+
+// injectEntityNamespaceStripping adds a namespace stripper to the entity.
+func injectEntityNamespaceStripping(entity *yaml.Node, namespace string) {
+	pluginconfig := `{
+		"name": "pre-function",
+		"config": {
+			"access": [
+				"local u,s,e=ngx.var.upstream_uri s,e=u:find('` + namespace + `',1,true)` +
+		`ngx.var.upstream_uri=u:sub(1,s)..u:sub(e+1,-1)"
+			]
 		}
+	}`
 
-		pluginsArrayNode := entity.Content[pluginsIdx+1]
+	pluginsIdx := yamlbasics.FindFieldKeyIndex(entity, "plugins")
+	if pluginsIdx == -1 {
+		// no plugins array, add a new array
+		pluginsIdx = len(entity.Content)
+		yamlbasics.SetFieldValue(entity, "plugins", yamlbasics.NewArray())
+	}
 
-		if pluginsArrayNode.Kind != yaml.SequenceNode {
-			// plugins is not an array, so we cannot add the plugin
-			continue
-		}
+	pluginsArrayNode := entity.Content[pluginsIdx+1]
 
+	if pluginsArrayNode.Kind == yaml.SequenceNode {
 		// add the plugin to the array
 		plugin, _ := yamlbasics.FromObject(filebasics.MustDeserialize([]byte(pluginconfig)))
 		_ = yamlbasics.Append(pluginsArrayNode, plugin)
 	}
+}
+
+// injectRouteNamespaceStripping adds a namespace stripper to the route.
+func injectRouteNamespaceStripping(route *yaml.Node, namespace string) {
+	injectEntityNamespaceStripping(route, namespace)
+}
+
+// injectServiceNamespaceStripping adds a namespace stripper to the service.
+func injectServiceNamespaceStripping(service *yaml.Node, namespace string) {
+	injectEntityNamespaceStripping(service, namespace)
 }
