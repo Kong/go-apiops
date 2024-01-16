@@ -295,5 +295,24 @@ func injectRouteNamespaceStripping(route *yaml.Node, namespace string) {
 
 // injectServiceNamespaceStripping adds a namespace stripper to the service.
 func injectServiceNamespaceStripping(service *yaml.Node, namespace string) {
-	injectEntityNamespaceStripping(service, namespace)
+	servicePath := ""
+	pathNode := yamlbasics.GetFieldValue(service, "path")
+	if pathNode != nil && pathNode.Kind == yaml.ScalarNode && pathNode.Tag == "!!str" {
+		servicePath = pathNode.Value
+		if !strings.HasSuffix(servicePath, "/") {
+			servicePath = servicePath + "/"
+		}
+		if servicePath == "/" {
+			servicePath = ""
+		}
+	}
+
+	if servicePath != "" && strings.HasSuffix(servicePath, namespace) {
+		// if the namespace matches the "tail" of the 'service.path' property, we can strip
+		// it there instead of injecting a plugin.
+		pathNode.Value = strings.TrimSuffix(servicePath, namespace) + "/"
+	} else {
+		// inject a plugin
+		injectEntityNamespaceStripping(service, namespace)
+	}
 }

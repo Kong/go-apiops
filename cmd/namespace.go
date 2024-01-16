@@ -101,7 +101,8 @@ the resulting paths '/addressbook/list' and '/cookbook/list' can be exposed with
 colliding.
 
 A "pre-function" plugin will be added to remove the prefix from the path before
-the request is routed to the service.
+the request is routed to the service. If the prefix is matching the 'service.path'
+suffix, then that property is updated, and no plugin is injected.
 `,
 	Args: cobra.NoArgs,
 	RunE: executeNamespace,

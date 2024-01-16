@@ -587,6 +587,60 @@ var _ = Describe("Namespace", func() {
 			}`))
 		})
 
+		It("updates service.path, if the namespace matches", func() {
+			data := `{
+				"services": [
+					{
+						"name": "service1",
+						"path": "/somepath` + ns + `",
+						"routes": [
+							{
+								"name": "route1",
+								"strip_path": false,
+								"paths": [
+									"/one"
+								]
+							},{
+								"name": "route2",
+								"strip_path": false,
+								"paths": [
+									"~/xyz/two$"
+								]
+							}
+						]
+					}
+				]
+			}`
+
+			config := toYaml(data)
+			namespace.Apply(config, "", ns) // the "" prefix will match all routes
+
+			Expect(toString(config)).To(MatchJSON(`{
+        "services": [
+          {
+            "name": "service1",
+						"path": "/somepath/",
+            "routes": [
+              {
+                "name": "route1",
+								"strip_path": false,
+                "paths": [
+									"` + ns + `one"
+								]
+              },
+              {
+                "name": "route2",
+								"strip_path": false,
+                "paths": [
+									"~` + ns + `xyz/two$"
+								]
+              }
+            ]
+          }
+        ]
+			}`))
+		})
+
 		It("attaches a plugin to routes, if not all routes match", func() {
 			data := `{
 				"services": [
