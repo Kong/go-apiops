@@ -93,3 +93,10 @@ paths:
         "200":
           description: An echo message.
       operationId: postBatchWithParams
+  # dollar sign in path
+  /some/$test:
+    get:
+      responses:
+        "200":
+          description: no parameters
+      operationId: dollar-sign

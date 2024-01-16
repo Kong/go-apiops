@@ -88,6 +88,22 @@
             "OAS3_import",
             "OAS3file_12-path-parameter-regex.yaml"
           ]
+        },
+        {
+          "methods": [
+            "GET"
+          ],
+          "name": "Path_parameter_test-dollar-sign",
+          "paths": [
+            "~/some/\\$test$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_12-path-parameter-regex.yaml"
+          ]
         }
       ],
       "tags": [

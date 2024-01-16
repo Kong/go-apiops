@@ -1056,7 +1056,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 
 			// Escape path contents for regex creation
 			convertedPath := path
-			charsToEscape := []string{"(", ")", ".", "+", "?", "*", "["}
+			charsToEscape := []string{"(", ")", ".", "+", "?", "*", "[", "$"}
 			for _, char := range charsToEscape {
 				convertedPath = strings.ReplaceAll(convertedPath, char, "\\"+char)
 			}
