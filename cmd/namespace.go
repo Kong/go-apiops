@@ -12,6 +12,7 @@ import (
 	"github.com/kong/go-apiops/filebasics"
 	"github.com/kong/go-apiops/jsonbasics"
 	"github.com/kong/go-apiops/namespace"
+	"github.com/kong/go-apiops/yamlbasics"
 	"github.com/spf13/cobra"
 )
 
@@ -36,25 +37,29 @@ func executeNamespace(cmd *cobra.Command, _ []string) error {
 		outputFormat = strings.ToUpper(outputFormat)
 	}
 
-	var matchPrefix string
+	var selectors yamlbasics.SelectorSet
 	{
-		matchPrefix, err := cmd.Flags().GetString("prefix")
+		selectorlist, err := cmd.Flags().GetStringArray("selector")
 		if err != nil {
-			return fmt.Errorf("failed to retrieve '--prefix' value; %w", err)
+			return fmt.Errorf("failed to retrieve '--selector' entry; %w", err)
 		}
-		_, err = namespace.CheckPrefix(matchPrefix)
+		if len(selectorlist) == 0 {
+			selectors, err = yamlbasics.NewSelectorSet(deckformat.EntityPointers["routes"])
+		} else {
+			selectors, err = yamlbasics.NewSelectorSet(selectorlist)
+		}
 		if err != nil {
 			return err
 		}
 	}
 
-	var namespaceStr string
+	var pathPrefix string
 	{
-		namespaceStr, err = cmd.Flags().GetString("namespace")
+		pathPrefix, err = cmd.Flags().GetString("path")
 		if err != nil {
-			return fmt.Errorf("failed to retrieve '--namespace' value; %w", err)
+			return fmt.Errorf("failed to retrieve '--path' value; %w", err)
 		}
-		_, err = namespace.CheckNamespace(namespaceStr)
+		_, err = namespace.CheckNamespace(pathPrefix)
 		if err != nil {
 			return err
 		}
@@ -63,8 +68,8 @@ func executeNamespace(cmd *cobra.Command, _ []string) error {
 	trackInfo := deckformat.HistoryNewEntry("namespace")
 	trackInfo["input"] = inputFilename
 	trackInfo["output"] = outputFilename
-	trackInfo["prefix"] = matchPrefix
-	trackInfo["namespace"] = namespaceStr
+	trackInfo["selectors"] = selectors.GetSources()
+	trackInfo["path-prefix"] = pathPrefix
 
 	// do the work; read/prefix/write
 	data, err := filebasics.DeserializeFile(inputFilename)
@@ -73,7 +78,7 @@ func executeNamespace(cmd *cobra.Command, _ []string) error {
 	}
 
 	yamlNode := jsonbasics.ConvertToYamlNode(data)
-	err = namespace.Apply(yamlNode, matchPrefix, namespaceStr)
+	err = namespace.Apply(yamlNode, selectors, pathPrefix)
 	if err != nil {
 		log.Fatalf("failed to apply the namespace: %s", err)
 	}
@@ -114,7 +119,7 @@ func init() {
 	namespaceCmd.Flags().StringP("output-file", "o", "-", "output file to write. Use - to write to stdout.")
 	namespaceCmd.Flags().StringP("format", "", string(filebasics.OutputFormatYaml), "output format: "+
 		string(filebasics.OutputFormatJSON)+" or "+string(filebasics.OutputFormatYaml))
-	namespaceCmd.Flags().StringP("prefix", "", "", "the existing path-prefix to match. Only matching paths "+
-		"will be namespaced (plain or regex based)")
-	namespaceCmd.Flags().StringP("namespace", "", "", "the namespace to apply")
+	patchCmd.Flags().StringArrayP("selector", "", []string{},
+		"json-pointer identifying routes to update (can be specified more than once)")
+	namespaceCmd.Flags().StringP("path", "", "", "the path based namespace to apply")
 }

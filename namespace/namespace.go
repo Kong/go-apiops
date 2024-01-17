@@ -31,54 +31,25 @@ func CheckNamespace(prefix string) (string, error) {
 	return prefix, nil
 }
 
-// CheckPrefix validates the prefix argument. Returns updated prefix.
-// Defaults to "", if not specified. Regexes, starting with "~", are not valid.
-func CheckPrefix(prefix string) (string, error) {
-	if prefix == "" {
-		return "", nil
-	}
-
-	if !strings.HasPrefix(prefix, "/") {
-		return "", fmt.Errorf("invalid prefix; the prefix MUST start with '/', got: '%s'", prefix)
-	}
-
-	return prefix, nil
-}
-
 // UpdateSinglePathString updates a single path string with the namespace and returns it.
-func UpdateSinglePathString(path string, prefix string, namespace string) string {
+func UpdateSinglePathString(path string, namespace string) string {
 	strip := "/"
 	if strings.HasPrefix(path, "~") {
-		prefix = "~" + prefix
 		namespace = "~" + namespace
 		strip = "~" + strip
 	}
-	if prefix == "" {
-		// plain path, no prefix to match
-		return namespace + strings.TrimPrefix(path, strip) // prevent double slashes
-	} else if strings.HasPrefix(path, prefix) {
-		return namespace + strings.TrimPrefix(path, strip)
-	}
-
-	return path // unchanged
+	return namespace + strings.TrimPrefix(path, strip) // prevent double slashes
 }
 
 // UpdateRoute returns true if the route needs stripping the namespace.
-// prefix can be empty (matches all paths).
 // namespace must start with a "/" and end with a "/" (a single "/" is NOT valid).
-func UpdateRoute(route *yaml.Node, prefix string, namespace string) bool {
+func UpdateRoute(route *yaml.Node, namespace string) bool {
 	if route.Kind != yaml.MappingNode {
 		return false
 	}
 
 	pathsKeyIdx := yamlbasics.FindFieldKeyIndex(route, "paths")
 	if pathsKeyIdx == -1 {
-		// no "paths" property found. If a prefix was specified, we have a no-match, otherwise we can update
-		// by adding a paths array, and specifying the prefix for Kong to match
-		if prefix != "" {
-			return false
-		}
-
 		// a prefix was specified, but there is no "paths" array, so add one
 		pathsKeyIdx = len(route.Content)
 		yamlbasics.SetFieldValue(route, "paths", yamlbasics.NewArray())
@@ -104,7 +75,7 @@ func UpdateRoute(route *yaml.Node, prefix string, namespace string) bool {
 	// we have a paths-array, now update them all
 	updates := 0
 	for _, pathNode := range pathsArrayNode.Content {
-		updatedPath := UpdateSinglePathString(pathNode.Value, prefix, namespace)
+		updatedPath := UpdateSinglePathString(pathNode.Value, namespace)
 		if updatedPath != pathNode.Value {
 			pathNode.Value = updatedPath
 			updates++
@@ -114,14 +85,9 @@ func UpdateRoute(route *yaml.Node, prefix string, namespace string) bool {
 	return updates != 0 && !stripPath
 }
 
-// getAllRoutes returns all route nodes.
-// The result will never be nil, but can be an empty array. The deckfile may be nil.
-func getAllRoutes(deckfile *yaml.Node) []*yaml.Node {
-	return deckformat.GetEntities(deckfile, "routes")
-}
-
-// Apply updates all route entities found within the file with the namespace.
-func Apply(deckfile *yaml.Node, prefixToMatch string, namespace string) error {
+// Apply updates route entities with the namespace. The selectors should select the routes
+// to update. If the selectors are empty, then all routes will be updated.
+func Apply(deckfile *yaml.Node, selectors yamlbasics.SelectorSet, namespace string) error {
 	if deckfile == nil {
 		panic("expected 'deckfile' to be non-nil")
 	}
@@ -129,20 +95,31 @@ func Apply(deckfile *yaml.Node, prefixToMatch string, namespace string) error {
 	if err != nil {
 		return err
 	}
-	prefixToMatch, err = CheckPrefix(prefixToMatch)
-	if err != nil {
-		return err
+
+	allRoutes := deckformat.GetEntities(deckfile, "routes")
+	var targetRoutes []*yaml.Node
+	if selectors.IsEmpty() {
+		// no selectors, apply to all routes
+		targetRoutes = make([]*yaml.Node, len(allRoutes))
+		copy(targetRoutes, allRoutes)
+	} else {
+		targetRoutes, err = selectors.Find(deckfile)
+		if err != nil {
+			return err
+		}
+	}
+	targetRoutes = yamlbasics.Intersection(allRoutes, targetRoutes) // ignore everything not a route
+	if len(targetRoutes) == 0 {
+		return nil // nothing to do
 	}
 
+	routesNoStripping := yamlbasics.SubtractSet(allRoutes, targetRoutes) // everything not matched by the selectors
 	routesNeedStripping := make([]*yaml.Node, 0)
-	routesNoStripping := make([]*yaml.Node, 0)
-	for _, route := range getAllRoutes(deckfile) {
-		if route.Kind == yaml.MappingNode {
-			if UpdateRoute(route, prefixToMatch, namespace) {
-				routesNeedStripping = append(routesNeedStripping, route)
-			} else {
-				routesNoStripping = append(routesNoStripping, route)
-			}
+	for _, route := range targetRoutes {
+		if UpdateRoute(route, namespace) {
+			routesNeedStripping = append(routesNeedStripping, route)
+		} else {
+			routesNoStripping = append(routesNoStripping, route)
 		}
 	}
 
