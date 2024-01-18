@@ -137,7 +137,7 @@ func (set *SelectorSet) IsEmpty() bool {
 
 // GetSources returns a copy of the selector sources
 func (set *SelectorSet) GetSources() []string {
-	sources := make([]string, 0)
+	sources := make([]string, len(set.source))
 	copy(sources, set.source)
 	return sources
 }
