@@ -1,14 +1,12 @@
 package tags
 
 import (
-	"fmt"
 	"sort"
 
 	"github.com/kong/go-apiops/deckformat"
 	"github.com/kong/go-apiops/jsonbasics"
 	"github.com/kong/go-apiops/logbasics"
 	"github.com/kong/go-apiops/yamlbasics"
-	"github.com/vmware-labs/yaml-jsonpath/pkg/yamlpath"
 	"gopkg.in/yaml.v3"
 )
 
@@ -24,7 +22,7 @@ func init() {
 type Tagger struct {
 	// list of JSONpointers to entities that can hold tags, so the selector
 	// returns entities that can hold tags, not the tag arrays themselves
-	selectors []*yamlpath.Path
+	selectors yamlbasics.SelectorSet
 	// list of Nodes (selected by the selectors) representing entities that can
 	// hold tags, not the tag arrays themselves
 	tagOwners []*yaml.Node
@@ -55,17 +53,11 @@ func (ts *Tagger) SetSelectors(selectors []string) error {
 		selectors = defaultSelectors
 	}
 
-	compiledSelectors := make([]*yamlpath.Path, len(selectors))
-	for i, selector := range selectors {
-		logbasics.Debug("compiling JSONpath", "path", selector)
-		compiledpath, err := yamlpath.NewPath(selector)
-		if err != nil {
-			return fmt.Errorf("selector '%s' is not a valid JSONpath expression; %w", selector, err)
-		}
-		compiledSelectors[i] = compiledpath
+	var err error
+	ts.selectors, err = yamlbasics.NewSelectorSet(selectors)
+	if err != nil {
+		return err
 	}
-	// we're good, they are all valid
-	ts.selectors = compiledSelectors
 	ts.tagOwners = nil // clear previous JSONpointer search results
 	logbasics.Debug("successfully compiled JSONpaths")
 	return nil
@@ -84,35 +76,31 @@ func (ts *Tagger) search() error {
 		panic("data hasn't been set, see SetData()")
 	}
 
-	if ts.selectors == nil {
+	if ts.selectors.IsEmpty() {
 		err := ts.SetSelectors(nil) // set to 'nil' to set the default selectors
 		if err != nil {
 			panic("this should never happen, since we're setting the default selectors")
 		}
 	}
 
-	// build list of targets by executing the selectors one by one
-	targets := make([]*yaml.Node, 0)
-	refs := make(map[*yaml.Node]bool, 0) // keep track of already found nodes
-	for idx, selector := range ts.selectors {
-		nodes, err := selector.Find(ts.data)
-		if err != nil {
-			return err
-		}
-
-		// 'nodes' is an array of nodes matching the selector
-		objCount := 0
-		for _, node := range nodes {
-			// since we're updating object fields, we'll skip anything that is
-			// not a JSONobject
-			if node.Kind == yaml.MappingNode && !refs[node] {
-				refs[node] = true
-				targets = append(targets, node)
-				objCount++
-			}
-		}
-		logbasics.Debug("selector results", "selector", idx, "results", len(nodes), "objects", objCount)
+	nodes, err := ts.selectors.Find(ts.data)
+	if err != nil {
+		return err
 	}
+
+	// build list of targets
+	targets := make([]*yaml.Node, 0)
+
+	// 'nodes' is an array of nodes matching the selector
+	for _, node := range nodes {
+		// since we're updating object fields, we'll skip anything that is
+		// not a JSONobject
+		if node.Kind == yaml.MappingNode {
+			targets = append(targets, node)
+		}
+	}
+	logbasics.Debug("selector results", "results", len(nodes), "objects", len(targets))
+
 	ts.tagOwners = targets
 	return nil
 }
