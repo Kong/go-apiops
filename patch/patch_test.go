@@ -24,8 +24,7 @@ var _ = Describe("Patch", func() {
 			err := patch.Parse(data, "breadcrumb-text")
 
 			Expect(err).To(BeNil())
-			Expect(patch.SelectorSources).To(BeEquivalentTo([]string{"$"}))
-			Expect(patch.Selectors).ToNot(BeNil())
+			Expect(patch.Selectors.GetSources()).To(BeEquivalentTo([]string{"$"}))
 			Expect(patch.ObjValues).To(BeEquivalentTo(map[string]interface{}{
 				"field1": "value1",
 			}))
@@ -46,8 +45,7 @@ var _ = Describe("Patch", func() {
 			err := patch.Parse(data, "breadcrumb-text")
 
 			Expect(err).To(BeNil())
-			Expect(patch.SelectorSources).To(BeEquivalentTo([]string{"$"}))
-			Expect(patch.Selectors).ToNot(BeNil())
+			Expect(patch.Selectors.GetSources()).To(BeEquivalentTo([]string{"$"}))
 			Expect(patch.ObjValues).To(BeEquivalentTo(map[string]interface{}{}))
 			Expect(patch.ArrValues).To(BeEquivalentTo([]interface{}{"entry1", "entry2"}))
 			Expect(patch.Remove).To(BeEquivalentTo([]string{}))
@@ -74,8 +72,9 @@ var _ = Describe("Patch", func() {
 			var patch patch.DeckPatch
 			err := patch.Parse(data, "file1.yml:patches[1]")
 
-			Expect(err).To(MatchError("file1.yml:patches[1].selectors[0] is not a valid JSONpath " +
-				"expression; invalid character ' ' at position 3, following \"not\""))
+			Expect(err).To(MatchError("file1.yml:patches[1].selectors[*] contains an invalid JSONpath expression; " +
+				"selector 'not valid' is not a valid JSONpath expression; invalid character ' ' at position 3, " +
+				"following \"not\""))
 		})
 
 		It("fails on non object/array 'values'", func() {
@@ -251,31 +250,15 @@ var _ = Describe("Patch", func() {
 		})
 	})
 
-	Describe("validating --selector flags", func() {
-		It("returns error on bad JSONpath", func() {
-			testPatch := patch.DeckPatch{
-				SelectorSources: []string{"bad JSONpath"},
-				ObjValues:       nil,
-				Remove:          []string{"test"},
-			}
-			data := []byte(`{}`)
-			err := testPatch.ApplyToNodes(jsonbasics.ConvertToYamlNode(MustDeserialize(data)))
-			Expect(err).To(MatchError("selector 'bad JSONpath' is not a valid JSONpath expression; " +
-				"invalid character ' ' at position 3, following \"bad\""))
-		})
-	})
-
 	Describe("Applying values to objects", func() {
 		applyUpdates := func(data []byte, selector string, valueFlags []string) []byte {
 			jsonData := MustDeserialize(data)
 			parsedValues, remove, arr, err := patch.ValidateValuesFlags(valueFlags)
 			Expect(err).To(BeNil())
 
-			testPatch := patch.DeckPatch{
-				SelectorSources: []string{selector},
-				ObjValues:       parsedValues,
-				Remove:          remove,
-				ArrValues:       arr,
+			testPatch, err := patch.NewDeckPatch([]string{selector}, parsedValues, arr, remove)
+			if err != nil {
+				panic(err)
 			}
 
 			yamlNode := jsonbasics.ConvertToYamlNode(jsonData)
@@ -433,13 +416,13 @@ var _ = Describe("Patch", func() {
 		applyUpdates := func(data []byte, selector string, values []interface{}) []byte {
 			jsonData := MustDeserialize(data)
 
-			testPatch := patch.DeckPatch{
-				SelectorSources: []string{selector},
-				ArrValues:       values,
+			testPatch, err := patch.NewDeckPatch([]string{selector}, nil, values, nil)
+			if err != nil {
+				panic(err)
 			}
 
 			yamlNode := jsonbasics.ConvertToYamlNode(jsonData)
-			err := testPatch.ApplyToNodes(yamlNode)
+			err = testPatch.ApplyToNodes(yamlNode)
 			Expect(err).To(BeNil())
 
 			updated := jsonbasics.ConvertToJSONobject(yamlNode)

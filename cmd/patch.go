@@ -13,6 +13,7 @@ import (
 	"github.com/kong/go-apiops/jsonbasics"
 	"github.com/kong/go-apiops/logbasics"
 	"github.com/kong/go-apiops/patch"
+	"github.com/kong/go-apiops/yamlbasics"
 	"github.com/spf13/cobra"
 )
 
@@ -57,7 +58,10 @@ func executePatch(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return fmt.Errorf("failed to retrieve '--selector' entry; %w", err)
 		}
-		valuesPatch.SelectorSources = s
+		valuesPatch.Selectors, err = yamlbasics.NewSelectorSet(s)
+		if err != nil {
+			return fmt.Errorf("failed parsing '--selector' entry; %w", err)
+		}
 	}
 
 	patchFiles := make([]patch.DeckPatchFile, 0)
@@ -76,7 +80,7 @@ func executePatch(cmd *cobra.Command, args []string) error {
 	trackInfo["input"] = inputFilename
 	trackInfo["output"] = outputFilename
 	if (len(valuesPatch.ObjValues) + len(valuesPatch.Remove) + len(valuesPatch.ArrValues)) > 0 {
-		trackInfo["selector"] = valuesPatch.SelectorSources
+		trackInfo["selector"] = valuesPatch.Selectors.GetSources()
 	}
 	if len(valuesPatch.ObjValues) != 0 {
 		trackInfo["values"] = valuesPatch.ObjValues
