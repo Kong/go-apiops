@@ -245,11 +245,11 @@ func InjectNamespaceStripping(deckfile *yaml.Node, namespace string,
 
 // GetLuaStripFunction returns the Lua function that strips the namespace from the upstream_uri.
 func GetLuaStripFunction(ns string) string {
-	return `-- this will strip the '` + ns + `' path-namespace from the upstream_uri
-local ns,nst,sn
-ns='` + ns + `'
-nst=ns:sub(-1,-1)=='/' and ns or (ns..'/')
-function sn(u)
+	// code is optimized to be SHORT, not readable. Upon updates only the "namespace" will change
+	// it will be on the first line, so diffs in a gitops pipeline remain easy to grok.
+	return `local ns='` + ns + `' -- this strips the '` + ns + `' namespace from the path
+local nst=ns:sub(-1,-1)=='/' and ns or (ns..'/')
+local function sn(u)
 	local s,e=u:find(nst,1,true)
 	if s then
 		return u:sub(1,s)..u:sub(e+1,-1)
