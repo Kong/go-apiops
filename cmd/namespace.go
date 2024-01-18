@@ -55,9 +55,9 @@ func executeNamespace(cmd *cobra.Command, _ []string) error {
 
 	var pathPrefix string
 	{
-		pathPrefix, err = cmd.Flags().GetString("path")
+		pathPrefix, err = cmd.Flags().GetString("path-prefix")
 		if err != nil {
-			return fmt.Errorf("failed to retrieve '--path' value; %w", err)
+			return fmt.Errorf("failed to retrieve '--path-prefix' value; %w", err)
 		}
 		err = namespace.CheckNamespace(pathPrefix)
 		if err != nil {
@@ -121,5 +121,5 @@ func init() {
 		string(filebasics.OutputFormatJSON)+" or "+string(filebasics.OutputFormatYaml))
 	namespaceCmd.Flags().StringArrayP("selector", "", []string{},
 		"json-pointer identifying routes to update (can be specified more than once)")
-	namespaceCmd.Flags().StringP("path", "", "", "the path based namespace to apply")
+	namespaceCmd.Flags().StringP("path-prefix", "p", "", "the path based namespace to apply")
 }
