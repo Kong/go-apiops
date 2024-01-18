@@ -119,7 +119,7 @@ func init() {
 	namespaceCmd.Flags().StringP("output-file", "o", "-", "output file to write. Use - to write to stdout.")
 	namespaceCmd.Flags().StringP("format", "", string(filebasics.OutputFormatYaml), "output format: "+
 		string(filebasics.OutputFormatJSON)+" or "+string(filebasics.OutputFormatYaml))
-	patchCmd.Flags().StringArrayP("selector", "", []string{},
+	namespaceCmd.Flags().StringArrayP("selector", "", []string{},
 		"json-pointer identifying routes to update (can be specified more than once)")
 	namespaceCmd.Flags().StringP("path", "", "", "the path based namespace to apply")
 }
