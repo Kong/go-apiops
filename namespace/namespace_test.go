@@ -1,10 +1,12 @@
 package namespace_test
 
 import (
+	"github.com/kong/go-apiops/filebasics"
 	"github.com/kong/go-apiops/namespace"
 	"github.com/kong/go-apiops/yamlbasics"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	lua "github.com/yuin/gopher-lua"
 	"gopkg.in/yaml.v3"
 )
 
@@ -28,44 +30,101 @@ func toString(data *yaml.Node) string {
 var _ = Describe("Namespace", func() {
 	Describe("CheckNamespace", func() {
 		It("validates a plain namespace", func() {
-			prefix, err := namespace.CheckNamespace("/prefix/")
+			err := namespace.CheckNamespace("/prefix/")
 			Expect(err).ToNot(HaveOccurred())
-			Expect(prefix).To(Equal("/prefix/"))
 		})
 		It("appends a post-fix /", func() {
-			prefix, err := namespace.CheckNamespace("/prefix")
+			err := namespace.CheckNamespace("/prefix")
 			Expect(err).ToNot(HaveOccurred())
-			Expect(prefix).To(Equal("/prefix/"))
 		})
 		It("rejects a namespace without a leading /", func() {
-			_, err := namespace.CheckNamespace("prefix/")
+			err := namespace.CheckNamespace("prefix/")
 			Expect(err).To(HaveOccurred())
 		})
 		It("rejects a namespace with only a leading /", func() {
-			_, err := namespace.CheckNamespace("/")
+			err := namespace.CheckNamespace("/")
+			Expect(err).To(HaveOccurred())
+		})
+		It("rejects a namespace with empty segment; //", func() {
+			err := namespace.CheckNamespace("//")
 			Expect(err).To(HaveOccurred())
 		})
 	})
 
-	Describe("UpdateSinglePathString", func() {
-		ns, err := namespace.CheckNamespace("/namespace")
-		if err != nil {
-			panic(err)
-		}
-		It("updates plain paths", func() {
-			Expect(namespace.UpdateSinglePathString("/one", ns)).To(Equal("/namespace/one"))
-		})
-		It("updates empty paths", func() {
-			Expect(namespace.UpdateSinglePathString("/", ns)).To(Equal("/namespace/"))
-		})
-		It("updates regex paths", func() {
-			Expect(namespace.UpdateSinglePathString("~/demo/(?<something>[^#?/]+)/else$",
-				ns)).To(Equal("~/namespace/demo/(?<something>[^#?/]+)/else$"))
-		})
-	})
+	DescribeTable("UpdateSinglePathString",
+		func(path, ns, expected string) {
+			Expect(namespace.UpdateSinglePathString(path, ns)).To(Equal(expected))
+		},
+		// Test inputs:
+		// "current-route-path", "namespace to apply", "final path after applying namespace"
+
+		// plain
+		Entry(nil, "/", "/namespace", "/namespace"),
+		Entry(nil, "/one", "/namespace", "/namespace/one"),
+		Entry(nil, "/one/", "/namespace", "/namespace/one/"),
+		// regex
+		Entry(nil, "~/$", "/namespace", "~/namespace$"),
+		Entry(nil, "~/", "/namespace", "~/namespace"),
+		Entry(nil, "~/one$", "/namespace", "~/namespace/one$"),
+		Entry(nil, "~/one/$", "/namespace", "~/namespace/one/$"),
+
+		// same but now a namespace with a trailing slash
+		// plain
+		Entry(nil, "/", "/namespace/", "/namespace/"), // different!!
+		Entry(nil, "/one", "/namespace/", "/namespace/one"),
+		Entry(nil, "/one/", "/namespace/", "/namespace/one/"),
+		// regex
+		Entry(nil, "~/$", "/namespace/", "~/namespace/$"), // different!!
+		Entry(nil, "~/", "/namespace/", "~/namespace/"),   // different!!
+		Entry(nil, "~/one$", "/namespace/", "~/namespace/one$"),
+		Entry(nil, "~/one/$", "/namespace/", "~/namespace/one/$"),
+	)
+
+	DescribeTable("PreFunctions plugin Lua code",
+		func(upstream_uri, ns, expected string) {
+			stripFunc := namespace.GetLuaStripFunction(ns)
+			L := lua.NewState()
+			defer L.Close()
+			err := L.DoString(`
+			  local ngx = {
+					var = {
+						upstream_uri = "` + upstream_uri + `"
+					}
+				}
+
+			` + stripFunc + `
+			return ngx.var.upstream_uri`)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(L.GetTop()).To(Equal(1))
+			Expect(L.Get(1).String()).To(Equal(expected))
+		},
+
+		// Test inputs:
+		// "upstream_uri set by Kong", "namespace as applied", "upstream_uri after stripping namespace"
+
+		// namespace without trailing slash
+		Entry(nil, "/namespace", "/namespace", "/"),
+		Entry(nil, "/namespace/", "/namespace", "/"),
+		Entry(nil, "/namespace/more", "/namespace", "/more"),
+		// namespace with trailing slash
+		// Entry(nil, "/namespace", "/namespace/", "/"), // TODO: cannot happen, incoming path will not match
+		Entry(nil, "/namespace/", "/namespace/", "/"),
+		Entry(nil, "/namespace/more", "/namespace/", "/more"),
+
+		// same again, but now with a "service.path" set (added by kong in front of the namespace)
+		// namespace without trailing slash
+		Entry(nil, "/service/namespace", "/namespace", "/service"),
+		Entry(nil, "/service/namespace/", "/namespace", "/service/"),
+		Entry(nil, "/service/namespace/more", "/namespace", "/service/more"),
+		// namespace with trailing slash
+		// Entry(nil, "/service/namespace", "/namespace/", "/service/"), // TODO: cannot happen, incoming path will not match
+		Entry(nil, "/service/namespace/", "/namespace/", "/service/"),
+		Entry(nil, "/service/namespace/more", "/namespace/", "/service/more"),
+	)
 
 	Describe("UpdateRoute", func() {
-		ns, err := namespace.CheckNamespace("/namespace")
+		ns := "/namespace"
+		err := namespace.CheckNamespace(ns)
 		if err != nil {
 			panic(err)
 		}
@@ -98,6 +157,22 @@ var _ = Describe("Namespace", func() {
 
 				route := toYaml(data)
 				needsStripping := namespace.UpdateRoute(route, ns)
+
+				Expect(toString(route)).To(MatchJSON(`{
+					"strip_path": true,
+					"paths": [
+						"/namespace"
+					]
+				}`))
+				Expect(needsStripping).To(BeFalse())
+			})
+			It("updates route with no paths, namespace trailing /", func() {
+				data := `{
+					"strip_path": true
+				}`
+
+				route := toYaml(data)
+				needsStripping := namespace.UpdateRoute(route, ns+"/")
 
 				Expect(toString(route)).To(MatchJSON(`{
 					"strip_path": true,
@@ -141,6 +216,22 @@ var _ = Describe("Namespace", func() {
 				Expect(toString(route)).To(MatchJSON(`{
 					"strip_path": false,
 					"paths": [
+						"/namespace"
+					]
+				}`))
+				Expect(needsStripping).To(BeTrue())
+			})
+			It("updates route with no paths, namespace trailing /", func() {
+				data := `{
+					"strip_path": false,
+				}`
+
+				route := toYaml(data)
+				needsStripping := namespace.UpdateRoute(route, ns+"/")
+
+				Expect(toString(route)).To(MatchJSON(`{
+					"strip_path": false,
+					"paths": [
 						"/namespace/"
 					]
 				}`))
@@ -151,15 +242,18 @@ var _ = Describe("Namespace", func() {
 
 	Describe("Apply", func() {
 		ns := "/my-namespace/"
-		pluginConf := `{
-			"config": {
-				"access": [
-					"local u,s,e=ngx.var.upstream_uri s,e=u:find('` + ns +
-			`',1,true)ngx.var.upstream_uri=u:sub(1,s)..u:sub(e+1,-1)"
-				]
-			},
-			"name": "pre-function"
-		}`
+		// pluginConf := `{
+		// 	"config": {
+		// 		"access": [
+		// 			"local u,s,e=ngx.var.upstream_uri s,e=u:find('` + ns +
+		// 	`',1,true)ngx.var.upstream_uri=u:sub(1,s)..u:sub(e+1,-1)"
+		// 		]
+		// 	},
+		// 	"name": "pre-function"
+		// }`
+
+		pluginObj, _ := yamlbasics.ToObject(namespace.GetPreFunctionPlugin(ns))
+		pluginConf := string(filebasics.MustSerialize(pluginObj, filebasics.OutputFormatJSON))
 
 		//
 		// first we check proper conversions, and injection of the plugin

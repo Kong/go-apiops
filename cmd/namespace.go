@@ -59,7 +59,7 @@ func executeNamespace(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return fmt.Errorf("failed to retrieve '--path' value; %w", err)
 		}
-		_, err = namespace.CheckNamespace(pathPrefix)
+		err = namespace.CheckNamespace(pathPrefix)
 		if err != nil {
 			return err
 		}

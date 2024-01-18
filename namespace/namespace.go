@@ -5,30 +5,29 @@ import (
 	"strings"
 
 	"github.com/kong/go-apiops/deckformat"
-	"github.com/kong/go-apiops/filebasics"
 	"github.com/kong/go-apiops/yamlbasics"
 	"gopkg.in/yaml.v3"
 )
 
 // CheckNamespace validates the prefix namespace. Returns updated namespace. Must start with "/",
-// and must have at least 1 character after the "/". If there is no trailing '/', then it will be added.
-func CheckNamespace(prefix string) (string, error) {
+// and must have at least 1 character after the "/".
+func CheckNamespace(ns string) error {
 	defaultErr := fmt.Errorf("invalid namespace; the namespace MUST start with '/', "+
-		"and cannot be empty, got: '%s'", prefix)
+		"and cannot be empty, got: '%s'", ns)
 
-	if !strings.HasPrefix(prefix, "/") {
-		return "", defaultErr
+	if !strings.HasPrefix(ns, "/") {
+		return defaultErr
 	}
 
-	if !strings.HasSuffix(prefix, "/") {
-		prefix = prefix + "/"
+	if len(ns) == 1 {
+		return defaultErr
 	}
 
-	if len(prefix) <= 2 {
-		return "", defaultErr
+	if strings.HasPrefix(ns, "//") {
+		return defaultErr
 	}
 
-	return prefix, nil
+	return nil
 }
 
 // UpdateSinglePathString updates a single path string with the namespace and returns it.
@@ -38,7 +37,14 @@ func UpdateSinglePathString(path string, namespace string) string {
 		namespace = "~" + namespace
 		strip = "~" + strip
 	}
-	return namespace + strings.TrimPrefix(path, strip) // prevent double slashes
+	extraSlash := ""
+	if !strings.HasSuffix(namespace, "/") {
+		// normal path we need to add a slash, except if the path is an empty one; just "/"
+		if path != "/" && path != "~/" && path != "~/$" {
+			extraSlash = "/"
+		}
+	}
+	return namespace + extraSlash + strings.TrimPrefix(path, strip) // prevent double slashes
 }
 
 // UpdateRoute returns true if the route needs stripping the namespace.
@@ -91,7 +97,7 @@ func Apply(deckfile *yaml.Node, selectors yamlbasics.SelectorSet, namespace stri
 	if deckfile == nil {
 		panic("expected 'deckfile' to be non-nil")
 	}
-	namespace, err := CheckNamespace(namespace)
+	err := CheckNamespace(namespace)
 	if err != nil {
 		return err
 	}
@@ -237,18 +243,48 @@ func InjectNamespaceStripping(deckfile *yaml.Node, namespace string,
 	}
 }
 
+// GetLuaStripFunction returns the Lua function that strips the namespace from the upstream_uri.
+func GetLuaStripFunction(ns string) string {
+	return `
+local ns = '` + ns + `'
+local nst = ns:sub(-1,-1) == "/" and ns or (ns.."/")
+function stripNamespace(upstream_uri)
+	local s,e = upstream_uri:find(nst,1,true)
+	if s then
+		return upstream_uri:sub(1,s)..upstream_uri:sub(e+1,-1)
+	end
+	local s,e = upstream_uri:find(ns,1,true)
+	if e and e == #upstream_uri then
+		upstream_uri = upstream_uri:sub(1,s-1) --..upstream_uri:sub(e+1,-1)
+		if upstream_uri == "" then
+			upstream_uri = "/"
+		end
+		return upstream_uri
+	end
+	return upstream_uri
+end
+ngx.var.upstream_uri = stripNamespace(ngx.var.upstream_uri)`
+}
+
+// GetPreFunctionPlugin returns a plugin that strips the namespace from the upstream_uri.
+func GetPreFunctionPlugin(namespace string) *yaml.Node {
+	plugin := map[string]interface{}{
+		"name": "pre-function",
+		"config": map[string]interface{}{
+			"access": []string{
+				GetLuaStripFunction(namespace),
+			},
+		},
+	}
+	pluginNode, err := yamlbasics.FromObject(plugin)
+	if err != nil {
+		panic(err)
+	}
+	return pluginNode
+}
+
 // injectEntityNamespaceStripping adds a namespace stripper to the entity.
 func injectEntityNamespaceStripping(entity *yaml.Node, namespace string) {
-	pluginconfig := `{
-		"name": "pre-function",
-		"config": {
-			"access": [
-				"local u,s,e=ngx.var.upstream_uri s,e=u:find('` + namespace + `',1,true)` +
-		`ngx.var.upstream_uri=u:sub(1,s)..u:sub(e+1,-1)"
-			]
-		}
-	}`
-
 	pluginsIdx := yamlbasics.FindFieldKeyIndex(entity, "plugins")
 	if pluginsIdx == -1 {
 		// no plugins array, add a new array
@@ -260,8 +296,7 @@ func injectEntityNamespaceStripping(entity *yaml.Node, namespace string) {
 
 	if pluginsArrayNode.Kind == yaml.SequenceNode {
 		// add the plugin to the array
-		plugin, _ := yamlbasics.FromObject(filebasics.MustDeserialize([]byte(pluginconfig)))
-		_ = yamlbasics.Append(pluginsArrayNode, plugin)
+		_ = yamlbasics.Append(pluginsArrayNode, GetPreFunctionPlugin(namespace))
 	}
 }
 
