@@ -1,6 +1,6 @@
 module github.com/kong/go-apiops
 
-go 1.19
+go 1.21
 
 require (
 	github.com/getkin/kin-openapi v0.108.0
@@ -31,6 +31,7 @@ require (
 	github.com/mailru/easyjson v0.0.0-20190626092158-b2ccc519800e // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/mozillazg/go-unidecode v0.2.0 // indirect
+	github.com/onsi/ginkgo v1.16.4 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	golang.org/x/net v0.19.0 // indirect
