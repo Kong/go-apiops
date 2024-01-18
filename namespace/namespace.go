@@ -245,25 +245,22 @@ func InjectNamespaceStripping(deckfile *yaml.Node, namespace string,
 
 // GetLuaStripFunction returns the Lua function that strips the namespace from the upstream_uri.
 func GetLuaStripFunction(ns string) string {
-	return `
-local ns = '` + ns + `'
-local nst = ns:sub(-1,-1) == "/" and ns or (ns.."/")
-function stripNamespace(upstream_uri)
-	local s,e = upstream_uri:find(nst,1,true)
+	return `-- this will strip the '` + ns + `' path-namespace from the upstream_uri
+local ns,nst,sn
+ns='` + ns + `'
+nst=ns:sub(-1,-1)=='/' and ns or (ns..'/')
+function sn(u)
+	local s,e=u:find(nst,1,true)
 	if s then
-		return upstream_uri:sub(1,s)..upstream_uri:sub(e+1,-1)
+		return u:sub(1,s)..u:sub(e+1,-1)
 	end
-	local s,e = upstream_uri:find(ns,1,true)
-	if e and e == #upstream_uri then
-		upstream_uri = upstream_uri:sub(1,s-1) --..upstream_uri:sub(e+1,-1)
-		if upstream_uri == "" then
-			upstream_uri = "/"
-		end
-		return upstream_uri
+	if u:sub(-#ns,-1)==ns then
+		u=u:sub(1,-#ns-1)
+		if u=='' then u='/' end
 	end
-	return upstream_uri
+	return u
 end
-ngx.var.upstream_uri = stripNamespace(ngx.var.upstream_uri)`
+ngx.var.upstream_uri=sn(ngx.var.upstream_uri)`
 }
 
 // GetPreFunctionPlugin returns a plugin that strips the namespace from the upstream_uri.
