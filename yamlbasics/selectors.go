@@ -3,6 +3,7 @@ package yamlbasics
 import (
 	"fmt"
 
+	"github.com/kong/go-apiops/logbasics"
 	"github.com/vmware-labs/yaml-jsonpath/pkg/yamlpath"
 	"gopkg.in/yaml.v3"
 )
@@ -44,9 +45,10 @@ func IsIntersection(mainSet NodeSet, subset NodeSet) bool {
 
 // Intersection returns the intersection of the two given sets of nodes.
 // nil entries will be ignored. The result will have no duplicates.
-func Intersection(set1, set2 NodeSet) NodeSet {
+// the second return value is the remainder of set2 after the intersection was removed.
+func Intersection(set1, set2 NodeSet) (intersection NodeSet, remainder NodeSet) {
 	if len(set1) == 0 || len(set2) == 0 {
-		return make(NodeSet, 0)
+		return make(NodeSet, 0), make(NodeSet, 0)
 	}
 
 	// deduplicate
@@ -57,20 +59,27 @@ func Intersection(set1, set2 NodeSet) NodeSet {
 		}
 	}
 
-	intersection := make(NodeSet, 0)
+	intersection = make(NodeSet, 0)
+	remainder = make(NodeSet, 0)
 	seen2 := make(map[*yaml.Node]bool)
 	for _, node := range set2 {
-		if node != nil && seen1[node] && !seen2[node] {
+		if node != nil && !seen2[node] {
 			seen2[node] = true
-			intersection = append(intersection, node)
+			if seen1[node] {
+				intersection = append(intersection, node)
+			} else {
+				remainder = append(remainder, node)
+			}
 		}
 	}
-	return intersection
+	logbasics.Debug("intersection", "#found", len(intersection), "#remainder", len(remainder))
+	return intersection, remainder
 }
 
 // SubtractSet returns the set of nodes that are in mainSet but not in setToSubtract.
 // nil entries will be ignored. The result will have no duplicates.
 func SubtractSet(mainSet NodeSet, setToSubtract NodeSet) NodeSet {
+	// TODO: this can be implemneted by using Intersection, and returning the remainderset.
 	if len(mainSet) == 0 || len(setToSubtract) == 0 {
 		return make(NodeSet, 0)
 	}
@@ -164,6 +173,7 @@ func (set *SelectorSet) Find(nodeToSearch *yaml.Node) (NodeSet, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to execute selector '%s'; %w", set.source[i], err)
 		}
+		logbasics.Debug("selector results", "selector", set.source[i], "#found", len(matches))
 		for _, match := range matches {
 			if match != nil && !seen[match] {
 				results = append(results, match)
