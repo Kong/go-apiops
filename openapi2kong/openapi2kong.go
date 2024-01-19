@@ -100,19 +100,19 @@ func sanitizeRegexCapture(varName string, insoCompat bool) string {
 // getKongTags returns the provided tags or if nil, then the `x-kong-tags` property,
 // validated to be a string array. If there is no error, then there will always be
 // an array returned for safe access later in the process.
-func getKongTags(doc *openapi3.T, tagsProvided []string) ([]string, error) {
+func getKongTags(extensionProps openapi3.ExtensionProps, tagsProvided []string) ([]string, error) {
 	if tagsProvided != nil {
 		// the provided tags take precedence, return them
 		return tagsProvided, nil
 	}
 
-	if doc.ExtensionProps.Extensions == nil || doc.ExtensionProps.Extensions["x-kong-tags"] == nil {
+	if extensionProps.Extensions == nil || extensionProps.Extensions["x-kong-tags"] == nil {
 		// there is no extension, so return an empty array
 		return make([]string, 0), nil
 	}
 
 	var tagsValue interface{}
-	err := json.Unmarshal(doc.ExtensionProps.Extensions["x-kong-tags"].(json.RawMessage), &tagsValue)
+	err := json.Unmarshal(extensionProps.Extensions["x-kong-tags"].(json.RawMessage), &tagsValue)
 	if err != nil {
 		return nil, fmt.Errorf("expected 'x-kong-tags' to be an array of strings: %w", err)
 	}
@@ -641,7 +641,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 	//
 
 	// collect tags to use
-	if kongTags, err = getKongTags(doc, opts.Tags); err != nil {
+	if kongTags, err = getKongTags(doc.ExtensionProps, opts.Tags); err != nil {
 		return nil, err
 	}
 	logbasics.Info("tags after parsing x-kong-tags", "tags", kongTags)
@@ -1086,7 +1086,13 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 			}
 			route["name"] = operationBaseName
 			route["methods"] = []string{method}
-			route["tags"] = kongTags
+
+			kongRouteTags, err := getKongTags(operation.ExtensionProps, nil)
+			if err != nil {
+				return nil, err
+			}
+			route["tags"] = append(kongTags, kongRouteTags...)
+
 			if _, found := route["regex_priority"]; !found {
 				route["regex_priority"] = regexPriority
 			} else {
