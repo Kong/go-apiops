@@ -118,7 +118,7 @@ func Apply(deckfile *yaml.Node, selectors yamlbasics.SelectorSet, namespace stri
 	var remainder yamlbasics.NodeSet
 	targetRoutes, remainder = allRoutes.Intersection(targetRoutes) // check for non-routes
 	if len(remainder) != 0 {
-		return fmt.Errorf("the selectors returned non-route entities; %w", err)
+		return fmt.Errorf("the selectors returned non-route entities; %d", len(remainder))
 	}
 	if len(targetRoutes) == 0 {
 		logbasics.Info("no routes matched the selectors, nothing to do")
