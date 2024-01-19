@@ -10,102 +10,7 @@ import (
 
 //
 //
-// NodeSet implementation, just a list of yaml nodes
-//
-//
-
-// represents a set of yaml nodes
-type NodeSet []*yaml.Node
-
-// IsIntersection returns true if all nodes in the subset also appear in the main set.
-// nil entries will be ignored. Returns true if subset is empty.
-func IsIntersection(mainSet NodeSet, subset NodeSet) bool {
-	if len(subset) == 0 {
-		return true
-	}
-	if len(mainSet) == 0 {
-		return false
-	}
-
-	// deduplicate
-	seen := make(map[*yaml.Node]bool)
-	for _, node := range mainSet {
-		if node != nil {
-			seen[node] = true
-		}
-	}
-
-	for _, node := range subset {
-		if node != nil && !seen[node] {
-			return false
-		}
-	}
-	return true
-}
-
-// Intersection returns the intersection of the two given sets of nodes.
-// nil entries will be ignored. The result will have no duplicates.
-// the second return value is the remainder of set2 after the intersection was removed.
-func Intersection(set1, set2 NodeSet) (intersection NodeSet, remainder NodeSet) {
-	if len(set1) == 0 || len(set2) == 0 {
-		return make(NodeSet, 0), make(NodeSet, 0)
-	}
-
-	// deduplicate
-	seen1 := make(map[*yaml.Node]bool)
-	for _, node := range set1 {
-		if node != nil {
-			seen1[node] = true
-		}
-	}
-
-	intersection = make(NodeSet, 0)
-	remainder = make(NodeSet, 0)
-	seen2 := make(map[*yaml.Node]bool)
-	for _, node := range set2 {
-		if node != nil && !seen2[node] {
-			seen2[node] = true
-			if seen1[node] {
-				intersection = append(intersection, node)
-			} else {
-				remainder = append(remainder, node)
-			}
-		}
-	}
-	logbasics.Debug("intersection", "#found", len(intersection), "#remainder", len(remainder))
-	return intersection, remainder
-}
-
-// SubtractSet returns the set of nodes that are in mainSet but not in setToSubtract.
-// nil entries will be ignored. The result will have no duplicates.
-func SubtractSet(mainSet NodeSet, setToSubtract NodeSet) NodeSet {
-	// TODO: this can be implemneted by using Intersection, and returning the remainderset.
-	if len(mainSet) == 0 || len(setToSubtract) == 0 {
-		return make(NodeSet, 0)
-	}
-
-	// deduplicate
-	seen1 := make(map[*yaml.Node]bool)
-	for _, node := range setToSubtract {
-		if node != nil {
-			seen1[node] = true
-		}
-	}
-
-	subtracted := make(NodeSet, 0)
-	seen2 := make(map[*yaml.Node]bool)
-	for _, node := range mainSet {
-		if node != nil && !seen1[node] && !seen2[node] {
-			seen2[node] = true
-			subtracted = append(subtracted, node)
-		}
-	}
-	return subtracted
-}
-
-//
-//
-// SelectorSet implementation, handles mutiple instead of 1 JSONpath selector
+// SelectorSet implementation, handles multiple instead of 1 JSONpath selector
 //
 //
 
@@ -146,7 +51,7 @@ func (set *SelectorSet) IsEmpty() bool {
 
 // GetSources returns a copy of the selector sources
 func (set *SelectorSet) GetSources() []string {
-	sources := make([]string, 0)
+	sources := make([]string, len(set.source))
 	copy(sources, set.source)
 	return sources
 }
