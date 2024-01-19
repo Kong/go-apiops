@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/kong/go-apiops/deckformat"
+	"github.com/kong/go-apiops/logbasics"
 	"github.com/kong/go-apiops/yamlbasics"
 	"gopkg.in/yaml.v3"
 )
@@ -103,10 +104,10 @@ func Apply(deckfile *yaml.Node, selectors yamlbasics.SelectorSet, namespace stri
 	}
 
 	allRoutes := deckformat.GetEntities(deckfile, "routes")
-	var targetRoutes []*yaml.Node
+	var targetRoutes yamlbasics.NodeSet
 	if selectors.IsEmpty() {
 		// no selectors, apply to all routes
-		targetRoutes = make([]*yaml.Node, len(allRoutes))
+		targetRoutes = make(yamlbasics.NodeSet, len(allRoutes))
 		copy(targetRoutes, allRoutes)
 	} else {
 		targetRoutes, err = selectors.Find(deckfile)
@@ -114,13 +115,18 @@ func Apply(deckfile *yaml.Node, selectors yamlbasics.SelectorSet, namespace stri
 			return err
 		}
 	}
-	targetRoutes = yamlbasics.Intersection(allRoutes, targetRoutes) // ignore everything not a route
+	var remainder yamlbasics.NodeSet
+	targetRoutes, remainder = yamlbasics.Intersection(allRoutes, targetRoutes) // check for non-routes
+	if len(remainder) != 0 {
+		return fmt.Errorf("the selectors returned non-route entities; %w", err)
+	}
 	if len(targetRoutes) == 0 {
+		logbasics.Info("no routes matched the selectors, nothing to do")
 		return nil // nothing to do
 	}
 
 	routesNoStripping := yamlbasics.SubtractSet(allRoutes, targetRoutes) // everything not matched by the selectors
-	routesNeedStripping := make([]*yaml.Node, 0)
+	routesNeedStripping := make(yamlbasics.NodeSet, 0)
 	for _, route := range targetRoutes {
 		if UpdateRoute(route, namespace) {
 			routesNeedStripping = append(routesNeedStripping, route)
@@ -129,6 +135,7 @@ func Apply(deckfile *yaml.Node, selectors yamlbasics.SelectorSet, namespace stri
 		}
 	}
 
+	logbasics.Info("updating routes", "total", len(allRoutes), "selected", len(targetRoutes))
 	InjectNamespaceStripping(deckfile, namespace, routesNeedStripping, routesNoStripping)
 
 	return nil
@@ -136,7 +143,7 @@ func Apply(deckfile *yaml.Node, selectors yamlbasics.SelectorSet, namespace stri
 
 // getAllServices returns all service nodes.
 // The result will never be nil, but can be an empty array. The deckfile may be nil.
-func getAllServices(deckfile *yaml.Node) []*yaml.Node {
+func getAllServices(deckfile *yaml.Node) yamlbasics.NodeSet {
 	return deckformat.GetEntities(deckfile, "services")
 }
 
@@ -198,20 +205,18 @@ func findServiceByRoute(route *yaml.Node, deckfile *yaml.Node) *yaml.Node {
 	}
 
 	// service specified in the route object, but not found, so it is an inconsistent
-	// file. Report not as not found
+	// file. Report as not found
 	return nil
 }
-
-// routesNeedStripping, routesNoStripping
 
 // InjectNamespaceStripping injects a namespace stripper into the deckfile.
 // The namespace stripper will remove the namespace from the path, if it matches.
 // updated+unchanged must together be ALL routes in the file!
 func InjectNamespaceStripping(deckfile *yaml.Node, namespace string,
-	routesNeedStripping []*yaml.Node, routesNoStripping []*yaml.Node,
+	routesNeedStripping yamlbasics.NodeSet, routesNoStripping yamlbasics.NodeSet,
 ) {
-	serviceToUpdate := make(map[*yaml.Node][]*yaml.Node) // service -> routes
-	routesToUpdate := make([]*yaml.Node, 0)
+	serviceToUpdate := make(map[*yaml.Node]yamlbasics.NodeSet) // service -> routes
+	routesToUpdate := make(yamlbasics.NodeSet, 0)
 
 	for _, route := range routesNeedStripping {
 		if service := findServiceByRoute(route, deckfile); service != nil {
@@ -232,6 +237,8 @@ func InjectNamespaceStripping(deckfile *yaml.Node, namespace string,
 			}
 		}
 	}
+
+	logbasics.Info("entities to update with stripping", "routes", len(routesToUpdate), "services", len(serviceToUpdate))
 
 	// inject stripping logic into the entities
 	for _, route := range routesToUpdate {
