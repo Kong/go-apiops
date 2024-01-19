@@ -4,8 +4,10 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"log"
 	"os"
 
+	"github.com/kong/go-apiops/logbasics"
 	"github.com/spf13/cobra"
 )
 
@@ -16,6 +18,16 @@ var rootCmd = &cobra.Command{
 	Long: `A CLI for testing the Kong go-apiops library.
 
 go-apiops houses an improved APIOps toolset for operating Kong Gateway deployments.`,
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		// set the verbosity level of the log output
+		verbosity, err := cmd.Flags().GetInt("verbose")
+		if err != nil {
+			return err
+		}
+		logbasics.Initialize(log.LstdFlags, verbosity)
+		return nil
+	},
+
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
