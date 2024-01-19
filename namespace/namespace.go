@@ -103,7 +103,7 @@ func Apply(deckfile *yaml.Node, selectors yamlbasics.SelectorSet, namespace stri
 		return err
 	}
 
-	allRoutes := deckformat.GetEntities(deckfile, "routes")
+	allRoutes := yamlbasics.NodeSet(deckformat.GetEntities(deckfile, "routes"))
 	var targetRoutes yamlbasics.NodeSet
 	if selectors.IsEmpty() {
 		// no selectors, apply to all routes
@@ -116,7 +116,7 @@ func Apply(deckfile *yaml.Node, selectors yamlbasics.SelectorSet, namespace stri
 		}
 	}
 	var remainder yamlbasics.NodeSet
-	targetRoutes, remainder = yamlbasics.Intersection(allRoutes, targetRoutes) // check for non-routes
+	targetRoutes, remainder = allRoutes.Intersection(targetRoutes) // check for non-routes
 	if len(remainder) != 0 {
 		return fmt.Errorf("the selectors returned non-route entities; %w", err)
 	}
@@ -125,7 +125,7 @@ func Apply(deckfile *yaml.Node, selectors yamlbasics.SelectorSet, namespace stri
 		return nil // nothing to do
 	}
 
-	routesNoStripping := yamlbasics.SubtractSet(allRoutes, targetRoutes) // everything not matched by the selectors
+	routesNoStripping := allRoutes.Subtract(targetRoutes) // everything not matched by the selectors
 	routesNeedStripping := make(yamlbasics.NodeSet, 0)
 	for _, route := range targetRoutes {
 		if UpdateRoute(route, namespace) {
