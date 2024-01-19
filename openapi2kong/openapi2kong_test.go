@@ -41,8 +41,15 @@ func Test_Openapi2kong(t *testing.T) {
 		fileNameOut := strings.TrimSuffix(fileNameIn, ".yaml") + ".generated.json"
 		// log.Printf("input file: '%v', expected file: '%v'", fileNameIn, fileNameExpected)
 		dataIn, _ := os.ReadFile(fixturePath + fileNameIn)
+
+		// for x-kong-tags tests
+		var tags []string
+		if !strings.Contains(string(dataIn), "x-kong-tags:") {
+			tags = []string{"OAS3_import", "OAS3file_" + fileNameIn}
+		}
+
 		dataOut, err := Convert(dataIn, O2kOptions{
-			Tags: []string{"OAS3_import", "OAS3file_" + fileNameIn},
+			Tags: tags,
 			OIDC: true,
 		})
 		if err != nil {
