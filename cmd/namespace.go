@@ -108,6 +108,32 @@ colliding.
 A "pre-function" plugin will be added to remove the prefix from the path before
 the request is routed to the service. If the prefix is matching the 'service.path'
 suffix, then that property is updated, and no plugin is injected.
+
+Example file:
+
+routes:
+- paths:
+  - ~/tracks/system$
+  strip_path: true
+- paths:
+  - ~/list$
+  strip_path: false
+
+namespaced using "--path-prefix=/kong":
+
+routes:
+- paths:
+  - ~/kong/tracks/system$
+  strip_path: true
+- paths:
+  - ~/kong/list$
+  strip_path: false
+  plugins:
+  - name: pre-function
+    config:
+      access:
+      - "local ns='/kong' -- this strips the '/kong' namespace from the path\nlocal <more code here>"
+
 `,
 	Args: cobra.NoArgs,
 	RunE: executeNamespace,
