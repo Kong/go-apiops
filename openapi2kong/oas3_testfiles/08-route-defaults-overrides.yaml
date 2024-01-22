@@ -20,6 +20,16 @@ paths:
         '200':
           description: |-
             200 response
+  /path1/{param}:
+    get:
+      # should get the document level defaults, but with a path-parameter the
+      # regex_priority is set to 1 less than the defaults given
+      operationId: uses-doc-defaults-with-path-param
+      summary: List API versions
+      responses:
+        '200':
+          description: |-
+            200 response
   /path2:
     # specify new defaults to override document level
     x-kong-route-defaults:

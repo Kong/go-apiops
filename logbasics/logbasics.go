@@ -32,7 +32,8 @@ func Debug(msg string, keysAndValues ...interface{}) {
 	globalLogger.V(2).Info(msg, keysAndValues...)
 }
 
-// Error logs an error message.
+// Error logs an error message. Preferably errors should bubble up to the caller,
+// so only if that is not possible, this method should be used.
 func Error(err error, msg string, keysAndValues ...interface{}) {
 	globalLogger.Error(err, msg, keysAndValues...)
 }

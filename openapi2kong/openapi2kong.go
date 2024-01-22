@@ -20,6 +20,10 @@ import (
 const (
 	formatVersionKey   = "_format_version"
 	formatVersionValue = "3.0"
+
+	// default regex priorities to assign to routes
+	regexPriorityWithPathParams = 100
+	regexPriorityPlain          = 200 // non-regexed (no params) paths have higher precedence in OAS
 )
 
 // O2KOptions defines the options for an O2K conversion operation
@@ -1063,9 +1067,9 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 
 			// convert path parameters to regex captures
 			re, _ := regexp.Compile("{([^}]+)}")
-			regexPriority := 200 // non-regexed (no params) paths have higher precedence in OAS
+			regexPriority := regexPriorityPlain
 			if matches := re.FindAllStringSubmatch(convertedPath, -1); matches != nil {
-				regexPriority = 100
+				regexPriority = regexPriorityWithPathParams
 				for _, match := range matches {
 					varName := match[1]
 					// match single segment; '/', '?', and '#' can mark the end of a segment
@@ -1083,7 +1087,20 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 			route["name"] = operationBaseName
 			route["methods"] = []string{method}
 			route["tags"] = kongTags
-			route["regex_priority"] = regexPriority
+			if _, found := route["regex_priority"]; !found {
+				route["regex_priority"] = regexPriority
+			} else {
+				// a regex_priority was provided in the defaults
+				currentRegexPrio, err := jsonbasics.GetUInt64Field(route, "regex_priority")
+				if err != nil {
+					return nil, fmt.Errorf("failed to parse 'regex_priority' from route defaults: %w", err)
+				}
+				// the default in x-kong-route-defaults represents the plain path, path-parameter path needs to be lower
+				if regexPriority == regexPriorityWithPathParams {
+					// this is a path with parameters, so we need to lower the priority
+					route["regex_priority"] = currentRegexPrio - 1
+				}
+			}
 			if _, found := route["strip_path"]; !found {
 				route["strip_path"] = false // Default to false since we do not want to strip full-regex paths by default
 			}
