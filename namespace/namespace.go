@@ -323,10 +323,15 @@ func injectServiceNamespaceStripping(service *yaml.Node, namespace string) {
 		}
 	}
 
-	if servicePath != "" && strings.HasSuffix(servicePath, namespace) {
+	namespaceSuffix := namespace
+	if !strings.HasSuffix(namespaceSuffix, "/") {
+		namespaceSuffix = namespaceSuffix + "/"
+	}
+
+	if servicePath != "" && strings.HasSuffix(servicePath, namespaceSuffix) {
 		// if the namespace matches the "tail" of the 'service.path' property, we can strip
 		// it there instead of injecting a plugin.
-		pathNode.Value = strings.TrimSuffix(servicePath, namespace) + "/"
+		pathNode.Value = strings.TrimSuffix(servicePath, namespaceSuffix) + "/"
 	} else {
 		// inject a plugin
 		injectEntityNamespaceStripping(service, namespace)

@@ -1,6 +1,8 @@
 package namespace_test
 
 import (
+	"strings"
+
 	"github.com/kong/go-apiops/filebasics"
 	"github.com/kong/go-apiops/namespace"
 	"github.com/kong/go-apiops/yamlbasics"
@@ -242,16 +244,6 @@ var _ = Describe("Namespace", func() {
 
 	Describe("Apply", func() {
 		ns := "/my-namespace/"
-		// pluginConf := `{
-		// 	"config": {
-		// 		"access": [
-		// 			"local u,s,e=ngx.var.upstream_uri s,e=u:find('` + ns +
-		// 	`',1,true)ngx.var.upstream_uri=u:sub(1,s)..u:sub(e+1,-1)"
-		// 		]
-		// 	},
-		// 	"name": "pre-function"
-		// }`
-
 		pluginObj, _ := yamlbasics.ToObject(namespace.GetPreFunctionPlugin(ns))
 		pluginConf := string(filebasics.MustSerialize(pluginObj, filebasics.OutputFormatJSON))
 
@@ -444,62 +436,239 @@ var _ = Describe("Namespace", func() {
 			}`))
 		})
 
-		It("updates service.path, if the namespace matches", func() {
-			data := `{
-				"services": [
-					{
-						"name": "service1",
-						"path": "/somepath` + ns + `",
-						"routes": [
+		Describe("updates service.path, if the namespace matches", func() {
+			Describe("path-prefix with trailing slash", func() {
+				It("service.path with trailing slash", func() {
+					data := `{
+						"services": [
 							{
-								"name": "route1",
-								"strip_path": false,
-								"paths": [
-									"/one"
-								]
-							},{
-								"name": "route2",
-								"strip_path": false,
-								"paths": [
-									"~/xyz/two$"
+								"name": "service1",
+								"path": "/somepath` + ns + `",
+								"routes": [
+									{
+										"name": "route1",
+										"strip_path": false,
+										"paths": [
+											"/one"
+										]
+									},{
+										"name": "route2",
+										"strip_path": false,
+										"paths": [
+											"~/xyz/two$"
+										]
+									}
 								]
 							}
 						]
+					}`
+
+					config := toYaml(data)
+					selectors, err := yamlbasics.NewSelectorSet(nil)
+					if err != nil {
+						panic(err)
 					}
-				]
-			}`
+					namespace.Apply(config, selectors, ns)
 
-			config := toYaml(data)
-			selectors, err := yamlbasics.NewSelectorSet(nil)
-			if err != nil {
-				panic(err)
-			}
-			namespace.Apply(config, selectors, ns)
+					Expect(toString(config)).To(MatchJSON(`{
+						"services": [
+							{
+								"name": "service1",
+								"path": "/somepath/",
+								"routes": [
+									{
+										"name": "route1",
+										"strip_path": false,
+										"paths": [
+											"` + ns + `one"
+										]
+									},
+									{
+										"name": "route2",
+										"strip_path": false,
+										"paths": [
+											"~` + ns + `xyz/two$"
+										]
+									}
+								]
+							}
+						]
+					}`))
+				})
+				It("service.path without trailing slash", func() {
+					data := `{
+						"services": [
+							{
+								"name": "service1",
+								"path": "/somepath` + strings.TrimSuffix(ns, "/") + `",
+								"routes": [
+									{
+										"name": "route1",
+										"strip_path": false,
+										"paths": [
+											"/one"
+										]
+									},{
+										"name": "route2",
+										"strip_path": false,
+										"paths": [
+											"~/xyz/two$"
+										]
+									}
+								]
+							}
+						]
+					}`
 
-			Expect(toString(config)).To(MatchJSON(`{
-        "services": [
-          {
-            "name": "service1",
-						"path": "/somepath/",
-            "routes": [
-              {
-                "name": "route1",
-								"strip_path": false,
-                "paths": [
-									"` + ns + `one"
+					config := toYaml(data)
+					selectors, err := yamlbasics.NewSelectorSet(nil)
+					if err != nil {
+						panic(err)
+					}
+					namespace.Apply(config, selectors, ns)
+
+					Expect(toString(config)).To(MatchJSON(`{
+						"services": [
+							{
+								"name": "service1",
+								"path": "/somepath/",
+								"routes": [
+									{
+										"name": "route1",
+										"strip_path": false,
+										"paths": [
+											"` + ns + `one"
+										]
+									},
+									{
+										"name": "route2",
+										"strip_path": false,
+										"paths": [
+											"~` + ns + `xyz/two$"
+										]
+									}
 								]
-              },
-              {
-                "name": "route2",
-								"strip_path": false,
-                "paths": [
-									"~` + ns + `xyz/two$"
+							}
+						]
+					}`))
+				})
+			})
+			Describe("path-prefix without trailing slash", func() {
+				It("service.path with trailing slash", func() {
+					data := `{
+						"services": [
+							{
+								"name": "service1",
+								"path": "/somepath` + ns + `",
+								"routes": [
+									{
+										"name": "route1",
+										"strip_path": false,
+										"paths": [
+											"/one"
+										]
+									},{
+										"name": "route2",
+										"strip_path": false,
+										"paths": [
+											"~/xyz/two$"
+										]
+									}
 								]
-              }
-            ]
-          }
-        ]
-			}`))
+							}
+						]
+					}`
+
+					config := toYaml(data)
+					selectors, err := yamlbasics.NewSelectorSet(nil)
+					if err != nil {
+						panic(err)
+					}
+					namespace.Apply(config, selectors, strings.TrimSuffix(ns, "/"))
+
+					Expect(toString(config)).To(MatchJSON(`{
+						"services": [
+							{
+								"name": "service1",
+								"path": "/somepath/",
+								"routes": [
+									{
+										"name": "route1",
+										"strip_path": false,
+										"paths": [
+											"` + ns + `one"
+										]
+									},
+									{
+										"name": "route2",
+										"strip_path": false,
+										"paths": [
+											"~` + ns + `xyz/two$"
+										]
+									}
+								]
+							}
+						]
+					}`))
+				})
+				It("service.path without trailing slash", func() {
+					data := `{
+						"services": [
+							{
+								"name": "service1",
+								"path": "/somepath` + strings.TrimSuffix(ns, "/") + `",
+								"routes": [
+									{
+										"name": "route1",
+										"strip_path": false,
+										"paths": [
+											"/one"
+										]
+									},{
+										"name": "route2",
+										"strip_path": false,
+										"paths": [
+											"~/xyz/two$"
+										]
+									}
+								]
+							}
+						]
+					}`
+
+					config := toYaml(data)
+					selectors, err := yamlbasics.NewSelectorSet(nil)
+					if err != nil {
+						panic(err)
+					}
+					namespace.Apply(config, selectors, strings.TrimSuffix(ns, "/"))
+
+					Expect(toString(config)).To(MatchJSON(`{
+						"services": [
+							{
+								"name": "service1",
+								"path": "/somepath/",
+								"routes": [
+									{
+										"name": "route1",
+										"strip_path": false,
+										"paths": [
+											"` + ns + `one"
+										]
+									},
+									{
+										"name": "route2",
+										"strip_path": false,
+										"paths": [
+											"~` + ns + `xyz/two$"
+										]
+									}
+								]
+							}
+						]
+					}`))
+				})
+			})
 		})
 
 		It("attaches a plugin to routes, if not all routes match", func() {
