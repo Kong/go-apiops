@@ -20,7 +20,24 @@
             "~/path1$"
           ],
           "plugins": [],
-          "regex_priority": 200,
+          "regex_priority": 100,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_08-route-defaults-overrides.yaml"
+          ]
+        },
+        {
+          "id": "b6ab5ad9-ed23-5957-9d57-d071678162d1",
+          "methods": [
+            "GET"
+          ],
+          "name": "simple-api-overview_uses-doc-defaults-with-path-param",
+          "paths": [
+            "~/path1/(?<param>[^#?/]+)$"
+          ],
+          "plugins": [],
+          "regex_priority": 99,
           "strip_path": false,
           "tags": [
             "OAS3_import",
@@ -54,7 +71,7 @@
             "~/path2$"
           ],
           "plugins": [],
-          "regex_priority": 200,
+          "regex_priority": 300,
           "strip_path": true,
           "tags": [
             "OAS3_import",

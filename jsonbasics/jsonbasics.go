@@ -161,6 +161,8 @@ func GetStringField(object map[string]interface{}, fieldName string) (string, er
 	return "", fmt.Errorf("expected key '%s' to be a string, got %t", fieldName, value)
 }
 
+// GetStringIndex returns a string-value from an array index. Returns an error if the entry
+// is not a string.
 func GetStringIndex(arr []interface{}, index int) (string, error) {
 	value := arr[index]
 	switch result := value.(type) {
@@ -181,6 +183,8 @@ func GetBoolField(object map[string]interface{}, fieldName string) (bool, error)
 	return false, fmt.Errorf("expected key '%s' to be a boolean", fieldName)
 }
 
+// GetBoolIndex returns a boolean-value from an array index. Returns an error if the entry
+// is not a boolean.
 func GetBoolIndex(arr []interface{}, index int) (bool, error) {
 	value := arr[index]
 	switch result := value.(type) {
@@ -188,6 +192,96 @@ func GetBoolIndex(arr []interface{}, index int) (bool, error) {
 		return result, nil
 	}
 	return false, fmt.Errorf("expected index '%d' to be a boolean", index)
+}
+
+// GetUInt64Field returns a uint64 from an object field. Returns an error if the field
+// is not a unsigned integer, or is not found.
+func GetUInt64Field(object map[string]interface{}, fieldName string) (uint64, error) {
+	value, err := GetFloat64Field(object, fieldName)
+	if err == nil {
+		if value == float64(int(value)) {
+			return uint64(value), nil
+		}
+	}
+	return 0, fmt.Errorf("expected key '%s' to be an unsigned integer", fieldName)
+}
+
+// GetUInt64Index returns a uint64-value from an array index. Returns an error if the entry
+// is not an unsigned integer.
+func GetUInt64Index(arr []interface{}, index int) (uint64, error) {
+	value, err := GetFloat64Index(arr, index)
+	if err == nil {
+		if value == float64(int(value)) {
+			return uint64(value), nil
+		}
+	}
+	return 0, fmt.Errorf("expected index '%d' to be an unsigned integer", index)
+}
+
+// GetFloat64Field returns a float64 from an object field. Returns an error if the field
+// is not a float, or is not found.
+func GetFloat64Field(object map[string]interface{}, fieldName string) (float64, error) {
+	value := object[fieldName]
+	switch result := value.(type) {
+	case int:
+		return float64(result), nil
+	case int8:
+		return float64(result), nil
+	case int16:
+		return float64(result), nil
+	case int32:
+		return float64(result), nil
+	case int64:
+		return float64(result), nil
+	case uint:
+		return float64(result), nil
+	case uint8:
+		return float64(result), nil
+	case uint16:
+		return float64(result), nil
+	case uint32:
+		return float64(result), nil
+	case uint64:
+		return float64(result), nil
+	case float32:
+		return float64(result), nil
+	case float64:
+		return result, nil
+	}
+	return 0, fmt.Errorf("expected key '%s' to be a float", fieldName)
+}
+
+// GetFloat64Index returns a float64-value from an array index. Returns an error if the entry
+// is not a float.
+func GetFloat64Index(arr []interface{}, index int) (float64, error) {
+	value := arr[index]
+	switch result := value.(type) {
+	case int:
+		return float64(result), nil
+	case int8:
+		return float64(result), nil
+	case int16:
+		return float64(result), nil
+	case int32:
+		return float64(result), nil
+	case int64:
+		return float64(result), nil
+	case uint:
+		return float64(result), nil
+	case uint8:
+		return float64(result), nil
+	case uint16:
+		return float64(result), nil
+	case uint32:
+		return float64(result), nil
+	case uint64:
+		return float64(result), nil
+	case float32:
+		return float64(result), nil
+	case float64:
+		return result, nil
+	}
+	return 0, fmt.Errorf("expected index '%d' to be a float", index)
 }
 
 // DeepCopyObject implements a poor man's deepcopy by jsonify/de-jsonify

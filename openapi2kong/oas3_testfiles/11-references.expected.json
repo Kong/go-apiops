@@ -33,7 +33,7 @@
             "~/path1$"
           ],
           "plugins": [],
-          "regex_priority": 200,
+          "regex_priority": 999,
           "strip_path": false,
           "tags": [
             "OAS3_import",

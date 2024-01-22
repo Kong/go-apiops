@@ -111,6 +111,8 @@ x-kong-route-defaults:
   preserve_host: true
   # NOTE: these defaults can also be added to "path" and "operation" objects as well
   # to only apply to that subset of the spec.
+  # Fields `regex_priority` and `strip_path` should not be set. If provided they will
+  # be used, but verify the results carefully as setting them can cause unexpected results!
 
 
 paths:
