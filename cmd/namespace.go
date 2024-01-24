@@ -50,6 +50,11 @@ func executeNamespace(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
+	allowEmptySelectors, err := cmd.Flags().GetBool("allow-empty-selectors")
+	if err != nil {
+		return fmt.Errorf("failed getting cli argument 'allow-empty-selectors'; %w", err)
+	}
+
 	var pathPrefix string
 	{
 		pathPrefix, err = cmd.Flags().GetString("path-prefix")
@@ -75,7 +80,7 @@ func executeNamespace(cmd *cobra.Command, _ []string) error {
 	}
 
 	yamlNode := jsonbasics.ConvertToYamlNode(data)
-	err = namespace.Apply(yamlNode, selectors, pathPrefix)
+	err = namespace.Apply(yamlNode, selectors, pathPrefix, allowEmptySelectors)
 	if err != nil {
 		log.Fatalf("failed to apply the namespace: %s", err)
 	}
@@ -145,4 +150,5 @@ func init() {
 	namespaceCmd.Flags().StringArrayP("selector", "", []string{},
 		"json-pointer identifying routes to update (can be specified more than once)")
 	namespaceCmd.Flags().StringP("path-prefix", "p", "", "the path based namespace to apply")
+	namespaceCmd.Flags().BoolP("allow-empty-selectors", "", false, "do not error out if the selectors return empty")
 }

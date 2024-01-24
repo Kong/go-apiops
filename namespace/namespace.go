@@ -1,6 +1,7 @@
 package namespace
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -96,7 +97,7 @@ func UpdateRoute(route *yaml.Node, namespace string) bool {
 
 // Apply updates route entities with the namespace. The selectors should select the routes
 // to update. If the selectors are empty, then all routes will be updated.
-func Apply(deckfile *yaml.Node, selectors yamlbasics.SelectorSet, namespace string) error {
+func Apply(deckfile *yaml.Node, selectors yamlbasics.SelectorSet, namespace string, allowEmptySelection bool) error {
 	if deckfile == nil {
 		panic("expected 'deckfile' to be non-nil")
 	}
@@ -105,7 +106,7 @@ func Apply(deckfile *yaml.Node, selectors yamlbasics.SelectorSet, namespace stri
 		return err
 	}
 
-	allRoutes := yamlbasics.NodeSet(deckformat.GetEntities(deckfile, "routes"))
+	allRoutes := getAllRoutes(deckfile)
 	var targetRoutes yamlbasics.NodeSet
 	if selectors.IsEmpty() {
 		// no selectors, apply to all routes
@@ -117,14 +118,18 @@ func Apply(deckfile *yaml.Node, selectors yamlbasics.SelectorSet, namespace stri
 			return err
 		}
 	}
+
 	var remainder yamlbasics.NodeSet
 	targetRoutes, remainder = allRoutes.Intersection(targetRoutes) // check for non-routes
 	if len(remainder) != 0 {
 		return fmt.Errorf("the selectors returned non-route entities; %d", len(remainder))
 	}
 	if len(targetRoutes) == 0 {
-		logbasics.Info("no routes matched the selectors, nothing to do")
-		return nil // nothing to do
+		if allowEmptySelection {
+			logbasics.Info("no routes matched the selectors, nothing to do")
+			return nil
+		}
+		return errors.New("no routes matched the selectors")
 	}
 
 	routesNoStripping := allRoutes.Subtract(targetRoutes) // everything not matched by the selectors
@@ -158,11 +163,26 @@ func getAllServices(deckfile *yaml.Node) yamlbasics.NodeSet {
 	return cleanedList
 }
 
+// getAllRoutes returns all route nodes. Non-object entries will be skipped.
+// The result will never be nil, but can be an empty array. The deckfile may be nil.
+func getAllRoutes(deckfile *yaml.Node) yamlbasics.NodeSet {
+	list := deckformat.GetEntities(deckfile, "routes")
+	cleanedList := make(yamlbasics.NodeSet, 0)
+	for _, route := range list {
+		if err := yamlbasics.CheckType(route, yamlbasics.TypeObject); err != nil {
+			logbasics.Info("ignoring route: " + err.Error())
+			continue
+		}
+		cleanedList = append(cleanedList, route)
+	}
+	return cleanedList
+}
+
 // findServiceByRoute returns the service node that matches the route.
 // The result will be nil, if no service matches the route.
 func findServiceByRoute(route *yaml.Node, allServices yamlbasics.NodeSet) *yaml.Node {
-	if route.Kind != yaml.MappingNode {
-		panic("expected 'route' to be a mapping node")
+	if err := yamlbasics.CheckType(route, yamlbasics.TypeObject); err != nil {
+		panic("route: " + err.Error())
 	}
 
 	// walk the services, to find the route as nested entity
