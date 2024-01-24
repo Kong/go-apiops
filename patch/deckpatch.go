@@ -5,6 +5,7 @@ import (
 
 	"github.com/kong/go-apiops/jsonbasics"
 	"github.com/kong/go-apiops/logbasics"
+	"github.com/kong/go-apiops/yamlbasics"
 	"github.com/vmware-labs/yaml-jsonpath/pkg/yamlpath"
 	"gopkg.in/yaml.v3"
 )
@@ -181,20 +182,24 @@ func (patch *DeckPatch) ApplyToNodes(yamlData *yaml.Node) (err error) {
 		if len(patch.ArrValues) > 0 {
 			// since we're updating array fields, we'll skip anything that is
 			// not a JSONarray
-			if node.Kind == yaml.SequenceNode {
-				err = patch.ApplyToArrayNode(node)
-				if err != nil {
-					return err
-				}
+			if err := yamlbasics.CheckType(node, yamlbasics.TypeArray); err != nil {
+				logbasics.Info("Skipping non-array node: " + err.Error())
+				continue
+			}
+			err = patch.ApplyToArrayNode(node)
+			if err != nil {
+				return err
 			}
 		} else {
 			// since we're updating object fields, we'll skip anything that is
 			// not a JSONobject
-			if node.Kind == yaml.MappingNode {
-				err = patch.ApplyToObjectNode(node)
-				if err != nil {
-					return err
-				}
+			if err := yamlbasics.CheckType(node, yamlbasics.TypeObject); err != nil {
+				logbasics.Info("Skipping non-object node: " + err.Error())
+				continue
+			}
+			err = patch.ApplyToObjectNode(node)
+			if err != nil {
+				return err
 			}
 		}
 	}

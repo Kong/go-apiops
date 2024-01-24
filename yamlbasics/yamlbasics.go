@@ -13,6 +13,99 @@ import (
 
 //
 //
+//  Node types and checks
+//
+//
+
+// yamlType which can also represent the different scalar types. This is different from yaml.Kind!
+type NodeKind uint32
+
+// yaml data types including the scalar types
+const (
+	TypeDocument NodeKind = NodeKind(yaml.DocumentNode)
+	TypeArray    NodeKind = NodeKind(yaml.SequenceNode)
+	TypeObject   NodeKind = NodeKind(yaml.MappingNode)
+	TypeAlias    NodeKind = NodeKind(yaml.AliasNode)
+	TypeScalar   NodeKind = NodeKind(yaml.ScalarNode)
+	TypeNull     NodeKind = iota + 100
+	TypeNumber
+	TypeBool
+	TypeString
+)
+
+// String returns the string representation of the node type.
+func (t NodeKind) String() string {
+	switch t {
+	case TypeDocument:
+		return "document"
+	case TypeArray:
+		return "array"
+	case TypeObject:
+		return "object"
+	case TypeAlias:
+		return "alias"
+	case TypeScalar:
+		return "scalar"
+	case TypeNull:
+		return "null"
+	case TypeNumber:
+		return "number"
+	case TypeBool:
+		return "bool"
+	case TypeString:
+		return "string"
+	}
+	return fmt.Sprintf("unknown type %d", t)
+}
+
+// CheckTypes returns an error if the given node was not one of the expected types.
+func CheckTypes(node *yaml.Node, expected []NodeKind) error {
+	nodeType := NodeKind(node.Kind)
+	var scalarType NodeKind
+	if nodeType == TypeScalar {
+		switch node.Tag {
+		case "!!null":
+			scalarType = TypeNull
+		case "!!bool":
+			scalarType = TypeBool
+		case "!!int", "!!float":
+			scalarType = TypeNumber
+		case "!!str":
+			scalarType = TypeString
+		}
+	}
+	for _, expectedType := range expected {
+		if nodeType == expectedType || (nodeType == TypeScalar && scalarType == expectedType) {
+			return nil
+		}
+	}
+
+	var got string
+	if nodeType == TypeScalar {
+		got = fmt.Sprintf("%s (%s)", nodeType.String(), scalarType.String())
+	} else {
+		got = nodeType.String()
+	}
+
+	if len(expected) == 1 {
+		return fmt.Errorf("expected node to be of type %s, but was %s", expected[0].String(), got)
+	} else if len(expected) == 2 {
+		return fmt.Errorf("expected node to be of type %s or %s, but was %s", expected[0].String(), expected[1].String(), got)
+	}
+	expStr := " or " + expected[len(expected)-1].String()
+	for i := len(expStr) - 2; i >= 0; i-- {
+		expStr = expStr + ", " + expected[i].String()
+	}
+	return fmt.Errorf("expected node to be of type %s, but was %s", expStr, got)
+}
+
+// CheckType returns an error if the given node was not of the expected type.
+func CheckType(node *yaml.Node, expected NodeKind) error {
+	return CheckTypes(node, []NodeKind{expected})
+}
+
+//
+//
 //  parsing
 //
 //
@@ -192,7 +285,7 @@ func SetFieldValue(targetObject *yaml.Node, key string, value *yaml.Node) {
 
 //
 //
-//  Handling objects and fields
+//  Handling Arrays
 //
 //
 

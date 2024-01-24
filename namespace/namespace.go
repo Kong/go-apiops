@@ -51,7 +51,8 @@ func UpdateSinglePathString(path string, namespace string) string {
 // UpdateRoute returns true if the route needs stripping the namespace.
 // namespace must start with a "/" and end with a "/" (a single "/" is NOT valid).
 func UpdateRoute(route *yaml.Node, namespace string) bool {
-	if route.Kind != yaml.MappingNode {
+	if err := yamlbasics.CheckType(route, yamlbasics.TypeObject); err != nil {
+		logbasics.Info("ignoring route: " + err.Error())
 		return false
 	}
 
@@ -63,7 +64,8 @@ func UpdateRoute(route *yaml.Node, namespace string) bool {
 	}
 
 	pathsArrayNode := route.Content[pathsKeyIdx+1]
-	if pathsArrayNode.Kind != yaml.SequenceNode {
+	if err := yamlbasics.CheckType(pathsArrayNode, yamlbasics.TypeArray); err != nil {
+		logbasics.Info("ignoring route, bad paths property: " + err.Error())
 		return false
 	}
 
@@ -141,25 +143,30 @@ func Apply(deckfile *yaml.Node, selectors yamlbasics.SelectorSet, namespace stri
 	return nil
 }
 
-// getAllServices returns all service nodes.
+// getAllServices returns all service nodes. Non-object entries will be skipped.
 // The result will never be nil, but can be an empty array. The deckfile may be nil.
 func getAllServices(deckfile *yaml.Node) yamlbasics.NodeSet {
-	return deckformat.GetEntities(deckfile, "services")
+	list := deckformat.GetEntities(deckfile, "services")
+	cleanedList := make(yamlbasics.NodeSet, 0)
+	for _, service := range list {
+		if err := yamlbasics.CheckType(service, yamlbasics.TypeObject); err != nil {
+			logbasics.Info("ignoring service: " + err.Error())
+			continue
+		}
+		cleanedList = append(cleanedList, service)
+	}
+	return cleanedList
 }
 
 // findServiceByRoute returns the service node that matches the route.
 // The result will be nil, if no service matches the route.
-func findServiceByRoute(route *yaml.Node, deckfile *yaml.Node) *yaml.Node {
+func findServiceByRoute(route *yaml.Node, allServices yamlbasics.NodeSet) *yaml.Node {
 	if route.Kind != yaml.MappingNode {
-		return nil
+		panic("expected 'route' to be a mapping node")
 	}
-	allServices := getAllServices(deckfile)
 
 	// walk the services, to find the route as nested entity
 	for _, service := range allServices {
-		if service.Kind != yaml.MappingNode {
-			continue
-		}
 		routeIdx := yamlbasics.FindFieldKeyIndex(service, "routes")
 		if routeIdx == -1 {
 			continue
@@ -184,9 +191,6 @@ func findServiceByRoute(route *yaml.Node, deckfile *yaml.Node) *yaml.Node {
 
 	// find by ID
 	for _, service := range allServices {
-		if service.Kind != yaml.MappingNode {
-			continue
-		}
 		idIdx := yamlbasics.FindFieldKeyIndex(service, "id")
 		if idIdx != -1 && service.Content[idIdx+1].Value == serviceRef {
 			return service // Found it by ID!
@@ -195,9 +199,6 @@ func findServiceByRoute(route *yaml.Node, deckfile *yaml.Node) *yaml.Node {
 
 	// find by name
 	for _, service := range allServices {
-		if service.Kind != yaml.MappingNode {
-			continue
-		}
 		nameIdx := yamlbasics.FindFieldKeyIndex(service, "name")
 		if nameIdx != -1 && service.Content[nameIdx+1].Value == serviceRef {
 			return service // Found it by name!
@@ -217,9 +218,10 @@ func InjectNamespaceStripping(deckfile *yaml.Node, namespace string,
 ) {
 	serviceToUpdate := make(map[*yaml.Node]yamlbasics.NodeSet) // service -> routes
 	routesToUpdate := make(yamlbasics.NodeSet, 0)
+	allServices := getAllServices(deckfile)
 
 	for _, route := range routesNeedStripping {
-		if service := findServiceByRoute(route, deckfile); service != nil {
+		if service := findServiceByRoute(route, allServices); service != nil {
 			serviceToUpdate[service] = append(serviceToUpdate[service], route)
 		} else {
 			// not attached to a service, so must get its own plugin
@@ -228,7 +230,7 @@ func InjectNamespaceStripping(deckfile *yaml.Node, namespace string,
 	}
 
 	for _, route := range routesNoStripping {
-		if service := findServiceByRoute(route, deckfile); service != nil {
+		if service := findServiceByRoute(route, allServices); service != nil {
 			if _, ok := serviceToUpdate[service]; ok {
 				// this service also has routes to strip, so all the routes must individually get the plugin.
 				// move the routes, and remove the service from the "updatable" services map
