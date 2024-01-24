@@ -129,7 +129,7 @@ func Apply(deckfile *yaml.Node, selectors yamlbasics.SelectorSet, namespace stri
 			logbasics.Info("no routes matched the selectors, nothing to do")
 			return nil
 		}
-		return errors.New("no routes matched the selectors")
+		return errors.New("no routes matched the selectors. Check command help to suppress this error")
 	}
 
 	routesNoStripping := allRoutes.Subtract(targetRoutes) // everything not matched by the selectors
