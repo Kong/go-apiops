@@ -247,6 +247,19 @@ var _ = Describe("Namespace", func() {
 		pluginObj, _ := yamlbasics.ToObject(namespace.GetPreFunctionPlugin(ns))
 		pluginConf := string(filebasics.MustSerialize(pluginObj, filebasics.OutputFormatJSON))
 
+		It("errors of no matches", func() {
+			data := `{}`
+			config := toYaml(data)
+			selectors, err := yamlbasics.NewSelectorSet(nil)
+			if err != nil {
+				panic(err)
+			}
+			err = namespace.Apply(config, selectors, ns, false)
+
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("no routes matched the selectors"))
+		})
+
 		//
 		// first we check proper conversions, and injection of the plugin
 		//
@@ -277,7 +290,7 @@ var _ = Describe("Namespace", func() {
 			if err != nil {
 				panic(err)
 			}
-			namespace.Apply(config, selectors, ns)
+			namespace.Apply(config, selectors, ns, true)
 
 			Expect(toString(config)).To(MatchJSON(`{
 				"routes": [
@@ -320,7 +333,7 @@ var _ = Describe("Namespace", func() {
 			if err != nil {
 				panic(err)
 			}
-			namespace.Apply(config, selectors, ns)
+			namespace.Apply(config, selectors, ns, true)
 
 			Expect(toString(config)).To(MatchJSON(`{
         "routes": [
@@ -356,7 +369,7 @@ var _ = Describe("Namespace", func() {
 			if err != nil {
 				panic(err)
 			}
-			namespace.Apply(config, selectors, ns)
+			namespace.Apply(config, selectors, ns, true)
 
 			Expect(toString(config)).To(MatchJSON(`{
         "routes": [
@@ -408,7 +421,7 @@ var _ = Describe("Namespace", func() {
 			if err != nil {
 				panic(err)
 			}
-			namespace.Apply(config, selectors, ns)
+			namespace.Apply(config, selectors, ns, true)
 
 			Expect(toString(config)).To(MatchJSON(`{
         "services": [
@@ -468,7 +481,7 @@ var _ = Describe("Namespace", func() {
 					if err != nil {
 						panic(err)
 					}
-					namespace.Apply(config, selectors, ns)
+					namespace.Apply(config, selectors, ns, true)
 
 					Expect(toString(config)).To(MatchJSON(`{
 						"services": [
@@ -525,7 +538,7 @@ var _ = Describe("Namespace", func() {
 					if err != nil {
 						panic(err)
 					}
-					namespace.Apply(config, selectors, ns)
+					namespace.Apply(config, selectors, ns, true)
 
 					Expect(toString(config)).To(MatchJSON(`{
 						"services": [
@@ -584,7 +597,7 @@ var _ = Describe("Namespace", func() {
 					if err != nil {
 						panic(err)
 					}
-					namespace.Apply(config, selectors, strings.TrimSuffix(ns, "/"))
+					namespace.Apply(config, selectors, strings.TrimSuffix(ns, "/"), true)
 
 					Expect(toString(config)).To(MatchJSON(`{
 						"services": [
@@ -641,7 +654,7 @@ var _ = Describe("Namespace", func() {
 					if err != nil {
 						panic(err)
 					}
-					namespace.Apply(config, selectors, strings.TrimSuffix(ns, "/"))
+					namespace.Apply(config, selectors, strings.TrimSuffix(ns, "/"), true)
 
 					Expect(toString(config)).To(MatchJSON(`{
 						"services": [
@@ -701,7 +714,7 @@ var _ = Describe("Namespace", func() {
 			if err != nil {
 				panic(err)
 			}
-			namespace.Apply(config, selectors, ns)
+			namespace.Apply(config, selectors, ns, true)
 
 			Expect(toString(config)).To(MatchJSON(`{
         "services": [
