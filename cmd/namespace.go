@@ -67,11 +67,26 @@ func executeNamespace(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
+	clearHosts, err := cmd.Flags().GetBool("clear-hosts")
+	if err != nil {
+		return fmt.Errorf("failed getting cli argument 'clear-hosts'; %w", err)
+	}
+
+	var hosts []string
+	{
+		hosts, err = cmd.Flags().GetStringArray("host")
+		if err != nil {
+			return fmt.Errorf("failed to retrieve '--host' entry; %w", err)
+		}
+	}
+
 	trackInfo := deckformat.HistoryNewEntry("namespace")
 	trackInfo["input"] = inputFilename
 	trackInfo["output"] = outputFilename
 	trackInfo["selectors"] = selectors.GetSources()
 	trackInfo["path-prefix"] = pathPrefix
+	trackInfo["clear-host"] = clearHosts
+	trackInfo["hosts"] = hosts
 
 	// do the work; read/prefix/write
 	data, err := filebasics.DeserializeFile(inputFilename)
@@ -82,7 +97,11 @@ func executeNamespace(cmd *cobra.Command, _ []string) error {
 	yamlNode := jsonbasics.ConvertToYamlNode(data)
 	err = namespace.Apply(yamlNode, selectors, pathPrefix, allowEmptySelectors)
 	if err != nil {
-		log.Fatalf("failed to apply the namespace: %s", err)
+		log.Fatalf("failed to apply the path-based namespace: %s", err)
+	}
+	err = namespace.ApplyNamespaceHost(yamlNode, selectors, hosts, clearHosts, allowEmptySelectors)
+	if err != nil {
+		log.Fatalf("failed to apply the host-based namespace: %s", err)
 	}
 	data = jsonbasics.ConvertToJSONobject(yamlNode)
 
@@ -151,4 +170,7 @@ func init() {
 		"json-pointer identifying routes to update (can be specified more than once)")
 	namespaceCmd.Flags().StringP("path-prefix", "p", "", "the path based namespace to apply")
 	namespaceCmd.Flags().BoolP("allow-empty-selectors", "", false, "do not error out if the selectors return empty")
+	namespaceCmd.Flags().StringArrayP("host", "h", []string{},
+		"hostname to add to the route.hosts property (can be specified more than once)")
+	namespaceCmd.Flags().BoolP("clear-hosts", "", false, "clears the route.hosts array (before adding the hosts)")
 }
