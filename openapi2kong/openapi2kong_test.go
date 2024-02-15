@@ -87,3 +87,34 @@ func Test_Openapi2kong_InsoCompat(t *testing.T) {
 		}
 	}
 }
+
+func Test_Openapi2kong_pathParamLength(t *testing.T) {
+	testDataString := `
+openapi: 3.0.3
+info:
+  title: Path parameter test
+  version: v1
+servers:
+  - url: "https://example.com"
+
+paths:
+  /demo/{something-very-long-that-is-way-beyond-the-32-limit}/:
+    get:
+      operationId: opsid
+      parameters:
+        - in: path
+          name: something-very-long-that-is-way-beyond-the-32-limit
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+`
+	_, err := Convert([]byte(testDataString), O2kOptions{})
+	if err == nil {
+		t.Error("Expected error, but got none")
+	} else {
+		assert.Contains(t, err.Error(), "path-parameter name exceeds 32 characters")
+	}
+}
