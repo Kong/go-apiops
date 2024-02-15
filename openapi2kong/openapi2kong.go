@@ -1074,7 +1074,12 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 					varName := match[1]
 					// match single segment; '/', '?', and '#' can mark the end of a segment
 					// see https://github.com/OAI/OpenAPI-Specification/issues/291#issuecomment-316593913
-					regexMatch := "(?<" + sanitizeRegexCapture(varName, opts.InsoCompat) + ">[^#?/]+)"
+					captureName := sanitizeRegexCapture(varName, opts.InsoCompat)
+					if len(captureName) >= 32 {
+						return nil, fmt.Errorf("path-parameter name exceeds 32 characters: '%s' (sanitized to '%s')",
+							varName, captureName)
+					}
+					regexMatch := "(?<" + captureName + ">[^#?/]+)"
 					placeHolder := "{" + varName + "}"
 					logbasics.Debug("replacing path parameter", "parameter", placeHolder, "regex", regexMatch)
 					convertedPath = strings.Replace(convertedPath, placeHolder, regexMatch, 1)
