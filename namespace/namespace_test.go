@@ -29,7 +29,7 @@ func toString(data *yaml.Node) string {
 	return string(out)
 }
 
-var _ = Describe("Namespace", func() {
+var _ = Describe("Path-Namespace", func() {
 	Describe("CheckNamespace", func() {
 		It("validates a plain namespace", func() {
 			err := namespace.CheckNamespace("/prefix/")
