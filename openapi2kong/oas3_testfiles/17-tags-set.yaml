@@ -1,0 +1,19 @@
+openapi: '3.0.1'
+info:
+  title: Simple API overview
+  version: v2
+servers:
+  - url: /
+
+x-kong-tags:
+  - example-global-tag
+
+paths:
+  /:
+    get:
+      operationId: OpsId
+      summary: List API versions
+      responses:
+        '200':
+          description: |-
+            200 response

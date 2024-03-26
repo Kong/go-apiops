@@ -1,0 +1,87 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "localhost",
+      "id": "0907c4ab-d9e4-5d21-813b-c57a97eeaad9",
+      "name": "simple-api-overview",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "038abf43-69d2-5b8b-962f-43804448847e",
+          "methods": [
+            "GET"
+          ],
+          "name": "simple-api-overview_path1-has-route-tags",
+          "paths": [
+            "~/path1$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "example-global-tag",
+            "example-route-tag"
+          ]
+        },
+        {
+          "id": "30086569-722d-570b-9f76-a06db016c8d3",
+          "methods": [
+            "POST"
+          ],
+          "name": "simple-api-overview_path1-has-other-route-tags",
+          "paths": [
+            "~/path1$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "example-global-tag",
+            "example-route-tag-other"
+          ]
+        },
+        {
+          "id": "c6326752-bb0c-56d1-a19a-bbfd081bfe2c",
+          "methods": [
+            "GET"
+          ],
+          "name": "simple-api-overview_path2-no-route-tags",
+          "paths": [
+            "~/path2$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "example-global-tag"
+          ]
+        },
+        {
+          "id": "2af580bd-b0c1-59bb-a691-bd65ca18c2ec",
+          "methods": [
+            "POST"
+          ],
+          "name": "simple-api-overview_path2-has-route-tags",
+          "paths": [
+            "~/path2$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "example-global-tag",
+            "example-route-tag"
+          ]
+        }
+      ],
+      "tags": [
+        "example-global-tag"
+      ]
+    }
+  ],
+  "upstreams": []
+}

@@ -1,0 +1,36 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "localhost",
+      "id": "0907c4ab-d9e4-5d21-813b-c57a97eeaad9",
+      "name": "simple-api-overview",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "eee036de-517e-59cf-a2e0-17b3adfa31b5",
+          "methods": [
+            "GET"
+          ],
+          "name": "simple-api-overview_opsid",
+          "paths": [
+            "~/$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "example-global-tag"
+          ]
+        }
+      ],
+      "tags": [
+        "example-global-tag"
+      ]
+    }
+  ],
+  "upstreams": []
+}
