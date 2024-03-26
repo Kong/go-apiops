@@ -1096,7 +1096,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 				route["regex_priority"] = regexPriority
 			} else {
 				// a regex_priority was provided in the defaults
-				currentRegexPrio, err := jsonbasics.GetUInt64Field(route, "regex_priority")
+				currentRegexPrio, err := jsonbasics.GetInt64Field(route, "regex_priority")
 				if err != nil {
 					return nil, fmt.Errorf("failed to parse 'regex_priority' from route defaults: %w", err)
 				}

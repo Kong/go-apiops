@@ -200,4 +200,118 @@ var _ = Describe("jsonbasics", func() {
 		PIt("still to do", func() {
 		})
 	})
+
+	Describe("GetFloat64Index", func() {
+		It("returns the float or error", func() {
+			data := []interface{}{
+				1.5,
+				-1.5,
+				"text",
+			}
+			val, err := GetFloat64Index(data, 0)
+			Expect(err).To(BeNil())
+			Expect(val).To(BeEquivalentTo(1.5))
+			val, err = GetFloat64Index(data, 1)
+			Expect(err).To(BeNil())
+			Expect(val).To(BeEquivalentTo(-1.5))
+			val, err = GetFloat64Index(data, 2)
+			Expect(err).To(MatchError("expected index '2' to be a float"))
+			Expect(val).To(BeEquivalentTo(0))
+		})
+	})
+
+	Describe("GetFloat64Field", func() {
+		It("returns the float or error", func() {
+			data := map[string]interface{}{
+				"one":   1.5,
+				"two":   -1.5,
+				"three": "text",
+			}
+			val, err := GetFloat64Field(data, "one")
+			Expect(err).To(BeNil())
+			Expect(val).To(BeEquivalentTo(1.5))
+			val, err = GetFloat64Field(data, "two")
+			Expect(err).To(BeNil())
+			Expect(val).To(BeEquivalentTo(-1.5))
+			val, err = GetFloat64Field(data, "three")
+			Expect(err).To(MatchError("expected key 'three' to be a float"))
+			Expect(val).To(BeEquivalentTo(0))
+		})
+	})
+
+	Describe("GetInt64Index", func() {
+		It("returns the integer or error", func() {
+			data := []interface{}{
+				1,
+				-1,
+				1.5,
+			}
+			val, err := GetInt64Index(data, 0)
+			Expect(err).To(BeNil())
+			Expect(val).To(BeEquivalentTo(int64(1)))
+			val, err = GetInt64Index(data, 1)
+			Expect(err).To(BeNil())
+			Expect(val).To(BeEquivalentTo(int64(-1)))
+			val, err = GetInt64Index(data, 2)
+			Expect(err).To(MatchError("expected index '2' to be an integer"))
+			Expect(val).To(BeEquivalentTo(0))
+		})
+	})
+
+	Describe("GetInt64Field", func() {
+		It("returns the integer or error", func() {
+			data := map[string]interface{}{
+				"one":   1,
+				"two":   -1,
+				"three": 1.5,
+			}
+			val, err := GetInt64Field(data, "one")
+			Expect(err).To(BeNil())
+			Expect(val).To(BeEquivalentTo(int64(1)))
+			val, err = GetInt64Field(data, "two")
+			Expect(err).To(BeNil())
+			Expect(val).To(BeEquivalentTo(int64(-1)))
+			val, err = GetInt64Field(data, "three")
+			Expect(err).To(MatchError("expected key 'three' to be an integer"))
+			Expect(val).To(BeEquivalentTo(0))
+		})
+	})
+
+	Describe("GetUInt64Index", func() {
+		It("Returns the unsigned integer or error", func() {
+			data := []interface{}{
+				uint64(1),
+				uint64(2),
+				1.5,
+			}
+			val, err := GetUInt64Index(data, 0)
+			Expect(err).To(BeNil())
+			Expect(val).To(BeEquivalentTo(uint64(1)))
+			val, err = GetUInt64Index(data, 1)
+			Expect(err).To(BeNil())
+			Expect(val).To(BeEquivalentTo(uint64(2)))
+			val, err = GetUInt64Index(data, 2)
+			Expect(err).To(MatchError("expected index '2' to be an unsigned integer"))
+			Expect(val).To(BeEquivalentTo(0))
+		})
+	})
+
+	Describe("GetUInt64Field", func() {
+		It("returns the unsigned integer or error", func() {
+			data := map[string]interface{}{
+				"one":   uint64(1),
+				"two":   uint64(2),
+				"three": 1.5,
+			}
+			val, err := GetUInt64Field(data, "one")
+			Expect(err).To(BeNil())
+			Expect(val).To(BeEquivalentTo(uint64(1)))
+			val, err = GetUInt64Field(data, "two")
+			Expect(err).To(BeNil())
+			Expect(val).To(BeEquivalentTo(uint64(2)))
+			val, err = GetUInt64Field(data, "three")
+			Expect(err).To(MatchError("expected key 'three' to be an unsigned integer"))
+			Expect(val).To(BeEquivalentTo(0))
+		})
+	})
 })
