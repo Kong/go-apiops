@@ -199,8 +199,9 @@ func GetBoolIndex(arr []interface{}, index int) (bool, error) {
 func GetUInt64Field(object map[string]interface{}, fieldName string) (uint64, error) {
 	value, err := GetFloat64Field(object, fieldName)
 	if err == nil {
-		if value == float64(int(value)) {
-			return uint64(value), nil
+		uivalue := uint64(value)
+		if value == float64(uivalue) {
+			return uivalue, nil
 		}
 	}
 	return 0, fmt.Errorf("expected key '%s' to be an unsigned integer", fieldName)
@@ -211,11 +212,38 @@ func GetUInt64Field(object map[string]interface{}, fieldName string) (uint64, er
 func GetUInt64Index(arr []interface{}, index int) (uint64, error) {
 	value, err := GetFloat64Index(arr, index)
 	if err == nil {
-		if value == float64(int(value)) {
-			return uint64(value), nil
+		uivalue := uint64(value)
+		if value == float64(uivalue) {
+			return uivalue, nil
 		}
 	}
 	return 0, fmt.Errorf("expected index '%d' to be an unsigned integer", index)
+}
+
+// GetInt64Field returns an int64 from an object field. Returns an error if the field
+// is not an integer, or is not found.
+func GetInt64Field(object map[string]interface{}, fieldName string) (int64, error) {
+	value, err := GetFloat64Field(object, fieldName)
+	if err == nil {
+		ivalue := int64(value)
+		if value == float64(ivalue) {
+			return ivalue, nil
+		}
+	}
+	return 0, fmt.Errorf("expected key '%s' to be an integer", fieldName)
+}
+
+// GetInt64Index returns an int64-value from an array index. Returns an error if the entry
+// is not an integer.
+func GetInt64Index(arr []interface{}, index int) (int64, error) {
+	value, err := GetFloat64Index(arr, index)
+	if err == nil {
+		ivalue := int64(value)
+		if value == float64(ivalue) {
+			return ivalue, nil
+		}
+	}
+	return 0, fmt.Errorf("expected index '%d' to be an integer", index)
 }
 
 // GetFloat64Field returns a float64 from an object field. Returns an error if the field
