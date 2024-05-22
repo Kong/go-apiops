@@ -66,6 +66,38 @@ paths:
       responses:
         "200":
           description: OK
+  /body-single-content-xml:
+    post:
+      requestBody:
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/xmlSchema'
+      responses:
+        "200":
+          description: OK
+
+  /body-single-content-type-with-charset:
+    post:
+      requestBody:
+        content:
+          application/json; charset=UTF-8:
+            schema:
+              $ref: '#/components/schemas/jsonSchema'
+      responses:
+        "200":
+          description: OK
+
+  /body-single-content-type-with-structured-syntax-suffix:
+    post:
+      requestBody:
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/jsonSchema'
+      responses:
+        "200":
+          description: OK
 
 components:
   schemas:

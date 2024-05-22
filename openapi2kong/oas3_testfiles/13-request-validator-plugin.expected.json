@@ -45,6 +45,89 @@
           ]
         },
         {
+          "id": "ab63ee84-0324-5832-840a-d51118308654",
+          "methods": [
+            "POST"
+          ],
+          "name": "example_body-single-content-type-with-charset_post",
+          "paths": [
+            "~/body-single-content-type-with-charset$"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "allowed_content_types": [
+                  "application/json; charset=UTF-8"
+                ],
+                "body_schema": "{\"$ref\":\"#/definitions/jsonSchema\",\"definitions\":{\"jsonSchema\":{\"properties\":{\"id\":{\"type\":\"integer\"},\"name\":{\"type\":\"string\"}},\"type\":\"object\"}}}",
+                "version": "draft4"
+              },
+              "id": "c7ee68c7-96e8-56ca-98f6-cbe44cf3c9ce",
+              "name": "request-validator",
+              "tags": [
+                "OAS3_import",
+                "OAS3file_13-request-validator-plugin.yaml"
+              ]
+            }
+          ],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_13-request-validator-plugin.yaml"
+          ]
+        },
+        {
+          "id": "38af9752-0698-5a31-b825-90a83fee4225",
+          "methods": [
+            "POST"
+          ],
+          "name": "example_body-single-content-type-with-structured-syntax-suffix_post",
+          "paths": [
+            "~/body-single-content-type-with-structured-syntax-suffix$"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "allowed_content_types": [
+                  "application/merge-patch+json"
+                ],
+                "body_schema": "{\"$ref\":\"#/definitions/jsonSchema\",\"definitions\":{\"jsonSchema\":{\"properties\":{\"id\":{\"type\":\"integer\"},\"name\":{\"type\":\"string\"}},\"type\":\"object\"}}}",
+                "version": "draft4"
+              },
+              "id": "fc80da5e-c48a-59c6-b879-ab8ff331746d",
+              "name": "request-validator",
+              "tags": [
+                "OAS3_import",
+                "OAS3file_13-request-validator-plugin.yaml"
+              ]
+            }
+          ],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_13-request-validator-plugin.yaml"
+          ]
+        },
+        {
+          "id": "fea43c61-09c5-5baf-879f-8542b485f631",
+          "methods": [
+            "POST"
+          ],
+          "name": "example_body-single-content-xml_post",
+          "paths": [
+            "~/body-single-content-xml$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_13-request-validator-plugin.yaml"
+          ]
+        },
+        {
           "id": "6d59c2fe-e723-5238-a847-d87d8e8bb7fc",
           "methods": [
             "GET"
