@@ -110,7 +110,8 @@ func generateBodySchema(operation *openapi3.Operation) string {
 	for contentType, content := range content {
 		typ, subtype, err := parseMediaType(contentType)
 		if err != nil {
-			panic(err)
+			logbasics.Info("invalid MediaType '" + contentType + "' will be ignored")
+			return ""
 		}
 		if typ == "application" && (subtype == "json" || strings.HasSuffix(subtype, "+json")) {
 			return extractSchema((*content).Schema)
