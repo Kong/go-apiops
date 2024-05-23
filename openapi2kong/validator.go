@@ -2,6 +2,7 @@ package openapi2kong
 
 import (
 	"encoding/json"
+	"mime"
 	"sort"
 	"strings"
 
@@ -79,6 +80,15 @@ func generateParameterSchema(operation *openapi3.Operation, insoCompat bool) []m
 	return result
 }
 
+func parseMediaType(mediaType string) (string, string, error) {
+	parsedMediaType, _, err := mime.ParseMediaType(mediaType)
+	if err != nil {
+		return "", "", err
+	}
+	parts := strings.Split(parsedMediaType, "/")
+	return parts[0], parts[1], nil
+}
+
 // generateBodySchema returns the given schema if there is one, a generated
 // schema if it was specified, or "" if there is none.
 func generateBodySchema(operation *openapi3.Operation) string {
@@ -98,7 +108,12 @@ func generateBodySchema(operation *openapi3.Operation) string {
 	}
 
 	for contentType, content := range content {
-		if strings.Contains(strings.ToLower(contentType), "application/json") {
+		typ, subtype, err := parseMediaType(contentType)
+		if err != nil {
+			logbasics.Info("invalid MediaType '" + contentType + "' will be ignored")
+			return ""
+		}
+		if typ == "application" && (subtype == "json" || strings.HasSuffix(subtype, "+json")) {
 			return extractSchema((*content).Schema)
 		}
 	}
