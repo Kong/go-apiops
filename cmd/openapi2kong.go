@@ -69,11 +69,20 @@ func executeOpenapi2Kong(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
+	var insoCompatibility bool
+	{
+		insoCompatibility, err = cmd.Flags().GetBool("inso-compatible")
+		if err != nil {
+			return fmt.Errorf("failed getting cli argument 'inso-compatible'; %w", err)
+		}
+	}
+
 	options := openapi2kong.O2kOptions{
 		Tags:                 entityTags,
 		DocName:              docName,
 		OIDC:                 generateSecurity,
 		IgnoreSecurityErrors: ignoreSecurityErrors,
+		InsoCompat:           insoCompatibility,
 	}
 
 	trackInfo := deckformat.HistoryNewEntry("openapi2kong")
@@ -127,4 +136,5 @@ directive from the file)`)
 	openapi2kongCmd.Flags().BoolP("generate-security", "", false, "generate OpenIDConnect plugins from the "+
 		"security directives")
 	openapi2kongCmd.Flags().BoolP("ignore-security-errors", "", false, "ignore errors for unsupported security schemes")
+	openapi2kongCmd.Flags().BoolP("inso-compatible", "", false, "generate the config in an Inso compatible way")
 }

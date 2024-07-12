@@ -530,10 +530,14 @@ func insertPlugin(list *[]*map[string]interface{}, newPlugin *map[string]interfa
 // getForeignKeyPlugins checks the pluginList for plugins that also have a foreign key
 // for a consumer, and moves them to the docPlugins array. Returns update docPlugins and pluginList.
 func getForeignKeyPlugins(
-	docPlugins *[]*map[string]interface{},
-	pluginList *[]*map[string]interface{},
-	foreignKey string, foreignValue string,
-) (*[]*map[string]interface{}, *[]*map[string]interface{}) {
+	docPlugins *[]*map[string]interface{}, // the current list of doc-level plugins (may be nil)
+	pluginList *[]*map[string]interface{}, // the list of entity-level plugins to check for foreign keys (may be nil)
+	foreignKey string, // the owner entity type: eg. "service", or "route"
+	foreignValue string, // the owner entity name/id: the value (service/route name)
+) (
+	*[]*map[string]interface{}, // updated slice of document level plugins
+	*[]*map[string]interface{}, // updated slice of entity level plugins
+) {
 	var genericPlugins []*map[string]interface{}
 	if docPlugins == nil {
 		genericPlugins = make([]*map[string]interface{}, 0)
@@ -1119,13 +1123,38 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 	result["services"] = services
 	result["upstreams"] = upstreams
 	if len(*foreignKeyPlugins) > 0 {
+
+		// getSortKey returns a string that can be used to sort the plugins by name, service, route, and consumer (all
+		// the foreign keys that are possible).
+		getSortKey := func(p *map[string]interface{}) string {
+			plugin := *p
+			sep := string([]byte{0})
+			key := plugin["name"].(string) + sep
+
+			if plugin["service"] != nil {
+				key = key + plugin["service"].(string) + sep
+			} else {
+				key = key + sep
+			}
+
+			if plugin["route"] != nil {
+				key = key + plugin["route"].(string) + sep
+			} else {
+				key = key + sep
+			}
+
+			if plugin["consumer"] != nil {
+				key = key + plugin["consumer"].(string) + sep
+			} else {
+				key = key + sep
+			}
+
+			return key
+		}
+
 		sort.Slice(*foreignKeyPlugins,
 			func(i, j int) bool {
-				p1 := *(*foreignKeyPlugins)[i]
-				p2 := *(*foreignKeyPlugins)[j]
-				k1 := p1["name"].(string) + p1["id"].(string)
-				k2 := p2["name"].(string) + p2["id"].(string)
-				return k1 < k2
+				return getSortKey((*foreignKeyPlugins)[i]) < getSortKey((*foreignKeyPlugins)[j])
 			})
 		result["plugins"] = foreignKeyPlugins
 	}
