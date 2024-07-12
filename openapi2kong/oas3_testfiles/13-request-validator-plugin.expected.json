@@ -175,7 +175,7 @@
                 "body_schema": "{}",
                 "parameter_schema": [
                   {
-                    "explode": false,
+                    "explode": true,
                     "in": "query",
                     "name": "queryid",
                     "required": true,
@@ -191,7 +191,7 @@
                     "style": "simple"
                   },
                   {
-                    "explode": false,
+                    "explode": true,
                     "in": "cookie",
                     "name": "cookieid",
                     "required": true,
