@@ -48,15 +48,18 @@ func generateParameterSchema(operation *openapi3.Operation, insoCompat bool) []m
 	for _, parameterRef := range parameters {
 		paramValue := parameterRef.Value
 
+		style := getDefaultParamStyle(paramValue.Style, paramValue.In)
+
 		var explode bool
 		if paramValue.Explode == nil {
-			explode = false
+			explode = (style == "form") // default to true for form style, false for all others
 		} else {
 			explode = *paramValue.Explode
 		}
 
 		if paramValue != nil {
 			paramConf := make(map[string]interface{})
+			paramConf["style"] = style
 			paramConf["explode"] = explode
 			paramConf["in"] = paramValue.In
 			if paramValue.In == "path" {
@@ -65,7 +68,6 @@ func generateParameterSchema(operation *openapi3.Operation, insoCompat bool) []m
 				paramConf["name"] = paramValue.Name
 			}
 			paramConf["required"] = paramValue.Required
-			paramConf["style"] = getDefaultParamStyle(paramValue.Style, paramValue.In)
 
 			schema := extractSchema(paramValue.Schema)
 			if schema != "" {
