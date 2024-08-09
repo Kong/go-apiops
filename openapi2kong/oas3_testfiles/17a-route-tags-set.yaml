@@ -1,0 +1,44 @@
+openapi: '3.0.1'
+info:
+  title: Simple API overview
+  version: v2
+servers:
+  - url: /
+
+x-kong-tags:
+  - example-global-tag
+
+paths:
+  /path1:
+    get:
+      operationId: path1-has-route-tags
+      x-kong-tags:
+        - example-route-tag
+      responses:
+        '200':
+          description: |-
+            200 response
+    post:
+      operationId: path1-has-other-route-tags
+      x-kong-tags:
+        - example-route-tag-other
+      responses:
+        '200':
+          description: |-
+            200 response
+
+  /path2:
+    get:
+      operationId: path2-no-route-tags
+      responses:
+        '200':
+          description: |-
+            200 response
+    post:
+      operationId: path2-has-route-tags
+      x-kong-tags:
+        - example-route-tag
+      responses:
+        '200':
+          description: |-
+            200 response

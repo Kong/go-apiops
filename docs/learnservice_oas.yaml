@@ -30,7 +30,7 @@ servers:
 
 x-kong-tags: [ tag1, tag2 ]
   # specify the tags to use for each Kong entity generated. The tags can be overridden
-  # when doing the conversion. This can only be specified on document level.
+  # when doing the conversion.
 
 x-kong-service-defaults:
   # the defaults for the Kong services generated from 'servers' above
@@ -140,6 +140,8 @@ paths:
         config:
           status_code: 403
           message: So long and thanks for all the fish!
+      x-kong-tags: [ tag3, tag4 ]
+      # specify the tags to add for this specific route in addition to document level tags (if any)
       responses:
         '200':
           description: Successful operation
