@@ -4,17 +4,19 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/google/go-cmp/cmp"
+	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
+	"github.com/pb33f/libopenapi/orderedmap"
 )
 
 func Test_parseServerUris(t *testing.T) {
 	// basics
 
-	servers := &openapi3.Servers{
+	servers := []*v3.Server{
 		{
 			URL: "http://cookiemonster.com/chocolate/cookie",
-		}, {
+		},
+		{
 			URL: "https://konghq.com/bitter/sweet",
 		},
 	}
@@ -34,26 +36,27 @@ func Test_parseServerUris(t *testing.T) {
 		t.Errorf("did not expect error: %v", err)
 	}
 	if diff := cmp.Diff(targets, expected); diff != "" {
-		t.Errorf(diff)
+		t.Errorf(diff) //nolint:govet
 	}
+
+	variables := orderedmap.New[string, *v3.ServerVariable]()
+	variables.Set("var1", &v3.ServerVariable{
+		Default: "hello",
+		Enum:    []string{"hello", "world"},
+	})
+	variables.Set("var2", &v3.ServerVariable{
+		Default: "Welt",
+		Enum:    []string{"hallo", "Welt"},
+	})
 
 	// replaces variables with defaults
-
-	servers = &openapi3.Servers{
+	servers = []*v3.Server{
 		{
-			URL: "http://{var1}-{var2}.com/chocolate/cookie",
-			Variables: map[string]*openapi3.ServerVariable{
-				"var1": {
-					Default: "hello",
-					Enum:    []string{"hello", "world"},
-				},
-				"var2": {
-					Default: "Welt",
-					Enum:    []string{"hallo", "Welt"},
-				},
-			},
+			URL:       "http://{var1}-{var2}.com/chocolate/cookie",
+			Variables: variables,
 		},
 	}
+
 	expected = []*url.URL{
 		{
 			Scheme: "http",
@@ -66,12 +69,12 @@ func Test_parseServerUris(t *testing.T) {
 		t.Errorf("did not expect error: %v", err)
 	}
 	if diff := cmp.Diff(targets, expected); diff != "" {
-		t.Errorf(diff)
+		t.Errorf(diff) //nolint:govet
 	}
 
 	// returns error on a bad URL
 
-	servers = &openapi3.Servers{
+	servers = []*v3.Server{
 		{
 			URL: "http://cookiemonster.com/chocolate/cookie",
 		}, {
@@ -90,12 +93,12 @@ func Test_parseServerUris(t *testing.T) {
 			Path: "/",
 		},
 	}
-	targets, err = parseServerUris(&openapi3.Servers{})
+	targets, err = parseServerUris([]*v3.Server{})
 	if err != nil {
 		t.Errorf("did not expect error: %v", err)
 	}
 	if diff := cmp.Diff(targets, expected); diff != "" {
-		t.Errorf(diff)
+		t.Errorf(diff) //nolint:govet
 	}
 
 	// returns no error if servers is nil
@@ -110,7 +113,7 @@ func Test_parseServerUris(t *testing.T) {
 		t.Errorf("did not expect error: %v", err)
 	}
 	if diff := cmp.Diff(targets, expected); diff != "" {
-		t.Errorf(diff)
+		t.Errorf(diff) //nolint:govet
 	}
 }
 

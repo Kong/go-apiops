@@ -46,6 +46,7 @@ func NewSelectorSet(selectors []string) (SelectorSet, error) {
 
 // IsEmpty returns true if the selector set is empty.
 func (set *SelectorSet) IsEmpty() bool {
+	//nolint:gosimple
 	return set.selectors == nil || len(set.selectors) == 0
 }
 

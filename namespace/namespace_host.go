@@ -15,6 +15,7 @@ func ApplyNamespaceHost(
 	deckfile *yaml.Node, // the deckFile to operate on
 	selectors yamlbasics.SelectorSet, // the selectors to use to select the routes
 	hosts []string, // the hosts to add to the routes
+	//nolint:predeclared
 	clear bool, // if true, clear the hosts field before adding the hosts
 	allowEmptySelection bool, // if true, do not return an error if no routes are selected
 ) error {
@@ -54,6 +55,8 @@ func ApplyNamespaceHost(
 
 // updateRouteHosts updates the hosts field of the provided routes.
 // If clear is true, the hosts field is cleared before adding the hosts.
+//
+//nolint:predeclared
 func updateRouteHosts(routes yamlbasics.NodeSet, hosts []string, clear bool) error {
 	for _, route := range routes {
 		if err := yamlbasics.CheckType(route, yamlbasics.TypeObject); err != nil {
