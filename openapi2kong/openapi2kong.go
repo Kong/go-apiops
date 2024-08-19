@@ -71,14 +71,12 @@ func getKongTags(doc v3.Document, tagsProvided []string) ([]string, error) {
 	}
 
 	kongTags, ok := doc.Extensions.Get("x-kong-tags")
-
 	if !ok {
 		// there is no extension by the name "x-kong-tag", so return an empty array
 		return make([]string, 0), nil
 	}
 
 	resultArray := make([]string, len(kongTags.Content))
-
 	for i, v := range kongTags.Content {
 		var tagsValue interface{}
 		err := yaml.Unmarshal([]byte(v.Value), &tagsValue)
@@ -176,13 +174,9 @@ func getXKongComponents(doc v3.Document) (*map[string]interface{}, error) {
 
 	var xKong interface{}
 	_ = yaml.Unmarshal(xKongComponentsBytes, &xKong)
-
-	switch val := xKong.(type) {
-	case map[string]interface{}:
-		components = val
-
-	default:
-		return nil, fmt.Errorf("expected '/components/x-kong' to be a YAML object")
+	components, err = jsonbasics.ToObject(xKong)
+	if err != nil {
+		return nil, fmt.Errorf("expected '/components/x-kong' to be a JSON/YAML object")
 	}
 
 	return &components, nil
@@ -398,7 +392,7 @@ func getPluginsList(
 			var pluginConfig map[string]interface{}
 			err = json.Unmarshal(jsonstr, &pluginConfig)
 			if err != nil {
-				return nil, fmt.Errorf(fmt.Sprintf("failed to parse JSON object for '%s': %%w", extensionName), err)
+				return nil, fmt.Errorf("failed to parse JSON object for '%s': %w", extensionName, err)
 			}
 
 			pluginConfig["name"] = pluginName
@@ -692,7 +686,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 		return nil, fmt.Errorf("failed to create plugins list from document root: %w", err)
 	}
 
-	// // get the OIDC stuff from top level, bail out if the requirements are unsupported
+	// get the OIDC stuff from top level, bail out if the requirements are unsupported
 	if opts.OIDC {
 		docOIDCdefaults, err = getOIDCdefaults(doc.Security, doc, nil, opts.IgnoreSecurityErrors)
 		if err != nil {

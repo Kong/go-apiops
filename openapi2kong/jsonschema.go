@@ -24,22 +24,15 @@ func dereferenceSchema(sr *base.SchemaProxy, seenBefore map[string]*base.SchemaP
 	}
 
 	s := sr.Schema()
-
-	for _, schema := range s.AllOf {
-		dereferenceSchema(schema, seenBefore)
-	}
-
-	for _, schema := range s.AnyOf {
-		dereferenceSchema(schema, seenBefore)
-	}
-
-	for _, schema := range s.OneOf {
-		dereferenceSchema(schema, seenBefore)
+	allSchemas := [][]*base.SchemaProxy{s.AllOf, s.AnyOf, s.OneOf}
+	for _, schemas := range allSchemas {
+		for _, schema := range schemas {
+			dereferenceSchema(schema, seenBefore)
+		}
 	}
 
 	schemaMap := s.Properties
 	schema := schemaMap.First()
-
 	for schema != nil {
 		dereferenceSchema(schema.Value(), seenBefore)
 		schema = schema.Next()
@@ -70,7 +63,6 @@ func extractSchema(s *base.SchemaProxy) string {
 	finalSchema := make(map[string]interface{})
 
 	if s.IsReference() {
-		// Add ref key and string
 		finalSchema["$ref"] = s.GetReference()
 	} else {
 		// copy the primary schema, if no ref string is present
