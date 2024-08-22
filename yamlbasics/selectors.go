@@ -46,6 +46,7 @@ func NewSelectorSet(selectors []string) (SelectorSet, error) {
 
 // IsEmpty returns true if the selector set is empty.
 func (set *SelectorSet) IsEmpty() bool {
+	//nolint:gosimple
 	return set.selectors == nil || len(set.selectors) == 0
 }
 
@@ -67,6 +68,7 @@ func (set *SelectorSet) Find(nodeToSearch *yaml.Node) (NodeSet, error) {
 	if nodeToSearch == nil {
 		panic("expected nodeToSearch to be non-nil")
 	}
+	//nolint:gosimple
 	if set.selectors == nil || len(set.selectors) == 0 {
 		return make(NodeSet, 0), nil
 	}

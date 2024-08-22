@@ -9,12 +9,15 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/google/uuid"
 	"github.com/kong/go-apiops/filebasics"
 	"github.com/kong/go-apiops/jsonbasics"
 	"github.com/kong/go-apiops/logbasics"
-	"github.com/kong/go-slugify"
+	"github.com/pb33f/libopenapi"
+	openapibase "github.com/pb33f/libopenapi/datamodel/high/base"
+	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
+	"github.com/pb33f/libopenapi/orderedmap"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -53,207 +56,154 @@ func (opts *O2kOptions) setDefaults() {
 	}
 }
 
-// Slugify converts a name to a valid Kong name by removing and replacing unallowed characters
-// and sanitizing non-latin characters. Multiple inputs will be concatenated using '_'.
-func Slugify(insoCompat bool, name ...string) string {
-	var (
-		slugifier *slugify.Slugifier
-		concatBy  string
-	)
-	if insoCompat {
-		slugifier = (&slugify.Slugifier{}).ToLower(false).InvalidChar("_").WordSeparator("_")
-		slugifier.AllowedSet("a-zA-Z0-9\\-")
-		concatBy = "-"
-	} else {
-		slugifier = (&slugify.Slugifier{}).ToLower(true).InvalidChar("-").WordSeparator("-")
-		concatBy = "_"
-	}
-
-	for i, elem := range name {
-		name[i] = slugifier.Slugify(elem)
-	}
-
-	// drop empty strings from the array
-	for i := 0; i < len(name); i++ {
-		if name[i] == "" {
-			name = append(name[:i], name[i+1:]...)
-			i--
-		}
-	}
-
-	return strings.Join(name, concatBy)
-}
-
-// sanitizeRegexCapture will remove illegal characters from the path-variable name.
-// The returned name will be valid for PCRE regex captures; Alphanumeric + '_', starting
-// with [a-zA-Z].
-func sanitizeRegexCapture(varName string, insoCompat bool) string {
-	var regexName *slugify.Slugifier
-	if insoCompat {
-		regexName = (&slugify.Slugifier{}).ToLower(false).InvalidChar("_").WordSeparator("_")
-	} else {
-		regexName = (&slugify.Slugifier{}).ToLower(true).InvalidChar("_").WordSeparator("_")
-	}
-	return regexName.Slugify(varName)
-}
-
 // getKongTags returns the provided tags or if nil, then the `x-kong-tags` property,
 // validated to be a string array. If there is no error, then there will always be
 // an array returned for safe access later in the process.
-func getKongTags(doc *openapi3.T, tagsProvided []string) ([]string, error) {
+func getKongTags(doc v3.Document, tagsProvided []string) ([]string, error) {
 	if tagsProvided != nil {
 		// the provided tags take precedence, return them
 		return tagsProvided, nil
 	}
 
-	if doc.ExtensionProps.Extensions == nil || doc.ExtensionProps.Extensions["x-kong-tags"] == nil {
+	if doc.Extensions == nil {
 		// there is no extension, so return an empty array
 		return make([]string, 0), nil
 	}
 
-	var tagsValue interface{}
-	err := json.Unmarshal(doc.ExtensionProps.Extensions["x-kong-tags"].(json.RawMessage), &tagsValue)
-	if err != nil {
-		return nil, fmt.Errorf("expected 'x-kong-tags' to be an array of strings: %w", err)
-	}
-	var tagsArray []interface{}
-	switch tags := tagsValue.(type) {
-	case []interface{}:
-		// got a proper array
-		tagsArray = tags
-	default:
-		return nil, fmt.Errorf("expected 'x-kong-tags' to be an array of strings")
+	kongTags, ok := doc.Extensions.Get("x-kong-tags")
+	if !ok {
+		// there is no extension by the name "x-kong-tag", so return an empty array
+		return make([]string, 0), nil
 	}
 
-	resultArray := make([]string, len(tagsArray))
-	for i := 0; i < len(tagsArray); i++ {
-		switch tag := tagsArray[i].(type) {
+	resultArray := make([]string, len(kongTags.Content))
+	for i, v := range kongTags.Content {
+		var tagsValue interface{}
+		err := yaml.Unmarshal([]byte(v.Value), &tagsValue)
+		if err != nil {
+			return nil, fmt.Errorf("expected 'x-kong-tags' to be an array of strings: %w", err)
+		}
+
+		switch tag := tagsValue.(type) {
 		case string:
 			resultArray[i] = tag
 		default:
 			return nil, fmt.Errorf("expected 'x-kong-tags' to be an array of strings")
 		}
 	}
+
 	return resultArray, nil
 }
 
 // getKongName returns the `x-kong-name` property, validated to be a string
-func getKongName(props openapi3.ExtensionProps) (string, error) {
-	if props.Extensions != nil && props.Extensions["x-kong-name"] != nil {
-		var name string
-		err := json.Unmarshal(props.Extensions["x-kong-name"].(json.RawMessage), &name)
-		if err != nil {
-			return "", fmt.Errorf("expected 'x-kong-name' to be a string: %w", err)
-		}
-		return name, nil
-	}
-	return "", nil
-}
-
-func dereferenceJSONObject(
-	value map[string]interface{},
-	components *map[string]interface{},
-) (map[string]interface{}, error) {
-	var pointer string
-
-	switch value["$ref"].(type) {
-	case nil: // it is not a reference, so return the object
-		return value, nil
-
-	case string: // it is a json pointer
-		pointer = value["$ref"].(string)
-		if !strings.HasPrefix(pointer, "#/components/x-kong/") {
-			return nil, fmt.Errorf("all 'x-kong-...' references must be at '#/components/x-kong/...'")
-		}
-
-	default: // bad pointer
-		return nil, fmt.Errorf("expected '$ref' pointer to be a string")
+func getKongName(extensions *orderedmap.Map[string, *yaml.Node]) (string, error) {
+	if extensions == nil {
+		return "", nil
 	}
 
-	// walk the tree to find the reference
-	segments := strings.Split(pointer, "/")
-	path := "#/components/x-kong"
-	result := components
+	xKongName, ok := extensions.Get("x-kong-name")
 
-	for i := 3; i < len(segments); i++ {
-		segment := segments[i]
-		path = path + "/" + segment
-
-		switch (*result)[segment].(type) {
-		case nil:
-			return nil, fmt.Errorf("reference '%s' not found", pointer)
-		case map[string]interface{}:
-			target := (*result)[segment].(map[string]interface{})
-			result = &target
-		default:
-			return nil, fmt.Errorf("expected '%s' to be a JSON object", path)
-		}
+	if !ok {
+		return "", nil
 	}
 
-	return *result, nil
+	var name string
+	err := yaml.Unmarshal([]byte(xKongName.Value), &name)
+	if err != nil {
+		return "", fmt.Errorf("expected 'x-kong-name' to be a string: %w", err)
+	}
+
+	return name, nil
 }
 
 // getXKongObject returns specified 'key' from the extension properties if available.
 // returns nil if it wasn't found, an error if it wasn't an object or couldn't be
 // dereferenced. The returned object will be json encoded again.
-func getXKongObject(props openapi3.ExtensionProps, key string, components *map[string]interface{}) ([]byte, error) {
-	if props.Extensions != nil && props.Extensions[key] != nil {
-		var jsonBlob interface{}
-		_ = json.Unmarshal(props.Extensions[key].(json.RawMessage), &jsonBlob)
-		jsonObject, err := jsonbasics.ToObject(jsonBlob)
-		if err != nil {
-			return nil, fmt.Errorf("expected '%s' to be a JSON object", key)
-		}
-
-		object, err := dereferenceJSONObject(jsonObject, components)
-		if err != nil {
-			return nil, err
-		}
-		return json.Marshal(object)
+func getXKongObject(
+	extensions *orderedmap.Map[string, *yaml.Node],
+	key string, components *map[string]interface{},
+) ([]byte, error) {
+	if extensions == nil {
+		return nil, nil
 	}
-	return nil, nil
+
+	xKongObject, ok := extensions.Get(key)
+	if !ok || xKongObject == nil {
+		return nil, nil
+	}
+
+	xKongObjectBytes, err := convertYamlNodeToBytes(xKongObject)
+	if err != nil {
+		return nil, fmt.Errorf("expected '%s' to be a YAML object", key)
+	}
+
+	var jsonBlob interface{}
+	_ = yaml.Unmarshal(xKongObjectBytes, &jsonBlob)
+	jsonObject, err := jsonbasics.ToObject(jsonBlob)
+	if err != nil {
+		return nil, fmt.Errorf("expected '%s' to be a JSON/YAML object", key)
+	}
+
+	object, err := dereferenceJSONObject(jsonObject, components)
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(object)
 }
 
 // getXKongComponents will return a map of the '/components/x-kong/' object. If
 // the extension is not there it will return an empty map. If the entry is not a
-// Json object, it will return an error.
-func getXKongComponents(doc *openapi3.T) (*map[string]interface{}, error) {
+// yaml object, it will return an error.
+func getXKongComponents(doc v3.Document) (*map[string]interface{}, error) {
 	var components map[string]interface{}
-	switch prop := doc.Components.ExtensionProps.Extensions["x-kong"].(type) {
-	case nil:
-		// not available, create empty map to do safe lookups down the line
-		components = make(map[string]interface{})
 
-	default:
-		// we got some json blob
-		var xKong interface{}
-		_ = json.Unmarshal(prop.(json.RawMessage), &xKong)
+	if doc.Components == nil || doc.Components.Extensions == nil {
+		return &map[string]interface{}{}, nil
+	}
 
-		switch val := xKong.(type) {
-		case map[string]interface{}:
-			components = val
+	xKongComponents, ok := doc.Components.Extensions.Get("x-kong")
 
-		default:
-			return nil, fmt.Errorf("expected '/components/x-kong' to be a JSON object")
-		}
+	if !ok || xKongComponents == nil {
+		return &components, nil
+	}
+
+	xKongComponentsBytes, err := convertYamlNodeToBytes(xKongComponents)
+	if err != nil {
+		return nil, fmt.Errorf("expected '/components/x-kong' to be a YAML object")
+	}
+
+	var xKong interface{}
+	_ = yaml.Unmarshal(xKongComponentsBytes, &xKong)
+	components, err = jsonbasics.ToObject(xKong)
+	if err != nil {
+		return nil, fmt.Errorf("expected '/components/x-kong' to be a JSON/YAML object")
 	}
 
 	return &components, nil
 }
 
 // getServiceDefaults returns a JSON string containing the defaults
-func getServiceDefaults(props openapi3.ExtensionProps, components *map[string]interface{}) ([]byte, error) {
-	return getXKongObject(props, "x-kong-service-defaults", components)
+func getServiceDefaults(
+	extensions *orderedmap.Map[string, *yaml.Node],
+	components *map[string]interface{},
+) ([]byte, error) {
+	return getXKongObject(extensions, "x-kong-service-defaults", components)
 }
 
 // getUpstreamDefaults returns a JSON string containing the defaults
-func getUpstreamDefaults(props openapi3.ExtensionProps, components *map[string]interface{}) ([]byte, error) {
-	return getXKongObject(props, "x-kong-upstream-defaults", components)
+func getUpstreamDefaults(
+	extensions *orderedmap.Map[string, *yaml.Node],
+	components *map[string]interface{},
+) ([]byte, error) {
+	return getXKongObject(extensions, "x-kong-upstream-defaults", components)
 }
 
 // getRouteDefaults returns a JSON string containing the defaults
-func getRouteDefaults(props openapi3.ExtensionProps, components *map[string]interface{}) ([]byte, error) {
-	return getXKongObject(props, "x-kong-route-defaults", components)
+func getRouteDefaults(
+	extensions *orderedmap.Map[string, *yaml.Node],
+	components *map[string]interface{},
+) ([]byte, error) {
+	return getXKongObject(extensions, "x-kong-route-defaults", components)
 }
 
 // getOIDCdefaults returns a JSON string containing the defaults from the SecurityRequirements. The type must
@@ -261,55 +211,48 @@ func getRouteDefaults(props openapi3.ExtensionProps, components *map[string]inte
 // If the extension is not there it will return an empty map. If the entry is not a
 // Json object, it will return an error.
 func getOIDCdefaults(
-	requirementsp *openapi3.SecurityRequirements, // the security requirements to parse
-	doc *openapi3.T, // the complete OAS document
+	requirements []*openapibase.SecurityRequirement, // the security requirements to parse
+	doc v3.Document, // the complete OAS document
 	inherited []byte, // the inherited OIDC defaults
 	ignoreSecurityErrors bool, // ignore unsupported security requirements (return "inherited" instead of error)
 ) ([]byte, error) {
 	// Collect the OAS specific properties
 	var (
-		requirements openapi3.SecurityRequirements // the security requirements to parse
-		schemeName   string                        // the name of the security-scheme
-		scopes       []string                      // the scopes required for the security-scheme
-		scheme       *openapi3.SecurityScheme      // the security-scheme object
+		// requirements openapi3.SecurityRequirements // the security requirements to parse
+		schemeName string             // the name of the security-scheme
+		scopes     []string           // the scopes required for the security-scheme
+		scheme     *v3.SecurityScheme // the security-scheme object
 	)
 	{
-		if requirementsp != nil {
-			requirements = *requirementsp
-		} else {
-			// no security requirements, so return inherited (can be nil)
+		if len(requirements) == 0 || ignoreSecurityErrors {
+			// no security requirements or nothing is defined
+			// so return inherited (can be nil)
 			return inherited, nil
 		}
-		if len(requirements) == 0 {
+
+		if len(requirements) > 1 && !ignoreSecurityErrors {
+			return nil, fmt.Errorf("only a single security-requirement is supported")
+		}
+
+		requirement := requirements[0].Requirements
+		if requirement.Len() == 0 || ignoreSecurityErrors {
 			return inherited, nil // there is nothing defined, so return inherited (can be nil)
 		}
-		if len(requirements) > 1 {
-			// multiple requirements are a logical OR, which is not supported
-			if !ignoreSecurityErrors {
-				return nil, fmt.Errorf("only a single security-requirement is supported")
-			} else {
-				return inherited, nil
-			}
-		}
-		requirement := requirements[0]
-		if len(requirement) == 0 {
-			return inherited, nil // there is nothing defined, so return inherited (can be nil)
-		}
-		if len(requirement) > 1 {
+
+		if requirement.Len() > 1 && !ignoreSecurityErrors {
 			// multiple schemes are a logical AND, which is not supported
-			if !ignoreSecurityErrors {
-				return nil, fmt.Errorf("within a security-requirement only a single security-scheme is supported")
-			} else {
-				return inherited, nil
-			}
+			return nil, fmt.Errorf("within a security-requirement only a single security-scheme is supported")
 		}
 
-		for k, v := range requirement { // has only 1 entry, so executes only once
-			schemeName = k
-			scopes = v
-		}
+		// requirement has only 1 entry
+		// So, we won't iterate
+		reqPair := requirement.First()
+		schemeName = reqPair.Key()
+		scopes = reqPair.Value()
 
-		scheme = doc.Components.SecuritySchemes[schemeName].Value
+		schemes := doc.Components.SecuritySchemes
+		scheme, _ = schemes.Get(schemeName)
+
 		if scheme.Type != "openIdConnect" {
 			// non-OIDC security directives are not supported
 			if !ignoreSecurityErrors {
@@ -332,7 +275,7 @@ func getOIDCdefaults(
 		}
 
 		// grab the base plugin config from the x-kong-... directive
-		pluginBaseData, err := getXKongObject(scheme.ExtensionProps, "x-kong-security-openid-connect", kongComponents)
+		pluginBaseData, err := getXKongObject(scheme.Extensions, "x-kong-security-openid-connect", kongComponents)
 		if err != nil {
 			return nil, err
 		}
@@ -403,7 +346,8 @@ func createPluginID(uuidNamespace uuid.UUID, baseName string, config map[string]
 // (the 'x-kong-plugin<pluginname>' extensions). Applied on top of the optional
 // pluginsToInclude list. The result will be sorted by plugin name.
 func getPluginsList(
-	props openapi3.ExtensionProps,
+	extensions *orderedmap.Map[string, *yaml.Node],
+	componentExtensions *orderedmap.Map[string, *yaml.Node],
 	pluginsToInclude *[]*map[string]interface{},
 	uuidNamespace uuid.UUID,
 	baseName string,
@@ -429,36 +373,42 @@ func getPluginsList(
 		}
 	}
 
-	if props.Extensions != nil {
-		// there are extensions, go check if there are plugins
-		for extensionName := range props.Extensions {
-			if strings.HasPrefix(extensionName, "x-kong-plugin-") {
-				pluginName := strings.TrimPrefix(extensionName, "x-kong-plugin-")
+	if extensions == nil && componentExtensions == nil {
+		return nil, nil
+	}
 
-				jsonstr, err := getXKongObject(props, extensionName, components)
-				if err != nil {
-					return nil, err
-				}
+	// there are extensions, go check if there are plugins
+	extension := extensions.First()
+	for extension != nil {
+		extensionName := extension.Key()
+		if strings.HasPrefix(extensionName, "x-kong-plugin-") {
+			pluginName := strings.TrimPrefix(extensionName, "x-kong-plugin-")
 
-				var pluginConfig map[string]interface{}
-				err = json.Unmarshal(jsonstr, &pluginConfig)
-				if err != nil {
-					return nil, fmt.Errorf(fmt.Sprintf("failed to parse JSON object for '%s': %%w", extensionName), err)
-				}
-
-				pluginConfig["name"] = pluginName
-				if !skipID {
-					pluginConfig["id"] = createPluginID(uuidNamespace, baseName, pluginConfig)
-				}
-				pluginConfig["tags"] = tags
-
-				// foreign keys to service+route are not allowed (consumer is allowed)
-				delete(pluginConfig, "service")
-				delete(pluginConfig, "route")
-
-				plugins[pluginName] = &pluginConfig
+			jsonstr, err := getXKongObject(extensions, extensionName, components)
+			if err != nil {
+				return nil, err
 			}
+
+			var pluginConfig map[string]interface{}
+			err = json.Unmarshal(jsonstr, &pluginConfig)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse JSON object for '%s': %w", extensionName, err)
+			}
+
+			pluginConfig["name"] = pluginName
+			if !skipID {
+				pluginConfig["id"] = createPluginID(uuidNamespace, baseName, pluginConfig)
+			}
+			pluginConfig["tags"] = tags
+
+			// foreign keys to service+route are not allowed (consumer is allowed)
+			delete(pluginConfig, "service")
+			delete(pluginConfig, "route")
+
+			plugins[pluginName] = &pluginConfig
 		}
+
+		extension = extension.Next()
 	}
 
 	// the list is complete, sort to be deterministic in the output
@@ -481,6 +431,11 @@ func getPluginsList(
 // and return it as a JSON string, along with the updated plugin list. If there
 // is none, the returned config will be the currentConfig.
 func getValidatorPlugin(list *[]*map[string]interface{}, currentConfig []byte) ([]byte, *[]*map[string]interface{}) {
+	// search for the request-validator plugin
+	if list == nil {
+		return currentConfig, list
+	}
+
 	for i, plugin := range *list {
 		pluginName := (*plugin)["name"].(string) // safe because it was previously parsed
 		if pluginName == "request-validator" {
@@ -588,13 +543,13 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 
 	var (
 		err            error
-		doc            *openapi3.T             // the OAS3 document we're operating on
+		doc            v3.Document             // the OAS3 document we're operating on
 		kongComponents *map[string]interface{} // contents of OAS key `/components/x-kong/`
 		kongTags       []string                // tags to attach to Kong entities
 		nameConcatChar string                  // character to use for concatenating names
 
 		docBaseName         string                     // the slugified basename for the document
-		docServers          *openapi3.Servers          // servers block on document level
+		docServers          []*v3.Server               // servers block on document level
 		docServiceDefaults  []byte                     // JSON string representation of service-defaults on document level
 		docService          map[string]interface{}     // service entity in use on document level
 		docUpstreamDefaults []byte                     // JSON string representation of upstream-defaults on document level
@@ -606,7 +561,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 		foreignKeyPlugins   *[]*map[string]interface{} // top-level array of plugin configs, sorted by plugin name+id
 
 		pathBaseName         string                     // the slugified basename for the path
-		pathServers          *openapi3.Servers          // servers block on current path level
+		pathServers          []*v3.Server               // servers block on current path level
 		pathServiceDefaults  []byte                     // JSON string representation of service-defaults on path level
 		pathService          map[string]interface{}     // service entity in use on path level
 		pathUpstreamDefaults []byte                     // JSON string representation of upstream-defaults on path level
@@ -616,7 +571,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 		pathValidatorConfig  []byte                     // JSON string representation of validator config to generate
 
 		operationBaseName         string                     // the slugified basename for the operation
-		operationServers          *openapi3.Servers          // servers block on current operation level
+		operationServers          []*v3.Server               // servers block on current operation level
 		operationServiceDefaults  []byte                     // JSON string representation of service-defaults on ops level
 		operationService          map[string]interface{}     // service entity in use on operation level
 		operationUpstreamDefaults []byte                     // JSON string representation of upstream-defaults on ops level
@@ -625,6 +580,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 		operationPluginList       *[]*map[string]interface{} // array of plugin configs, sorted by plugin name
 		operationValidatorConfig  []byte                     // JSON string representation of validator config to generate
 	)
+
 	if opts.InsoCompat {
 		nameConcatChar = "-"
 	} else {
@@ -632,10 +588,25 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 	}
 
 	// Load and parse the OAS file
-	loader := openapi3.NewLoader()
-	doc, err = loader.LoadFromData(content)
+	openapiDoc, err := libopenapi.NewDocument(content)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing OAS3 file: [%w]", err)
+	}
+
+	// var errors []error
+	v3Model, errs := openapiDoc.BuildV3Model()
+
+	// if anything went wrong when building the v3 model,
+	// a slice of errors will be returned
+	if len(errs) > 0 {
+		for i := range errs {
+			logbasics.Error(errs[i], "error while building v3 document model \n")
+		}
+		return nil, fmt.Errorf("cannot create v3 model from document: %d errors reported", len(errs))
+	}
+
+	if v3Model != nil {
+		doc = v3Model.Model
 	}
 
 	//
@@ -651,13 +622,13 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 	logbasics.Info("tags after parsing x-kong-tags", "tags", kongTags)
 
 	// set document level elements
-	docServers = &doc.Servers // this one is always set, but can be empty
+	docServers = doc.Servers
 
 	// determine document name, precedence: specified -> x-kong-name -> Info.Title -> random
 	docBaseName = opts.DocName
 	if docBaseName == "" {
 		logbasics.Debug("no document name specified, trying x-kong-name")
-		if docBaseName, err = getKongName(doc.ExtensionProps); err != nil {
+		if docBaseName, err = getKongName(doc.Extensions); err != nil {
 			return nil, err
 		}
 		if docBaseName == "" {
@@ -682,13 +653,13 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 	}
 
 	// for defaults we keep strings, so deserializing them provides a copy right away
-	if docServiceDefaults, err = getServiceDefaults(doc.ExtensionProps, kongComponents); err != nil {
+	if docServiceDefaults, err = getServiceDefaults(doc.Extensions, kongComponents); err != nil {
 		return nil, err
 	}
-	if docUpstreamDefaults, err = getUpstreamDefaults(doc.ExtensionProps, kongComponents); err != nil {
+	if docUpstreamDefaults, err = getUpstreamDefaults(doc.Extensions, kongComponents); err != nil {
 		return nil, err
 	}
-	if docRouteDefaults, err = getRouteDefaults(doc.ExtensionProps, kongComponents); err != nil {
+	if docRouteDefaults, err = getRouteDefaults(doc.Extensions, kongComponents); err != nil {
 		return nil, err
 	}
 
@@ -704,7 +675,12 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 	}
 
 	// attach plugins
-	docPluginList, err = getPluginsList(doc.ExtensionProps, nil, opts.UUIDNamespace, docBaseName,
+	var componentExtensions *orderedmap.Map[string, *yaml.Node]
+	if doc.Components != nil && doc.Components.Extensions != nil {
+		componentExtensions = doc.Components.Extensions
+	}
+
+	docPluginList, err = getPluginsList(doc.Extensions, componentExtensions, nil, opts.UUIDNamespace, docBaseName,
 		kongComponents, kongTags, opts.SkipID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create plugins list from document root: %w", err)
@@ -712,7 +688,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 
 	// get the OIDC stuff from top level, bail out if the requirements are unsupported
 	if opts.OIDC {
-		docOIDCdefaults, err = getOIDCdefaults(&doc.Security, doc, nil, opts.IgnoreSecurityErrors)
+		docOIDCdefaults, err = getOIDCdefaults(doc.Security, doc, nil, opts.IgnoreSecurityErrors)
 		if err != nil {
 			return nil, err
 		}
@@ -731,7 +707,6 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 		foreignKeyPlugins, docPluginList, "service", docService["name"].(string))
 
 	docService["plugins"] = docPluginList
-
 	//
 	//
 	//  Handle OAS Path level
@@ -739,27 +714,34 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 	//
 
 	// create a sorted array of paths, to be deterministic in our output order
-	sortedPaths := make([]string, len(doc.Paths))
+	allPaths := doc.Paths.PathItems
+	sortedPaths := make([]string, allPaths.Len())
+	path := allPaths.First()
 	i := 0
-	for path := range doc.Paths {
-		sortedPaths[i] = path
+	for path != nil && i < allPaths.Len() {
+		sortedPaths[i] = path.Key()
 		i++
+		path = path.Next()
 	}
 	sort.Strings(sortedPaths)
 
-	for _, path := range sortedPaths {
-		logbasics.Info("processing path", "path", path)
-		pathitem := doc.Paths[path]
+	for _, pathKey := range sortedPaths {
+		pathitem, ok := allPaths.Get(pathKey)
+		if !ok {
+			continue
+		}
+
+		logbasics.Info("processing path", "path", pathKey)
 
 		// determine path name, precedence: specified -> x-kong-name -> actual-path
-		if pathBaseName, err = getKongName(pathitem.ExtensionProps); err != nil {
+		if pathBaseName, err = getKongName(pathitem.Extensions); err != nil {
 			return nil, err
 		}
 		if pathBaseName == "" {
 			// no given name, so use the path itself to construct the name
 			if !opts.InsoCompat {
-				pathBaseName = Slugify(opts.InsoCompat, path)
-				if strings.HasSuffix(path, "/") {
+				pathBaseName = Slugify(opts.InsoCompat, pathKey)
+				if strings.HasSuffix(pathKey, "/") {
 					// a common case is 2 paths, one with and one without a trailing "/" so to prevent
 					// duplicate names being generated, we add a "~" suffix as a special case to cater
 					// for different names. Better user solution is to use operation-id's.
@@ -767,13 +749,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 				}
 			} else {
 				// we need inso compatibility
-				pathBaseName = Slugify(opts.InsoCompat, path)
-				// if strings.HasSuffix(path, "/") {
-				// 	// a common case is 2 paths, one with and one without a trailing "/" so to prevent
-				// 	// duplicate names being generated, we add a "~" suffix as a special case to cater
-				// 	// for different names. Better user solution is to use operation-id's.
-				// 	pathBaseName = pathBaseName + "~"
-				// }
+				pathBaseName = Slugify(opts.InsoCompat, pathKey)
 			}
 		} else {
 			pathBaseName = Slugify(opts.InsoCompat, pathBaseName)
@@ -787,7 +763,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 
 		// Set up the defaults on the Path level
 		newPathService := false
-		if pathServiceDefaults, err = getServiceDefaults(pathitem.ExtensionProps, kongComponents); err != nil {
+		if pathServiceDefaults, err = getServiceDefaults(pathitem.Extensions, kongComponents); err != nil {
 			return nil, err
 		}
 		if pathServiceDefaults == nil {
@@ -797,7 +773,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 		}
 
 		newUpstream := false
-		if pathUpstreamDefaults, err = getUpstreamDefaults(pathitem.ExtensionProps, kongComponents); err != nil {
+		if pathUpstreamDefaults, err = getUpstreamDefaults(pathitem.Extensions, kongComponents); err != nil {
 			return nil, err
 		}
 		if pathUpstreamDefaults == nil {
@@ -807,7 +783,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 			newPathService = true
 		}
 
-		if pathRouteDefaults, err = getRouteDefaults(pathitem.ExtensionProps, kongComponents); err != nil {
+		if pathRouteDefaults, err = getRouteDefaults(pathitem.Extensions, kongComponents); err != nil {
 			return nil, err
 		}
 		if pathRouteDefaults == nil {
@@ -815,8 +791,8 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 		}
 
 		// if there is no path level servers block, use the document one
-		pathServers = &pathitem.Servers
-		if len(*pathServers) == 0 { // it's always set, so we ignore it if empty
+		pathServers = pathitem.Servers
+		if len(pathServers) == 0 { // it's always set, so we ignore it if empty
 			pathServers = docServers
 		} else {
 			newUpstream = true
@@ -840,7 +816,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 			}
 
 			// collect path plugins, including the doc-level plugins since we have a new service entity
-			pathPluginList, err = getPluginsList(pathitem.ExtensionProps, docPluginList,
+			pathPluginList, err = getPluginsList(pathitem.Extensions, nil, docPluginList,
 				opts.UUIDNamespace, pathBaseName, kongComponents, kongTags, opts.SkipID)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create plugins list from path item: %w", err)
@@ -871,7 +847,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 			pathService = docService
 
 			// collect path plugins, only the path level, since we're on the doc-level service-entity
-			pathPluginList, err = getPluginsList(pathitem.ExtensionProps, nil,
+			pathPluginList, err = getPluginsList(pathitem.Extensions, componentExtensions, nil,
 				opts.UUIDNamespace, pathBaseName, kongComponents, kongTags, opts.SkipID)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create plugins list from path item: %w", err)
@@ -888,24 +864,33 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 		//
 
 		// create a sorted array of operations, to be deterministic in our output order
-		operations := pathitem.Operations()
-		sortedMethods := make([]string, len(operations))
+		operations := pathitem.GetOperations()
+
+		sortedMethods := make([]string, operations.Len())
+		method := operations.First()
 		i := 0
-		for method := range operations {
-			sortedMethods[i] = method
+		for method != nil && i < operations.Len() {
+			sortedMethods[i] = method.Key()
 			i++
+			method = method.Next()
 		}
 		sort.Strings(sortedMethods)
 
 		// traverse all operations
-		for _, method := range sortedMethods {
-			operation := operations[method]
-			logbasics.Info("processing operation", "method", method, "path", path, "id", operation.OperationID)
+		for _, methodKey := range sortedMethods {
+			operation, ok := operations.Get(methodKey)
+			if !ok {
+				continue
+			}
+
+			methodKey = strings.ToUpper(methodKey)
+
+			logbasics.Info("processing operation", "method", methodKey, "path", path, "id", operation.OperationId)
 
 			var operationRoutes []interface{} // the routes array we need to add to
 
 			// determine operation name, precedence: specified -> operation-ID -> method-name
-			if operationBaseName, err = getKongName(operation.ExtensionProps); err != nil {
+			if operationBaseName, err = getKongName(operation.Extensions); err != nil {
 				return nil, err
 			}
 			if operationBaseName != "" {
@@ -917,13 +902,13 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 					operationBaseName = pathBaseName + nameConcatChar + Slugify(opts.InsoCompat, operationBaseName)
 				}
 			} else {
-				operationBaseName = operation.OperationID
+				operationBaseName = operation.OperationId
 				if operationBaseName == "" {
 					// no operation ID provided, so build as "doc-path-method"
 					if opts.InsoCompat {
-						operationBaseName = pathBaseName + nameConcatChar + Slugify(opts.InsoCompat, strings.ToLower(method))
+						operationBaseName = pathBaseName + nameConcatChar + Slugify(opts.InsoCompat, strings.ToLower(methodKey))
 					} else {
-						operationBaseName = pathBaseName + nameConcatChar + Slugify(opts.InsoCompat, method)
+						operationBaseName = pathBaseName + nameConcatChar + Slugify(opts.InsoCompat, methodKey)
 					}
 				} else {
 					// operation ID is provided, so build as "doc-operationid"
@@ -934,7 +919,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 
 			// Set up the defaults on the Operation level
 			newOperationService := false
-			if operationServiceDefaults, err = getServiceDefaults(operation.ExtensionProps, kongComponents); err != nil {
+			if operationServiceDefaults, err = getServiceDefaults(operation.Extensions, kongComponents); err != nil {
 				return nil, err
 			}
 			if operationServiceDefaults == nil {
@@ -944,7 +929,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 			}
 
 			newUpstream := false
-			if operationUpstreamDefaults, err = getUpstreamDefaults(operation.ExtensionProps, kongComponents); err != nil {
+			if operationUpstreamDefaults, err = getUpstreamDefaults(operation.Extensions, kongComponents); err != nil {
 				return nil, err
 			}
 			if operationUpstreamDefaults == nil {
@@ -954,7 +939,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 				newOperationService = true
 			}
 
-			if operationRouteDefaults, err = getRouteDefaults(operation.ExtensionProps, kongComponents); err != nil {
+			if operationRouteDefaults, err = getRouteDefaults(operation.Extensions, kongComponents); err != nil {
 				return nil, err
 			}
 			if operationRouteDefaults == nil {
@@ -963,7 +948,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 
 			// if there is no operation level servers block, use the path one
 			operationServers = operation.Servers
-			if operationServers == nil || len(*operationServers) == 0 {
+			if len(operationServers) == 0 {
 				operationServers = pathServers
 			} else {
 				newUpstream = true
@@ -983,7 +968,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 					opts.UUIDNamespace,
 					opts.SkipID)
 				if err != nil {
-					return nil, fmt.Errorf("failed to create service/updstream from operation '%s %s': %w", path, method, err)
+					return nil, fmt.Errorf("failed to create service/updstream from operation '%s %s': %w", pathKey, methodKey, err)
 				}
 				services = append(services, operationService)
 				if operationUpstream != nil {
@@ -1006,21 +991,21 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 			if !newOperationService && !newPathService {
 				// we're operating on the doc-level service entity, so we need the plugins
 				// from the path and operation
-				operationPluginList, err = getPluginsList(operation.ExtensionProps, pathPluginList,
+				operationPluginList, err = getPluginsList(operation.Extensions, nil, pathPluginList,
 					opts.UUIDNamespace, operationBaseName, kongComponents, kongTags, opts.SkipID)
 			} else if newOperationService {
 				// we're operating on an operation-level service entity, so we need the plugins
 				// from the document, path, and operation.
-				operationPluginList, _ = getPluginsList(doc.ExtensionProps, nil, opts.UUIDNamespace,
+				operationPluginList, _ = getPluginsList(doc.Extensions, nil, nil, opts.UUIDNamespace,
 					operationBaseName, kongComponents, kongTags, opts.SkipID)
-				operationPluginList, _ = getPluginsList(pathitem.ExtensionProps, operationPluginList, opts.UUIDNamespace,
+				operationPluginList, _ = getPluginsList(pathitem.Extensions, nil, operationPluginList, opts.UUIDNamespace,
 					operationBaseName, kongComponents, kongTags, opts.SkipID)
-				operationPluginList, err = getPluginsList(operation.ExtensionProps, operationPluginList, opts.UUIDNamespace,
+				operationPluginList, err = getPluginsList(operation.Extensions, nil, operationPluginList, opts.UUIDNamespace,
 					operationBaseName, kongComponents, kongTags, opts.SkipID)
 			} else if newPathService {
 				// we're operating on a path-level service entity, so we only need the plugins
 				// from the operation.
-				operationPluginList, err = getPluginsList(operation.ExtensionProps, nil, opts.UUIDNamespace,
+				operationPluginList, err = getPluginsList(operation.Extensions, nil, nil, opts.UUIDNamespace,
 					operationBaseName, kongComponents, kongTags, opts.SkipID)
 			}
 			if err != nil {
@@ -1063,7 +1048,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 			route["plugins"] = operationPluginList
 
 			// Escape path contents for regex creation
-			convertedPath := path
+			convertedPath := pathKey
 			charsToEscape := []string{"(", ")", ".", "+", "?", "*", "[", "$"}
 			for _, char := range charsToEscape {
 				convertedPath = strings.ReplaceAll(convertedPath, char, "\\"+char)
@@ -1094,7 +1079,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 				route["id"] = uuid.NewSHA1(opts.UUIDNamespace, []byte(operationBaseName+".route")).String()
 			}
 			route["name"] = operationBaseName
-			route["methods"] = []string{method}
+			route["methods"] = []string{methodKey}
 			route["tags"] = kongTags
 			if _, found := route["regex_priority"]; !found {
 				route["regex_priority"] = regexPriority

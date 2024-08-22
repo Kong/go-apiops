@@ -6,10 +6,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/google/uuid"
 	"github.com/kong/go-apiops/jsonbasics"
 	"github.com/kong/go-apiops/logbasics"
+	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
 )
 
 const JSONSchemaVersion = "draft4"
@@ -33,7 +33,7 @@ func getDefaultParamStyle(givenStyle string, paramType string) string {
 // generateParameterSchema returns the given schema if there is one, a generated
 // schema if it was specified, or nil if there is none.
 // Parameters include path, query, and headers
-func generateParameterSchema(operation *openapi3.Operation, insoCompat bool) []map[string]interface{} {
+func generateParameterSchema(operation *v3.Operation, insoCompat bool) []map[string]interface{} {
 	parameters := operation.Parameters
 	if parameters == nil {
 		return nil
@@ -45,31 +45,29 @@ func generateParameterSchema(operation *openapi3.Operation, insoCompat bool) []m
 
 	result := make([]map[string]interface{}, len(parameters))
 	i := 0
-	for _, parameterRef := range parameters {
-		paramValue := parameterRef.Value
-
-		if paramValue != nil {
-			style := getDefaultParamStyle(paramValue.Style, paramValue.In)
+	for _, parameter := range parameters {
+		if parameter != nil {
+			style := getDefaultParamStyle(parameter.Style, parameter.In)
 
 			var explode bool
-			if paramValue.Explode == nil {
+			if parameter.Explode == nil {
 				explode = (style == "form") // default to true for form style, false for all others
 			} else {
-				explode = *paramValue.Explode
+				explode = *parameter.Explode
 			}
 
 			paramConf := make(map[string]interface{})
 			paramConf["style"] = style
 			paramConf["explode"] = explode
-			paramConf["in"] = paramValue.In
-			if paramValue.In == "path" {
-				paramConf["name"] = sanitizeRegexCapture(paramValue.Name, insoCompat)
+			paramConf["in"] = parameter.In
+			if parameter.In == "path" {
+				paramConf["name"] = sanitizeRegexCapture(parameter.Name, insoCompat)
 			} else {
-				paramConf["name"] = paramValue.Name
+				paramConf["name"] = parameter.Name
 			}
-			paramConf["required"] = paramValue.Required
+			paramConf["required"] = parameter.Required
 
-			schema := extractSchema(paramValue.Schema)
+			schema := extractSchema(parameter.Schema)
 			if schema != "" {
 				paramConf["schema"] = schema
 			}
@@ -93,31 +91,33 @@ func parseMediaType(mediaType string) (string, string, error) {
 
 // generateBodySchema returns the given schema if there is one, a generated
 // schema if it was specified, or "" if there is none.
-func generateBodySchema(operation *openapi3.Operation) string {
+func generateBodySchema(operation *v3.Operation) string {
 	requestBody := operation.RequestBody
 	if requestBody == nil {
 		return ""
 	}
 
-	requestBodyValue := requestBody.Value
-	if requestBodyValue == nil {
-		return ""
-	}
-
-	content := requestBodyValue.Content
+	content := requestBody.Content
 	if content == nil {
 		return ""
 	}
 
-	for contentType, content := range content {
+	contentItem := content.First()
+
+	for contentItem != nil {
+		contentType := contentItem.Key()
+		contentValue := contentItem.Value()
+
 		typ, subtype, err := parseMediaType(contentType)
 		if err != nil {
 			logbasics.Info("invalid MediaType '" + contentType + "' will be ignored")
 			return ""
 		}
 		if typ == "application" && (subtype == "json" || strings.HasSuffix(subtype, "+json")) {
-			return extractSchema((*content).Schema)
+			return extractSchema((*contentValue).Schema)
 		}
+
+		contentItem = contentItem.Next()
 	}
 
 	return ""
@@ -125,31 +125,28 @@ func generateBodySchema(operation *openapi3.Operation) string {
 
 // generateContentTypes returns an array of allowed content types. nil if none.
 // Returned array will be sorted by name for deterministic comparisons.
-func generateContentTypes(operation *openapi3.Operation) []string {
+func generateContentTypes(operation *v3.Operation) []string {
 	requestBody := operation.RequestBody
 	if requestBody == nil {
 		return nil
 	}
 
-	requestBodyValue := requestBody.Value
-	if requestBodyValue == nil {
-		return nil
-	}
-
-	content := requestBodyValue.Content
+	content := requestBody.Content
 	if content == nil {
 		return nil
 	}
 
-	if len(content) == 0 {
+	if content.Len() == 0 {
 		return nil
 	}
 
-	list := make([]string, len(content))
+	list := make([]string, content.Len())
 	i := 0
-	for contentType := range content {
-		list[i] = contentType
+	contentItem := content.First()
+	for contentItem != nil && i < len(list) {
+		list[i] = contentItem.Key()
 		i++
+		contentItem = contentItem.Next()
 	}
 	sort.Strings(list)
 
@@ -158,7 +155,7 @@ func generateContentTypes(operation *openapi3.Operation) []string {
 
 // generateValidatorPlugin generates the validator plugin configuration, based
 // on the JSON snippet, and the OAS inputs. This can return nil
-func generateValidatorPlugin(configJSON []byte, operation *openapi3.Operation,
+func generateValidatorPlugin(configJSON []byte, operation *v3.Operation,
 	uuidNamespace uuid.UUID, baseName string, skipID bool, insoCompat bool,
 ) *map[string]interface{} {
 	if len(configJSON) == 0 {

@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/google/uuid"
+	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
 )
 
 const (
@@ -18,21 +18,27 @@ const (
 
 // parseServerUris parses the server uri's after rendering the template variables.
 // result will always have at least 1 entry, but not necessarily a hostname/port/scheme
-func parseServerUris(servers *openapi3.Servers) ([]*url.URL, error) {
+func parseServerUris(servers []*v3.Server) ([]*url.URL, error) {
 	var targets []*url.URL
 
-	if servers == nil || len(*servers) == 0 {
+	if len(servers) == 0 {
 		uriObject, _ := url.ParseRequestURI("/") // path '/' is the default for empty server blocks
 		targets = make([]*url.URL, 1)
 		targets[0] = uriObject
 
 	} else {
-		targets = make([]*url.URL, len(*servers))
+		targets = make([]*url.URL, len(servers))
 
-		for i, server := range *servers {
+		for i, server := range servers {
 			uriString := server.URL
-			for name, svar := range server.Variables {
+
+			pair := server.Variables.First()
+			for pair != nil {
+				name := pair.Key()
+				svar := pair.Value()
 				uriString = strings.ReplaceAll(uriString, "{"+name+"}", svar.Default)
+
+				pair = pair.Next()
 			}
 
 			uriObject, err := url.ParseRequestURI(uriString)
@@ -118,7 +124,7 @@ func parseDefaultTargets(targets interface{}, tags []string) ([]map[string]inter
 // createKongUpstream create a new upstream entity.
 func createKongUpstream(
 	baseName string, // slugified name of the upstream, and uuid input
-	servers *openapi3.Servers, // the OAS3 server block to use for generation
+	servers []*v3.Server, // the OAS3 server block to use for generation
 	upstreamDefaults []byte, // defaults to use (JSON string) or empty if no defaults
 	tags []string, // tags to attach to the new upstream
 	uuidNamespace uuid.UUID,
@@ -179,7 +185,7 @@ func createKongUpstream(
 // for the UUIDv5 generation.
 func CreateKongService(
 	baseName string, // slugified name of the service, and uuid input
-	servers *openapi3.Servers,
+	servers []*v3.Server,
 	serviceDefaults []byte,
 	upstreamDefaults []byte,
 	tags []string,

@@ -4,53 +4,71 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/pb33f/libopenapi/datamodel/high/base"
 )
 
 // dereferenceSchema walks the schema and adds every subschema to the seenBefore map.
 // This is safe to recursive schemas.
-func dereferenceSchema(sr *openapi3.SchemaRef, seenBefore map[string]*openapi3.Schema) {
+func dereferenceSchema(sr *base.SchemaProxy, seenBefore map[string]*base.SchemaProxy) {
 	if sr == nil {
 		return
 	}
 
-	if sr.Ref != "" {
-		if seenBefore[sr.Ref] != nil {
+	srRef := sr.GetReference()
+
+	if srRef != "" {
+		if seenBefore[srRef] != nil {
 			return
 		}
-		seenBefore[sr.Ref] = sr.Value
+		seenBefore[srRef] = sr
 	}
 
-	s := sr.Value
-
-	for _, list := range []openapi3.SchemaRefs{s.AllOf, s.AnyOf, s.OneOf} {
-		for _, s2 := range list {
-			dereferenceSchema(s2, seenBefore)
+	s := sr.Schema()
+	allSchemas := [][]*base.SchemaProxy{s.AllOf, s.AnyOf, s.OneOf}
+	for _, schemas := range allSchemas {
+		for _, schema := range schemas {
+			dereferenceSchema(schema, seenBefore)
 		}
 	}
-	for _, s2 := range s.Properties {
-		dereferenceSchema(s2, seenBefore)
+
+	schemaMap := s.Properties
+	schema := schemaMap.First()
+	for schema != nil {
+		dereferenceSchema(schema.Value(), seenBefore)
+		schema = schema.Next()
 	}
-	for _, ref := range []*openapi3.SchemaRef{s.Not, s.AdditionalProperties, s.Items} {
-		dereferenceSchema(ref, seenBefore)
+
+	dereferenceSchema(s.Not, seenBefore)
+
+	if s.AdditionalProperties != nil && s.AdditionalProperties.IsA() {
+		dereferenceSchema(s.AdditionalProperties.A, seenBefore)
+	}
+
+	if s.Items != nil && s.Items.IsA() {
+		dereferenceSchema(s.Items.A, seenBefore)
 	}
 }
 
 // extractSchema will extract a schema, including all sub-schemas/references and
 // return it as a single JSONschema string. All components will be moved under the
 // "#/definitions/" key.
-func extractSchema(s *openapi3.SchemaRef) string {
-	if s == nil || s.Value == nil {
+func extractSchema(s *base.SchemaProxy) string {
+	if s == nil || s.Schema() == nil {
 		return ""
 	}
 
-	seenBefore := make(map[string]*openapi3.Schema)
+	seenBefore := make(map[string]*base.SchemaProxy)
 	dereferenceSchema(s, seenBefore)
 
-	var finalSchema map[string]interface{}
-	// copy the primary schema
-	jConf, _ := s.MarshalJSON()
-	_ = json.Unmarshal(jConf, &finalSchema)
+	finalSchema := make(map[string]interface{})
+
+	if s.IsReference() {
+		finalSchema["$ref"] = s.GetReference()
+	} else {
+		// copy the primary schema, if no ref string is present
+		jConf, _ := s.Schema().MarshalJSON()
+		_ = json.Unmarshal(jConf, &finalSchema)
+	}
 
 	// inject subschema's referenced
 	if len(seenBefore) > 0 {
@@ -58,7 +76,12 @@ func extractSchema(s *openapi3.SchemaRef) string {
 		for key, schema := range seenBefore {
 			// copy the subschema
 			var copySchema map[string]interface{}
-			jConf, _ := schema.MarshalJSON()
+
+			if schema.Schema() == nil {
+				continue
+			}
+
+			jConf, _ := schema.Schema().MarshalJSON()
 			_ = json.Unmarshal(jConf, &copySchema)
 
 			// store under new key
