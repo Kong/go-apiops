@@ -10,7 +10,7 @@ require (
 	github.com/kong/go-slugify v1.0.0
 	github.com/onsi/ginkgo/v2 v2.20.0
 	github.com/onsi/gomega v1.34.1
-	github.com/pb33f/libopenapi v0.16.13
+	github.com/pb33f/libopenapi v0.16.14
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.9.0
 	github.com/vmware-labs/yaml-jsonpath v0.3.2
