@@ -1,6 +1,8 @@
 module github.com/kong/go-apiops
 
-go 1.21
+go 1.23.0
+
+replace gopkg.in/yaml.v3 v3.0.1 => github.com/Kong/yaml v1.0.0
 
 require (
 	github.com/go-logr/logr v1.4.2
