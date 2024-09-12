@@ -65,7 +65,12 @@ func generateParameterSchema(operation *v3.Operation, insoCompat bool) []map[str
 			} else {
 				paramConf["name"] = parameter.Name
 			}
-			paramConf["required"] = parameter.Required
+
+			if parameter.Required != nil {
+				paramConf["required"] = parameter.Required
+			} else {
+				paramConf["required"] = false
+			}
 
 			schema := extractSchema(parameter.Schema)
 			if schema != "" {
