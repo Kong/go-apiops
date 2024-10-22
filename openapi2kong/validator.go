@@ -34,6 +34,7 @@ func getDefaultParamStyle(givenStyle string, paramType string) string {
 // schema if it was specified, or nil if there is none.
 // Parameters include path, query, and headers
 func generateParameterSchema(operation *v3.Operation, insoCompat bool) []map[string]interface{} {
+	// FIXME: ALSO accepet PATH object
 	parameters := operation.Parameters
 	if parameters == nil {
 		return nil
@@ -42,6 +43,9 @@ func generateParameterSchema(operation *v3.Operation, insoCompat bool) []map[str
 	if len(parameters) == 0 {
 		return nil
 	}
+
+	// FIXME: create 1 new parametr list with first the PATH ones, then the OPERATION ones
+	// such that the latter oiverwite the former by the same name
 
 	result := make([]map[string]interface{}, len(parameters))
 	i := 0
@@ -161,6 +165,7 @@ func generateContentTypes(operation *v3.Operation) []string {
 // generateValidatorPlugin generates the validator plugin configuration, based
 // on the JSON snippet, and the OAS inputs. This can return nil
 func generateValidatorPlugin(configJSON []byte, operation *v3.Operation,
+	// FIXME: pass in the PATH object
 	uuidNamespace uuid.UUID, baseName string, skipID bool, insoCompat bool,
 ) *map[string]interface{} {
 	if len(configJSON) == 0 {
@@ -183,6 +188,7 @@ func generateValidatorPlugin(configJSON []byte, operation *v3.Operation,
 	}
 
 	if config["parameter_schema"] == nil {
+		// FIXME: pass along the parameters from the PATH object
 		parameterSchema := generateParameterSchema(operation, insoCompat)
 		if parameterSchema != nil {
 			config["parameter_schema"] = parameterSchema
