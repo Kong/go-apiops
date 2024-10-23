@@ -97,7 +97,8 @@ func generateParameterSchema(operation *v3.Operation, path *v3.PathItem, insoCom
 
 				_, typeStr, ok := fetchOneOfAndType(schemaMap)
 				if ok && typeStr == "" {
-					return nil, fmt.Errorf(`parameter schemas for request-validator plugin using oneOf must have a top-level type property`)
+					return nil,
+						fmt.Errorf(`parameter schemas for request-validator plugin using oneOf must have a top-level type property`)
 				}
 			}
 
