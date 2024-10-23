@@ -1,0 +1,36 @@
+# When the request-validator is added without a body or parameter schema
+# the generator should automatically generate it.
+
+openapi: 3.0.2
+
+info:
+  title: Example
+  version: 1.0.0
+
+servers:
+  - url: http://backend.com/path
+
+x-kong-plugin-request-validator: {}
+
+paths:
+ /test/common-param/{common-param}:
+      parameters:
+        - in: path
+          name: common-param
+          schema:
+            type: integer
+          required: true
+      get:
+        parameters:
+          - in: query
+            name: metadata
+            schema:
+              type: boolean
+            required: false
+        responses:
+          '200':
+            description: OK
+        x-kong-plugin-request-validator:
+          enabled: true
+          config:
+            verbose_response: true
