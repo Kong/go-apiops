@@ -2,6 +2,7 @@ package openapi2kong
 
 import (
 	"encoding/json"
+	"fmt"
 	"mime"
 	"sort"
 	"strings"
@@ -33,16 +34,16 @@ func getDefaultParamStyle(givenStyle string, paramType string) string {
 // generateParameterSchema returns the given schema if there is one, a generated
 // schema if it was specified, or nil if there is none.
 // Parameters include path, query, and headers
-func generateParameterSchema(operation *v3.Operation, path *v3.PathItem, insoCompat bool) []map[string]interface{} {
+func generateParameterSchema(operation *v3.Operation, path *v3.PathItem, insoCompat bool) ([]map[string]interface{}, error) {
 	pathParameters := path.Parameters
 	operationParameters := operation.Parameters
 	if pathParameters == nil && operationParameters == nil {
-		return nil
+		return nil, nil
 	}
 
 	totalLength := len(pathParameters) + len(operationParameters)
 	if totalLength == 0 {
-		return nil
+		return nil, nil
 	}
 
 	combinedParameters := make([]*v3.Parameter, 0, totalLength)
@@ -90,9 +91,14 @@ func generateParameterSchema(operation *v3.Operation, path *v3.PathItem, insoCom
 				paramConf["required"] = false
 			}
 
-			schema := extractSchema(parameter.Schema)
+			schema, schemaMap := extractSchema(parameter.Schema)
 			if schema != "" {
 				paramConf["schema"] = schema
+
+				_, typeStr, ok := fetchOneOfAndType(schemaMap)
+				if ok && typeStr == "" {
+					return nil, fmt.Errorf(`parameter schemas for request-validator plugin using oneOf must have a top-level type property`)
+				}
 			}
 
 			result[i] = paramConf
@@ -100,7 +106,7 @@ func generateParameterSchema(operation *v3.Operation, path *v3.PathItem, insoCom
 		}
 	}
 
-	return result
+	return result, nil
 }
 
 func parseMediaType(mediaType string) (string, string, error) {
@@ -137,7 +143,8 @@ func generateBodySchema(operation *v3.Operation) string {
 			return ""
 		}
 		if typ == "application" && (subtype == "json" || strings.HasSuffix(subtype, "+json")) {
-			return extractSchema((*contentValue).Schema)
+			schema, _ := extractSchema((*contentValue).Schema)
+			return schema
 		}
 
 		contentItem = contentItem.Next()
@@ -180,9 +187,9 @@ func generateContentTypes(operation *v3.Operation) []string {
 // on the JSON snippet, and the OAS inputs. This can return nil
 func generateValidatorPlugin(operationConfigJSON []byte, operation *v3.Operation, path *v3.PathItem,
 	uuidNamespace uuid.UUID, baseName string, skipID bool, insoCompat bool,
-) *map[string]interface{} {
+) (*map[string]interface{}, error) {
 	if len(operationConfigJSON) == 0 {
-		return nil
+		return nil, nil
 	}
 	logbasics.Debug("generating validator plugin", "operation", baseName)
 
@@ -201,7 +208,10 @@ func generateValidatorPlugin(operationConfigJSON []byte, operation *v3.Operation
 	}
 
 	if config["parameter_schema"] == nil {
-		parameterSchema := generateParameterSchema(operation, path, insoCompat)
+		parameterSchema, err := generateParameterSchema(operation, path, insoCompat)
+		if err != nil {
+			return nil, err
+		}
 		if parameterSchema != nil {
 			config["parameter_schema"] = parameterSchema
 			config["version"] = JSONSchemaVersion
@@ -219,7 +229,7 @@ func generateValidatorPlugin(operationConfigJSON []byte, operation *v3.Operation
 				// unless the content-types have been provided by the user
 				if config["allowed_content_types"] == nil {
 					// also not provided, so really nothing to validate, don't add a plugin
-					return nil
+					return nil, nil
 				}
 				// add an empty schema, which passes everything, but it also activates the
 				// content-type check
@@ -236,5 +246,57 @@ func generateValidatorPlugin(operationConfigJSON []byte, operation *v3.Operation
 		}
 	}
 
-	return &pluginConfig
+	return &pluginConfig, nil
+}
+
+func fetchOneOfAndType(schemaMap map[string]interface{}) ([]interface{}, string, bool) {
+	var oneOfSchemaArray []interface{}
+	var typeStr string
+	var oneOfFound bool
+
+	// Check if oneOf exists at the current level
+	if oneOf, ok := schemaMap["oneOf"]; ok {
+		if slice, isSlice := oneOf.([]interface{}); isSlice {
+			oneOfSchemaArray = slice
+			oneOfFound = true
+		}
+	}
+
+	// Check if type exists at the current level
+	if typ, ok := schemaMap["type"]; ok {
+		if str, isString := typ.(string); isString {
+			typeStr = str
+		}
+	}
+
+	// If both oneOf and type are found at this level, return them
+	if oneOfFound && typeStr != "" {
+		return oneOfSchemaArray, typeStr, true
+	}
+
+	// Recursively search in nested objects
+	for _, value := range schemaMap {
+		switch v := value.(type) {
+		case map[string]interface{}:
+			if slice, str, found := fetchOneOfAndType(v); found {
+				return slice, str, true
+			}
+		case []interface{}:
+			for _, item := range v {
+				if itemMap, isMap := item.(map[string]interface{}); isMap {
+					if slice, str, found := fetchOneOfAndType(itemMap); found {
+						return slice, str, true
+					}
+				}
+			}
+		}
+	}
+
+	// If oneOf is found but type is not, return oneOf with empty type
+	if oneOfFound {
+		return oneOfSchemaArray, "", true
+	}
+
+	// If neither oneOf nor type is found
+	return nil, "", false
 }

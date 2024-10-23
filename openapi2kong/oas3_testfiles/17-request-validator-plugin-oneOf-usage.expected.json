@@ -1,0 +1,78 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "backend.com",
+      "id": "730d612d-914b-5fe8-8ead-e6aa654318ef",
+      "name": "example",
+      "path": "/path",
+      "plugins": [],
+      "port": 80,
+      "protocol": "http",
+      "routes": [
+        {
+          "id": "1446ecde-7037-5f9c-8537-8217e2a12bfa",
+          "methods": [
+            "GET"
+          ],
+          "name": "example_params-test_get",
+          "paths": [
+            "~/params/test$"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "body_schema": "{}",
+                "parameter_schema": [
+                  {
+                    "explode": true,
+                    "in": "query",
+                    "name": "queryid",
+                    "required": true,
+                    "schema": "{\"oneOf\":[{\"example\":10,\"type\":\"integer\"},{\"example\":2.5,\"type\":\"number\"}],\"type\":\"number\"}",
+                    "style": "form"
+                  },
+                  {
+                    "explode": false,
+                    "in": "header",
+                    "name": "testHeader",
+                    "required": true,
+                    "schema": "{\"$ref\":\"#/definitions/headerType\",\"definitions\":{\"headerType\":{\"oneOf\":[{\"example\":\"10\",\"type\":\"string\"},{\"example\":2.5,\"type\":\"number\"}],\"type\":\"string\"}}}",
+                    "style": "simple"
+                  },
+                  {
+                    "explode": false,
+                    "in": "header",
+                    "name": "testHeader",
+                    "required": true,
+                    "schema": "{\"$ref\":\"#/definitions/secondHeaderType\",\"definitions\":{\"secondHeaderType\":{\"oneOf\":[{\"example\":\"10\",\"type\":\"string\"},{\"example\":2.5,\"type\":\"number\"}],\"type\":\"string\"}}}",
+                    "style": "simple"
+                  }
+                ],
+                "version": "draft4"
+              },
+              "enabled": true,
+              "id": "8bd60198-9b34-5f0b-9240-4826c7c331a0",
+              "name": "request-validator",
+              "tags": [
+                "OAS3_import",
+                "OAS3file_17-request-validator-plugin-oneOf-usage.yaml"
+              ]
+            }
+          ],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_17-request-validator-plugin-oneOf-usage.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_17-request-validator-plugin-oneOf-usage.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}
