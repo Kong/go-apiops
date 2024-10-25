@@ -1,5 +1,5 @@
 # When the request-validator is added with path and operation parameters,
-# the generator should automatically generate it.
+# with both sharing same name and location, operation parameters override the path parameters.
 
 openapi: 3.0.2
 
@@ -22,11 +22,11 @@ paths:
           required: true
       get:
         parameters:
-          - in: query
-            name: metadata
+          - in: path
+            name: common-param
             schema:
-              type: boolean
-            required: false
+              type: integer
+            required: true
         responses:
           '200':
             description: OK

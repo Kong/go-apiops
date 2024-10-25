@@ -46,10 +46,21 @@ func generateParameterSchema(operation *v3.Operation, path *v3.PathItem, insoCom
 	}
 
 	combinedParameters := make([]*v3.Parameter, 0, totalLength)
-	combinedParameters = append(combinedParameters, pathParameters...)
+
+	for _, pathParam := range pathParameters {
+		for _, opParam := range operationParameters {
+			// If path parameter and operation parameter share the same name and location
+			// operation parameter overrides the path parameter. Thus, if this check passes,
+			// Then we add the path param, else we skip it.
+			if pathParam.Name != opParam.Name && pathParam.In != opParam.In {
+				combinedParameters = append(combinedParameters, pathParam)
+			}
+		}
+	}
+
 	combinedParameters = append(combinedParameters, operationParameters...)
 
-	result := make([]map[string]interface{}, totalLength)
+	result := make([]map[string]interface{}, len(combinedParameters))
 	i := 0
 
 	for _, parameter := range combinedParameters {
