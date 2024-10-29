@@ -34,7 +34,9 @@ func getDefaultParamStyle(givenStyle string, paramType string) string {
 // generateParameterSchema returns the given schema if there is one, a generated
 // schema if it was specified, or nil if there is none.
 // Parameters include path, query, and headers
-func generateParameterSchema(operation *v3.Operation, path *v3.PathItem, insoCompat bool) ([]map[string]interface{}, error) {
+func generateParameterSchema(operation *v3.Operation, path *v3.PathItem,
+	insoCompat bool,
+) ([]map[string]interface{}, error) {
 	pathParameters := path.Parameters
 	operationParameters := operation.Parameters
 	if pathParameters == nil && operationParameters == nil {
