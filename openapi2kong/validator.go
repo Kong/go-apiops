@@ -308,5 +308,11 @@ func fetchTopLevelType(schemaMap map[string]interface{}) (string, bool) {
 		}
 	}
 
+	if !oneOfFound && !anyOfFound {
+		// We don't need a top-level type for the case where
+		// there is no oneOf or anyOf schema
+		return "", true
+	}
+
 	return "", false
 }
