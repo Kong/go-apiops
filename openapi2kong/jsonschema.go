@@ -51,7 +51,9 @@ func dereferenceSchema(sr *base.SchemaProxy, seenBefore map[string]*base.SchemaP
 
 // extractSchema will extract a schema, including all sub-schemas/references and
 // return it as a single JSONschema string. All components will be moved under the
-// "#/definitions/" key.
+// "#/definitions/" key. Along with that, it will also return the schema as a
+// map, so that if any further operations or validations need to be done on the schema
+// they could be performed.
 func extractSchema(s *base.SchemaProxy) (string, map[string]interface{}) {
 	if s == nil || s.Schema() == nil {
 		return "", nil

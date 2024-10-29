@@ -95,10 +95,10 @@ func generateParameterSchema(operation *v3.Operation, path *v3.PathItem, insoCom
 			if schema != "" {
 				paramConf["schema"] = schema
 
-				_, typeStr, ok := fetchOneOfAndType(schemaMap)
-				if ok && typeStr == "" {
+				_, typeStrFound := fetchTopLevelType(schemaMap)
+				if !typeStrFound {
 					return nil,
-						fmt.Errorf(`parameter schemas for request-validator plugin using oneOf must have a top-level type property`)
+						fmt.Errorf(`parameter schemas for request-validator plugin must have a top-level type property`)
 				}
 			}
 
@@ -250,17 +250,32 @@ func generateValidatorPlugin(operationConfigJSON []byte, operation *v3.Operation
 	return &pluginConfig, nil
 }
 
-func fetchOneOfAndType(schemaMap map[string]interface{}) ([]interface{}, string, bool) {
-	var oneOfSchemaArray []interface{}
-	var typeStr string
-	var oneOfFound bool
+func fetchTopLevelType(schemaMap map[string]interface{}) (string, bool) {
+	var (
+		typeStr    string
+		oneOfFound bool
+		anyOfFound bool
+	)
+
+	isSlice := func(value interface{}) bool {
+		_, ok := value.([]interface{})
+		return ok
+	}
+
+	// We need to check for oneOf and anyOf first, as we need the
+	// top-level type from the same level from the map.
+	// Without checking for those, the recusion may enter the
+	// oneOf or anyOf maps and return the type from there.
+	// This would defeat our purpose of checking for the top-level type
 
 	// Check if oneOf exists at the current level
 	if oneOf, ok := schemaMap["oneOf"]; ok {
-		if slice, isSlice := oneOf.([]interface{}); isSlice {
-			oneOfSchemaArray = slice
-			oneOfFound = true
-		}
+		oneOfFound = isSlice(oneOf)
+	}
+
+	// Check if anyOf exists at the current level
+	if anyOf, ok := schemaMap["anyOf"]; ok {
+		anyOfFound = isSlice(anyOf)
 	}
 
 	// Check if type exists at the current level
@@ -271,33 +286,27 @@ func fetchOneOfAndType(schemaMap map[string]interface{}) ([]interface{}, string,
 	}
 
 	// If both oneOf and type are found at this level, return them
-	if oneOfFound && typeStr != "" {
-		return oneOfSchemaArray, typeStr, true
+	if oneOfFound && typeStr != "" || anyOfFound && typeStr != "" {
+		return typeStr, true
 	}
 
 	// Recursively search in nested objects
 	for _, value := range schemaMap {
 		switch v := value.(type) {
 		case map[string]interface{}:
-			if slice, str, found := fetchOneOfAndType(v); found {
-				return slice, str, true
+			if str, found := fetchTopLevelType(v); found {
+				return str, true
 			}
 		case []interface{}:
 			for _, item := range v {
 				if itemMap, isMap := item.(map[string]interface{}); isMap {
-					if slice, str, found := fetchOneOfAndType(itemMap); found {
-						return slice, str, true
+					if str, found := fetchTopLevelType(itemMap); found {
+						return str, true
 					}
 				}
 			}
 		}
 	}
 
-	// If oneOf is found but type is not, return oneOf with empty type
-	if oneOfFound {
-		return oneOfSchemaArray, "", true
-	}
-
-	// If neither oneOf nor type is found
-	return nil, "", false
+	return "", false
 }
