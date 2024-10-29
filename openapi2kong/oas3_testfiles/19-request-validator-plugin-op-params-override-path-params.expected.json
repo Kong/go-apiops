@@ -17,7 +17,7 @@
           ],
           "name": "example_test-common-param-common-param_get",
           "paths": [
-            "~/test/common-param/(?\u003ccommon_param\u003e[^#?/]+)$"
+            "~/test/common-param/(?<common_param>[^#?/]+)$"
           ],
           "plugins": [
             {
