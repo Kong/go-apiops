@@ -1027,7 +1027,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 
 			// Extract the request-validator config from the plugin list, generate it and reinsert
 			operationValidatorConfig, operationPluginList = getValidatorPlugin(operationPluginList, pathValidatorConfig)
-			validatorPlugin := generateValidatorPlugin(operationValidatorConfig, operation, opts.UUIDNamespace,
+			validatorPlugin := generateValidatorPlugin(operationValidatorConfig, operation, pathitem, opts.UUIDNamespace,
 				operationBaseName, opts.SkipID, opts.InsoCompat)
 			operationPluginList = insertPlugin(operationPluginList, validatorPlugin)
 

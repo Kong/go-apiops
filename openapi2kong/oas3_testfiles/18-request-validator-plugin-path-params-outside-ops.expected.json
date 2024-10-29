@@ -1,0 +1,70 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "backend.com",
+      "id": "730d612d-914b-5fe8-8ead-e6aa654318ef",
+      "name": "example",
+      "path": "/path",
+      "plugins": [],
+      "port": 80,
+      "protocol": "http",
+      "routes": [
+        {
+          "id": "bee0be08-646a-562a-91b9-71737169585b",
+          "methods": [
+            "GET"
+          ],
+          "name": "example_test-common-param-common-param_get",
+          "paths": [
+            "~/test/common-param/(?<common_param>[^#?/]+)$"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "parameter_schema": [
+                  {
+                    "explode": false,
+                    "in": "path",
+                    "name": "common_param",
+                    "required": true,
+                    "schema": "{\"type\":\"integer\"}",
+                    "style": "simple"
+                  },
+                  {
+                    "explode": true,
+                    "in": "query",
+                    "name": "metadata",
+                    "required": false,
+                    "schema": "{\"type\":\"boolean\"}",
+                    "style": "form"
+                  }
+                ],
+                "verbose_response": true,
+                "version": "draft4"
+              },
+              "enabled": true,
+              "id": "3bcb9a87-847d-5ccf-93dc-b2aa1b32b77d",
+              "name": "request-validator",
+              "tags": [
+                "OAS3_import",
+                "OAS3file_18-request-validator-plugin-path-params-outside-ops.yaml"
+              ]
+            }
+          ],
+          "regex_priority": 100,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_18-request-validator-plugin-path-params-outside-ops.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_18-request-validator-plugin-path-params-outside-ops.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}

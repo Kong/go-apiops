@@ -33,19 +33,37 @@ func getDefaultParamStyle(givenStyle string, paramType string) string {
 // generateParameterSchema returns the given schema if there is one, a generated
 // schema if it was specified, or nil if there is none.
 // Parameters include path, query, and headers
-func generateParameterSchema(operation *v3.Operation, insoCompat bool) []map[string]interface{} {
-	parameters := operation.Parameters
-	if parameters == nil {
+func generateParameterSchema(operation *v3.Operation, path *v3.PathItem, insoCompat bool) []map[string]interface{} {
+	pathParameters := path.Parameters
+	operationParameters := operation.Parameters
+	if pathParameters == nil && operationParameters == nil {
 		return nil
 	}
 
-	if len(parameters) == 0 {
+	totalLength := len(pathParameters) + len(operationParameters)
+	if totalLength == 0 {
 		return nil
 	}
 
-	result := make([]map[string]interface{}, len(parameters))
+	combinedParameters := make([]*v3.Parameter, 0, totalLength)
+
+	for _, pathParam := range pathParameters {
+		for _, opParam := range operationParameters {
+			// If path parameter and operation parameter share the same name and location
+			// operation parameter overrides the path parameter. Thus, if this check passes,
+			// Then we add the path param, else we skip it.
+			if pathParam.Name != opParam.Name && pathParam.In != opParam.In {
+				combinedParameters = append(combinedParameters, pathParam)
+			}
+		}
+	}
+
+	combinedParameters = append(combinedParameters, operationParameters...)
+
+	result := make([]map[string]interface{}, len(combinedParameters))
 	i := 0
-	for _, parameter := range parameters {
+
+	for _, parameter := range combinedParameters {
 		if parameter != nil {
 			style := getDefaultParamStyle(parameter.Style, parameter.In)
 
@@ -160,16 +178,16 @@ func generateContentTypes(operation *v3.Operation) []string {
 
 // generateValidatorPlugin generates the validator plugin configuration, based
 // on the JSON snippet, and the OAS inputs. This can return nil
-func generateValidatorPlugin(configJSON []byte, operation *v3.Operation,
+func generateValidatorPlugin(operationConfigJSON []byte, operation *v3.Operation, path *v3.PathItem,
 	uuidNamespace uuid.UUID, baseName string, skipID bool, insoCompat bool,
 ) *map[string]interface{} {
-	if len(configJSON) == 0 {
+	if len(operationConfigJSON) == 0 {
 		return nil
 	}
 	logbasics.Debug("generating validator plugin", "operation", baseName)
 
 	var pluginConfig map[string]interface{}
-	_ = json.Unmarshal(configJSON, &pluginConfig)
+	_ = json.Unmarshal(operationConfigJSON, &pluginConfig)
 
 	// create a new ID here based on the operation
 	if !skipID {
@@ -183,7 +201,7 @@ func generateValidatorPlugin(configJSON []byte, operation *v3.Operation,
 	}
 
 	if config["parameter_schema"] == nil {
-		parameterSchema := generateParameterSchema(operation, insoCompat)
+		parameterSchema := generateParameterSchema(operation, path, insoCompat)
 		if parameterSchema != nil {
 			config["parameter_schema"] = parameterSchema
 			config["version"] = JSONSchemaVersion
