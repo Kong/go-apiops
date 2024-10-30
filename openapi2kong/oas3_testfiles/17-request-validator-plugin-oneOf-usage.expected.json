@@ -37,15 +37,15 @@
                     "in": "header",
                     "name": "testHeader",
                     "required": true,
-                    "schema": "{\"$ref\":\"#/definitions/headerType\",\"definitions\":{\"headerType\":{\"oneOf\":[{\"example\":\"10\",\"type\":\"string\"},{\"example\":2.5,\"type\":\"number\"}],\"type\":\"string\"}}}",
+                    "schema": "{\"$ref\":\"#/definitions/headerType\",\"definitions\":{\"headerType\":{\"oneOf\":[{\"$ref\":\"#/definitions/stringType\"},{\"$ref\":\"#/definitions/numberType\"}],\"type\":\"string\"},\"numberType\":{\"example\":2.5,\"type\":\"number\"},\"stringType\":{\"example\":\"10\",\"type\":\"string\"}}}",
                     "style": "simple"
                   },
                   {
                     "explode": false,
                     "in": "header",
-                    "name": "testHeader",
+                    "name": "secondTestHeader",
                     "required": true,
-                    "schema": "{\"$ref\":\"#/definitions/secondHeaderType\",\"definitions\":{\"secondHeaderType\":{\"oneOf\":[{\"example\":\"10\",\"type\":\"string\"},{\"example\":2.5,\"type\":\"number\"}],\"type\":\"string\"}}}",
+                    "schema": "{\"$ref\":\"#/definitions/secondHeaderType\",\"definitions\":{\"numberType\":{\"example\":2.5,\"type\":\"number\"},\"secondHeaderType\":{\"oneOf\":[{\"$ref\":\"#/definitions/stringType\"},{\"$ref\":\"#/definitions/numberType\"}],\"type\":\"string\"},\"stringType\":{\"example\":\"10\",\"type\":\"string\"}}}",
                     "style": "simple"
                   }
                 ],

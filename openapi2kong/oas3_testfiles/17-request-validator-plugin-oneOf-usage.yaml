@@ -36,7 +36,7 @@ paths:
             $ref: '#/components/schemas/headerType'
           required: true
         - in: header
-          name: testHeader
+          name: secondTestHeader
           schema:
             $ref: '#/components/schemas/secondHeaderType'
           required: true
@@ -45,9 +45,14 @@ components:
     headerType:
       type: string
       oneOf:
-        - type: string
-          example: "10"
-        - type: number
-          example: 2.5
+        - $ref: '#/components/schemas/stringType'
+        - $ref: '#/components/schemas/numberType'
     secondHeaderType:
       $ref: '#/components/schemas/headerType'
+    stringType:
+      type: string
+      example: "10"
+    numberType:
+      type: number
+      example: 2.5
+    
