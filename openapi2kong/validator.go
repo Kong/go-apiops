@@ -97,8 +97,8 @@ func generateParameterSchema(operation *v3.Operation, path *v3.PathItem,
 			if schema != "" {
 				paramConf["schema"] = schema
 
-				_, typeStrFound := fetchTopLevelType(schemaMap)
-				if !typeStrFound {
+				typeStr, oneOfAnyOfFound := fetchTopLevelType(schemaMap)
+				if typeStr == "" && oneOfAnyOfFound {
 					return nil,
 						fmt.Errorf(`parameter schemas for request-validator plugin must have a top-level type property`)
 				}
@@ -252,6 +252,16 @@ func generateValidatorPlugin(operationConfigJSON []byte, operation *v3.Operation
 	return &pluginConfig, nil
 }
 
+// This function checks if there is a oneOf or anyOf schema present in the passed schemaMap.
+// The first return value (string) indicates the top-level type for the oneOf/anyOf schema.
+// The second return value (bool) indicates if either of oneOf/anyOf is found in the schemaMap.
+//
+// 1. If the oneOf/anyOf schema is found, it tries to find the top-level type defined with
+// the oneOf/anyOf schema.
+// -- If the top-level type is found, it is returned along with "true".
+// -- If the top-level type is not found, a blank string is returned with "true".
+// 2. If the oneOf/anyOf schema is not found, the function will return
+// a blank string with "false".
 func fetchTopLevelType(schemaMap map[string]interface{}) (string, bool) {
 	var (
 		typeStr    string
@@ -296,13 +306,13 @@ func fetchTopLevelType(schemaMap map[string]interface{}) (string, bool) {
 	for _, value := range schemaMap {
 		switch v := value.(type) {
 		case map[string]interface{}:
-			if str, found := fetchTopLevelType(v); found {
+			if str, oneOfAnyOfFound := fetchTopLevelType(v); oneOfAnyOfFound {
 				return str, true
 			}
 		case []interface{}:
 			for _, item := range v {
 				if itemMap, isMap := item.(map[string]interface{}); isMap {
-					if str, found := fetchTopLevelType(itemMap); found {
+					if str, oneOfAnyOfFound := fetchTopLevelType(itemMap); oneOfAnyOfFound {
 						return str, true
 					}
 				}
@@ -311,10 +321,9 @@ func fetchTopLevelType(schemaMap map[string]interface{}) (string, bool) {
 	}
 
 	if !oneOfFound && !anyOfFound {
-		// We don't need a top-level type for the case where
-		// there is no oneOf or anyOf schema
-		return "", true
+		// there is no oneOf or anyOf schema, thus returning false
+		return "", false
 	}
 
-	return "", false
+	return "", true
 }
