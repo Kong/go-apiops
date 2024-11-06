@@ -2,6 +2,7 @@ package openapi2kong
 
 import (
 	"encoding/json"
+	"fmt"
 	"mime"
 	"sort"
 	"strings"
@@ -33,16 +34,18 @@ func getDefaultParamStyle(givenStyle string, paramType string) string {
 // generateParameterSchema returns the given schema if there is one, a generated
 // schema if it was specified, or nil if there is none.
 // Parameters include path, query, and headers
-func generateParameterSchema(operation *v3.Operation, path *v3.PathItem, insoCompat bool) []map[string]interface{} {
+func generateParameterSchema(operation *v3.Operation, path *v3.PathItem,
+	insoCompat bool,
+) ([]map[string]interface{}, error) {
 	pathParameters := path.Parameters
 	operationParameters := operation.Parameters
 	if pathParameters == nil && operationParameters == nil {
-		return nil
+		return nil, nil
 	}
 
 	totalLength := len(pathParameters) + len(operationParameters)
 	if totalLength == 0 {
-		return nil
+		return nil, nil
 	}
 
 	combinedParameters := make([]*v3.Parameter, 0, totalLength)
@@ -90,9 +93,15 @@ func generateParameterSchema(operation *v3.Operation, path *v3.PathItem, insoCom
 				paramConf["required"] = false
 			}
 
-			schema := extractSchema(parameter.Schema)
+			schema, schemaMap := extractSchema(parameter.Schema)
 			if schema != "" {
 				paramConf["schema"] = schema
+
+				typeStr, oneOfAnyOfFound := fetchTopLevelType(schemaMap)
+				if typeStr == "" && oneOfAnyOfFound {
+					return nil,
+						fmt.Errorf(`parameter schemas for request-validator plugin must have a top-level type property`)
+				}
 			}
 
 			result[i] = paramConf
@@ -100,7 +109,7 @@ func generateParameterSchema(operation *v3.Operation, path *v3.PathItem, insoCom
 		}
 	}
 
-	return result
+	return result, nil
 }
 
 func parseMediaType(mediaType string) (string, string, error) {
@@ -137,7 +146,8 @@ func generateBodySchema(operation *v3.Operation) string {
 			return ""
 		}
 		if typ == "application" && (subtype == "json" || strings.HasSuffix(subtype, "+json")) {
-			return extractSchema((*contentValue).Schema)
+			schema, _ := extractSchema((*contentValue).Schema)
+			return schema
 		}
 
 		contentItem = contentItem.Next()
@@ -180,9 +190,9 @@ func generateContentTypes(operation *v3.Operation) []string {
 // on the JSON snippet, and the OAS inputs. This can return nil
 func generateValidatorPlugin(operationConfigJSON []byte, operation *v3.Operation, path *v3.PathItem,
 	uuidNamespace uuid.UUID, baseName string, skipID bool, insoCompat bool,
-) *map[string]interface{} {
+) (*map[string]interface{}, error) {
 	if len(operationConfigJSON) == 0 {
-		return nil
+		return nil, nil
 	}
 	logbasics.Debug("generating validator plugin", "operation", baseName)
 
@@ -201,7 +211,10 @@ func generateValidatorPlugin(operationConfigJSON []byte, operation *v3.Operation
 	}
 
 	if config["parameter_schema"] == nil {
-		parameterSchema := generateParameterSchema(operation, path, insoCompat)
+		parameterSchema, err := generateParameterSchema(operation, path, insoCompat)
+		if err != nil {
+			return nil, err
+		}
 		if parameterSchema != nil {
 			config["parameter_schema"] = parameterSchema
 			config["version"] = JSONSchemaVersion
@@ -219,7 +232,7 @@ func generateValidatorPlugin(operationConfigJSON []byte, operation *v3.Operation
 				// unless the content-types have been provided by the user
 				if config["allowed_content_types"] == nil {
 					// also not provided, so really nothing to validate, don't add a plugin
-					return nil
+					return nil, nil
 				}
 				// add an empty schema, which passes everything, but it also activates the
 				// content-type check
@@ -236,5 +249,81 @@ func generateValidatorPlugin(operationConfigJSON []byte, operation *v3.Operation
 		}
 	}
 
-	return &pluginConfig
+	return &pluginConfig, nil
+}
+
+// This function checks if there is a oneOf or anyOf schema present in the passed schemaMap.
+// The first return value (string) indicates the top-level type for the oneOf/anyOf schema.
+// The second return value (bool) indicates if either of oneOf/anyOf is found in the schemaMap.
+//
+// 1. If the oneOf/anyOf schema is found, it tries to find the top-level type defined with
+// the oneOf/anyOf schema.
+// -- If the top-level type is found, it is returned along with "true".
+// -- If the top-level type is not found, a blank string is returned with "true".
+// 2. If the oneOf/anyOf schema is not found, the function will return
+// a blank string with "false".
+func fetchTopLevelType(schemaMap map[string]interface{}) (string, bool) {
+	var (
+		typeStr    string
+		oneOfFound bool
+		anyOfFound bool
+	)
+
+	isSlice := func(value interface{}) bool {
+		_, ok := value.([]interface{})
+		return ok
+	}
+
+	// We need to check for oneOf and anyOf first, as we need the
+	// top-level type from the same level from the map.
+	// Without checking for those, the recusion may enter the
+	// oneOf or anyOf maps and return the type from there.
+	// This would defeat our purpose of checking for the top-level type
+
+	// Check if oneOf exists at the current level
+	if oneOf, ok := schemaMap["oneOf"]; ok {
+		oneOfFound = isSlice(oneOf)
+	}
+
+	// Check if anyOf exists at the current level
+	if anyOf, ok := schemaMap["anyOf"]; ok {
+		anyOfFound = isSlice(anyOf)
+	}
+
+	// Check if type exists at the current level
+	if typ, ok := schemaMap["type"]; ok {
+		if str, isString := typ.(string); isString {
+			typeStr = str
+		}
+	}
+
+	// If both oneOf and type are found at this level, return them
+	if oneOfFound && typeStr != "" || anyOfFound && typeStr != "" {
+		return typeStr, true
+	}
+
+	// Recursively search in nested objects
+	for _, value := range schemaMap {
+		switch v := value.(type) {
+		case map[string]interface{}:
+			if str, oneOfAnyOfFound := fetchTopLevelType(v); oneOfAnyOfFound {
+				return str, true
+			}
+		case []interface{}:
+			for _, item := range v {
+				if itemMap, isMap := item.(map[string]interface{}); isMap {
+					if str, oneOfAnyOfFound := fetchTopLevelType(itemMap); oneOfAnyOfFound {
+						return str, true
+					}
+				}
+			}
+		}
+	}
+
+	if !oneOfFound && !anyOfFound {
+		// there is no oneOf or anyOf schema, thus returning false
+		return "", false
+	}
+
+	return "", true
 }
