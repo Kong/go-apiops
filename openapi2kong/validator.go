@@ -81,6 +81,12 @@ func generateParameterSchema(operation *v3.Operation, path *v3.PathItem,
 			paramConf["style"] = style
 			paramConf["explode"] = explode
 			paramConf["in"] = parameter.In
+
+			if parameter.In == "cookie" {
+				return nil, fmt.Errorf(`cookie parameters are not supported for request-validator plugin; 
+				choose either path, query or header`)
+			}
+
 			if parameter.In == "path" {
 				paramConf["name"] = sanitizeRegexCapture(parameter.Name, insoCompat)
 			} else {
