@@ -65,9 +65,19 @@ func generateParameterSchema(operation *v3.Operation, path *v3.PathItem,
 
 	result := make([]map[string]interface{}, len(combinedParameters))
 	i := 0
+	invalidParamCounts := 0
 
 	for _, parameter := range combinedParameters {
 		if parameter != nil {
+			if parameter.In == "cookie" {
+				logbasics.Info(`cookie parameters are not supported for request-validator plugin; 
+					choose either path, query or header`)
+
+				invalidParamCounts++
+
+				continue
+			}
+
 			style := getDefaultParamStyle(parameter.Style, parameter.In)
 
 			var explode bool
@@ -81,11 +91,6 @@ func generateParameterSchema(operation *v3.Operation, path *v3.PathItem,
 			paramConf["style"] = style
 			paramConf["explode"] = explode
 			paramConf["in"] = parameter.In
-
-			if parameter.In == "cookie" {
-				return nil, fmt.Errorf(`cookie parameters are not supported for request-validator plugin; 
-				choose either path, query or header`)
-			}
 
 			if parameter.In == "path" {
 				paramConf["name"] = sanitizeRegexCapture(parameter.Name, insoCompat)
@@ -115,7 +120,9 @@ func generateParameterSchema(operation *v3.Operation, path *v3.PathItem,
 		}
 	}
 
-	return result, nil
+	// This ensures that we don't return nulls in the map, in case of invalid parameters
+	// indexing makes sure that order is maintained and nulls are in the end
+	return result[:len(result)-invalidParamCounts], nil
 }
 
 func parseMediaType(mediaType string) (string, string, error) {
