@@ -191,14 +191,6 @@
                     "style": "simple"
                   },
                   {
-                    "explode": true,
-                    "in": "cookie",
-                    "name": "cookieid",
-                    "required": true,
-                    "schema": "{\"type\":\"integer\"}",
-                    "style": "form"
-                  },
-                  {
                     "explode": false,
                     "in": "path",
                     "name": "path_id",

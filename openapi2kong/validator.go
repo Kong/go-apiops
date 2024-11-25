@@ -65,9 +65,18 @@ func generateParameterSchema(operation *v3.Operation, path *v3.PathItem,
 
 	result := make([]map[string]interface{}, len(combinedParameters))
 	i := 0
+	invalidParamCounts := 0
 
 	for _, parameter := range combinedParameters {
 		if parameter != nil {
+			if parameter.In == "cookie" {
+				logbasics.Info("cookie parameters are not supported by the request-validator plugin; validation will be skipped")
+
+				invalidParamCounts++
+
+				continue
+			}
+
 			style := getDefaultParamStyle(parameter.Style, parameter.In)
 
 			var explode bool
@@ -81,6 +90,7 @@ func generateParameterSchema(operation *v3.Operation, path *v3.PathItem,
 			paramConf["style"] = style
 			paramConf["explode"] = explode
 			paramConf["in"] = parameter.In
+
 			if parameter.In == "path" {
 				paramConf["name"] = sanitizeRegexCapture(parameter.Name, insoCompat)
 			} else {
@@ -109,7 +119,9 @@ func generateParameterSchema(operation *v3.Operation, path *v3.PathItem,
 		}
 	}
 
-	return result, nil
+	// This ensures that we don't return nulls in the map, in case of invalid parameters
+	// indexing makes sure that order is maintained and nulls are in the end
+	return result[:len(result)-invalidParamCounts], nil
 }
 
 func parseMediaType(mediaType string) (string, string, error) {
@@ -303,7 +315,21 @@ func fetchTopLevelType(schemaMap map[string]interface{}) (string, bool) {
 	}
 
 	// Recursively search in nested objects
-	for _, value := range schemaMap {
+	for key, value := range schemaMap {
+		// This implies type = array
+		if key == "items" {
+			if itemMap, ok := schemaMap["items"].(map[string]interface{}); ok {
+				if _, ok := itemMap["oneOf"]; ok {
+					// skip this item map
+					// we don't need a top-level type with this oneOf
+					// However, we need to ensure that any nested refs
+					// in the oneOf array have top-level types.
+					// Thus, continuing the loop here.
+					continue
+				}
+			}
+		}
+
 		switch v := value.(type) {
 		case map[string]interface{}:
 			if str, oneOfAnyOfFound := fetchTopLevelType(v); oneOfAnyOfFound {

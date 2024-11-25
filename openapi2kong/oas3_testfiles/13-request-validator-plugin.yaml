@@ -40,6 +40,9 @@ paths:
           schema:
             type: integer
           required: true
+        # This would not be added to the req-validator plugin config
+        # as cookie type is not supported yet.
+        # A warning would be logged and this parameter would be ignored.
         - in: cookie
           name: cookieid
           schema:
