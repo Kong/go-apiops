@@ -351,5 +351,5 @@ func fetchTopLevelType(schemaMap map[string]interface{}) (string, bool) {
 		return "", false
 	}
 
-	return typeStr, true
+	return "", true
 }
