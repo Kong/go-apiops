@@ -47,6 +47,22 @@
                     "required": true,
                     "schema": "{\"$ref\":\"#/definitions/secondHeaderType\",\"definitions\":{\"numberType\":{\"example\":2.5,\"type\":\"number\"},\"secondHeaderType\":{\"oneOf\":[{\"$ref\":\"#/definitions/stringType\"},{\"$ref\":\"#/definitions/numberType\"}],\"type\":\"string\"},\"stringType\":{\"example\":\"10\",\"type\":\"string\"}}}",
                     "style": "simple"
+                  },
+                  {
+                    "explode": true,
+                    "in": "query",
+                    "name": "testArrayOne",
+                    "required": true,
+                    "schema": "{\"items\":{\"oneOf\":[{\"type\":\"string\"},{\"type\":\"integer\"}]},\"type\":\"array\"}",
+                    "style": "form"
+                  },
+                  {
+                    "explode": true,
+                    "in": "query",
+                    "name": "testArrayTwo",
+                    "required": true,
+                    "schema": "{\"definitions\":{\"headerType\":{\"oneOf\":[{\"$ref\":\"#/definitions/stringType\"},{\"$ref\":\"#/definitions/numberType\"}],\"type\":\"string\"},\"newType\":{\"oneOf\":[{\"type\":\"string\"},{\"type\":\"number\"}],\"type\":\"string\"},\"numberType\":{\"example\":2.5,\"type\":\"number\"},\"stringType\":{\"example\":\"10\",\"type\":\"string\"}},\"items\":{\"oneOf\":[{\"$ref\":\"#/definitions/headerType\"},{\"$ref\":\"#/definitions/newType\"}]},\"type\":\"array\"}",
+                    "style": "form"
                   }
                 ],
                 "version": "draft4"

@@ -315,7 +315,21 @@ func fetchTopLevelType(schemaMap map[string]interface{}) (string, bool) {
 	}
 
 	// Recursively search in nested objects
-	for _, value := range schemaMap {
+	for key, value := range schemaMap {
+		// This implies type = array
+		if key == "items" {
+			if itemMap, ok := schemaMap["items"].(map[string]interface{}); ok {
+				if _, ok := itemMap["oneOf"]; ok {
+					// skip this item map
+					// we don't need a top-level type with this oneOf
+					// However, we need to ensure that any nested refs
+					// in the oneOf array have top-level types.
+					// Thus, continuing the loop here.
+					continue
+				}
+			}
+		}
+
 		switch v := value.(type) {
 		case map[string]interface{}:
 			if str, oneOfAnyOfFound := fetchTopLevelType(v); oneOfAnyOfFound {
@@ -337,5 +351,5 @@ func fetchTopLevelType(schemaMap map[string]interface{}) (string, bool) {
 		return "", false
 	}
 
-	return "", true
+	return typeStr, true
 }
