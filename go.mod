@@ -14,7 +14,7 @@ require (
 	github.com/onsi/gomega v1.35.1
 	github.com/pb33f/libopenapi v0.16.13
 	github.com/spf13/cobra v1.8.1
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/vmware-labs/yaml-jsonpath v0.3.2
 	github.com/yuin/gopher-lua v1.1.1
 	golang.org/x/term v0.26.0
