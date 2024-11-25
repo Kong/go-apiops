@@ -70,8 +70,7 @@ func generateParameterSchema(operation *v3.Operation, path *v3.PathItem,
 	for _, parameter := range combinedParameters {
 		if parameter != nil {
 			if parameter.In == "cookie" {
-				logbasics.Info(`cookie parameters are not supported for request-validator plugin; 
-					choose either path, query or header`)
+				logbasics.Info("cookie parameters are not supported by the request-validator plugin; validation will be skipped")
 
 				invalidParamCounts++
 
