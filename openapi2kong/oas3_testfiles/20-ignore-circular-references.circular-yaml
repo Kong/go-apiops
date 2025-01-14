@@ -1,0 +1,68 @@
+openapi: 3.1.0
+info:
+  title: Testing Circular
+  version: 1.1.1
+
+  contact:
+    name: Kong Insomnia
+
+servers:
+  - url: https://some.random.url
+
+x-kong-plugin-request-validator:
+  enabled: true
+  version: draft4
+  config:
+    verbose_response: true
+
+tags:
+  - name: Testing
+    
+paths:
+  "/categories":
+    get:
+      tags:
+      - Category
+      summary: Get all categories for a given classificationId and brand
+      parameters:
+      - name: classificationId
+        in: query
+        description: 'Classification ID. Example value: 545'
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CategoriesResponse"
+components:
+  schemas:
+    CategoriesResponse:
+      required:
+      - categories
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Category"
+      additionalProperties: false
+    Category:
+      required:
+      - id
+      - subCategories
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        subCategories:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Category"
+      additionalProperties: false
+    
