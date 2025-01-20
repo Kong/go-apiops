@@ -227,7 +227,7 @@ func generateValidatorPlugin(operationConfigJSON []byte, operation *v3.Operation
 		if err != nil {
 			return nil, err
 		}
-		if parameterSchema != nil {
+		if len(parameterSchema) != 0 {
 			config["parameter_schema"] = parameterSchema
 			config["version"] = JSONSchemaVersion
 		}

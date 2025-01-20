@@ -19,6 +19,15 @@ paths:
       # there is nothing to validate here, so no plugin should be created
       summary: Get help
       operationId: getHelp
+      parameters:
+        # This would not be added to the req-validator plugin config
+        # as cookie type is not supported yet.
+        # A warning would be logged and this parameter would be ignored.
+        - in: cookie
+          name: cookieid
+          schema:
+            type: integer
+          required: true
       responses:
         '200':
           description: This is a success.
