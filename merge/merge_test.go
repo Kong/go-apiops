@@ -211,5 +211,15 @@ var _ = Describe("Merge", func() {
 
 			validateMerge(fileList, expected, expectErr, nil)
 		})
+
+		It("env variables in _format_version: bad env variable", func() {
+			fileList := []string{
+				"./merge_testfiles/badenvvar.yml",
+			}
+			expected := "environment variables in the state file must be prefixed with 'DECK_', found: 'FORMAT_VERSION'"
+			expectErr := true
+
+			validateMerge(fileList, expected, expectErr, nil)
+		})
 	})
 })

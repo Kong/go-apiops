@@ -10,6 +10,10 @@ import (
 	"github.com/kong/go-apiops/logbasics"
 )
 
+const (
+	envVarPrefix = "DECK_"
+)
+
 func merge2Files(data1 map[string]interface{}, data2 map[string]interface{}) map[string]interface{} {
 	mergedData := make(map[string]interface{})
 
@@ -98,6 +102,12 @@ func preprocessFormatVersion(data []byte) ([]byte, error) {
 		return nil, fmt.Errorf("invalid environment variable format")
 	}
 	envVarName := formatVersionLine[envStart : envStart+envEnd]
+
+	if !strings.HasPrefix(envVarName, envVarPrefix) {
+		return nil, fmt.Errorf("environment variables in the state file must "+
+			"be prefixed with '%s', found: '%s'", envVarPrefix, envVarName)
+	}
+
 	value := os.Getenv(envVarName)
 	if value == "" {
 		return nil, fmt.Errorf("environment variable '%s' is not set", envVarName)

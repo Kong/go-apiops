@@ -1,0 +1,2 @@
+# we require format versions to be prefixed with DECK_
+_format_version: "${{ env "FORMAT_VERSION" }}"
