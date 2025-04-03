@@ -6,7 +6,7 @@ linters:
   - durationcheck
   - errcheck
   - exhaustive
-  - exportloopref
+  # - exportloopref
   - gci
   - goconst
   - gofmt
