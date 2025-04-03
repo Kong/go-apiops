@@ -1,0 +1,12 @@
+_comment: this is file6
+
+_format_version: "${{ env "DECK_FORMAT_VERSION" }}"
+
+services:
+- connect_timeout: ${{ env "DECK_SVC_CONNECT_TIMEOUT" }}
+  host: mockbin.org
+  name: svc1
+  port: 80
+  protocol: http
+  read_timeout: ${{ env "DECK_SVC_READ_TIMEOUT" }}
+  retries: ${{ env "DECK_SVC_RETRIES" }}

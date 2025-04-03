@@ -57,6 +57,10 @@ func MustFiles(filenames []string) (result map[string]interface{}, history []int
 // is assigned to an environment variable.
 // If it is, it substitutes the value for further operations.
 func preprocessFormatVersion(data []byte) ([]byte, error) {
+	if len(data) == 0 {
+		return data, nil
+	}
+
 	content := string(data)
 
 	// checking if _format_version is assigned to an env variable
@@ -65,29 +69,40 @@ func preprocessFormatVersion(data []byte) ([]byte, error) {
 		return []byte(content), nil
 	}
 
-	templateEnvStart := strings.Index(content[formatVersionIndex:], "${{ env \"")
+	// finding the end of line after _format_version
+	lineEnd := strings.Index(content[formatVersionIndex:], "\n")
+	if lineEnd == -1 {
+		// if no newline found, checking till end of string
+		lineEnd = len(content) - formatVersionIndex
+	}
+	if formatVersionIndex+lineEnd > len(content) {
+		return nil, fmt.Errorf("invalid _format_version line")
+	}
+	// only look for template pattern within the _format_version line
+	formatVersionLine := content[formatVersionIndex : formatVersionIndex+lineEnd]
+	templateEnvStart := strings.Index(formatVersionLine, "${{ env \"")
 	if templateEnvStart == -1 {
 		return []byte(content), nil
 	}
 
-	// absolute position for templateEnvStart
-	templateEnvStart += formatVersionIndex
-
 	// finding env var name
 	envStart := templateEnvStart + len("${{ env \"")
-	envEnd := strings.Index(content[envStart:], "\" }}")
+	if envStart >= len(formatVersionLine) {
+		return nil, fmt.Errorf("environment variable is not used properly")
+	}
+	envEnd := strings.Index(formatVersionLine[envStart:], "\" }}")
 	if envEnd == -1 {
 		return nil, fmt.Errorf("environment variable quotes not closed")
 	}
-	envVarName := content[envStart : envStart+envEnd]
-
+	if envStart+envEnd > len(formatVersionLine) {
+		return nil, fmt.Errorf("invalid environment variable format")
+	}
+	envVarName := formatVersionLine[envStart : envStart+envEnd]
 	value := os.Getenv(envVarName)
-
 	if value == "" {
 		return nil, fmt.Errorf("environment variable '%s' is not set", envVarName)
 	}
 
-	// handling double quoted strings
 	var newValue string
 	var oldValue string
 
@@ -101,7 +116,7 @@ func preprocessFormatVersion(data []byte) ([]byte, error) {
 		oldValue = singleQuotedString
 		newValue = fmt.Sprintf(`'%s'`, value)
 	} else {
-		return nil, fmt.Errorf("environment variable '%s' is not templated properly", envVarName)
+		return nil, fmt.Errorf("environment variable '%s' is not templated properly; enclose in outer quotes", envVarName)
 	}
 
 	// replace with env var value

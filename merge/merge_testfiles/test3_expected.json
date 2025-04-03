@@ -1,0 +1,24 @@
+{
+    "_comment": "this is file5",
+    "_format_version": "3.0",
+    "services": [
+      {
+        "connect_timeout": "${{ env \"DECK_SVC_CONNECT_TIMEOUT\" }}",
+        "host": "mockbin.org",
+        "name": "svc1",
+        "port": 80,
+        "protocol": "http",
+        "read_timeout": "${{ env \"DECK_SVC_READ_TIMEOUT\" }}",
+        "retries": "${{ env \"DECK_SVC_RETRIES\" }}"
+      },
+      {
+        "connect_timeout": "${{ env \"DECK_SVC_CONNECT_TIMEOUT\" }}",
+        "host": "mockbin.org",
+        "name": "svc2",
+        "port": 80,
+        "protocol": "http",
+        "read_timeout": "${{ env \"DECK_SVC_READ_TIMEOUT\" }}",
+        "retries": "${{ env \"DECK_SVC_RETRIES\" }}"
+      }
+    ]
+  }
