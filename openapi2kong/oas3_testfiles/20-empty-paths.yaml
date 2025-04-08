@@ -1,0 +1,10 @@
+# openapi2kong.go should not fail when .paths is empty
+
+openapi: '3.0.0'
+info:
+  title: Simple API overview
+  version: v2
+servers:
+  - url: https://server1.com/
+  - url: https://server2.com/
+paths: []

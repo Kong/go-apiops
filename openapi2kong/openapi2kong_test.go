@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -15,8 +17,8 @@ const fixturePath = "./oas3_testfiles/"
 
 // findFilesBySuffix returns a list of files in the fixturePath
 // that end with the given suffix.
-func findFilesBySuffix(t *testing.T, suffix string) []fs.DirEntry {
-	files, err := os.ReadDir(fixturePath)
+func findFilesBySuffix(t *testing.T, dir string, suffix string) []fs.DirEntry {
+	files, err := os.ReadDir(dir)
 	if err != nil {
 		t.Error("failed reading test data: %w", err)
 	}
@@ -24,7 +26,7 @@ func findFilesBySuffix(t *testing.T, suffix string) []fs.DirEntry {
 	// loop over all files, and remove anything that doesn't end with the suffix
 	for i := 0; i < len(files); i++ {
 		if !strings.HasSuffix(files[i].Name(), suffix) {
-			files = append(files[:i], files[i+1:]...)
+			files = slices.Delete(files, i, i+1)
 			i--
 		}
 	}
@@ -32,14 +34,32 @@ func findFilesBySuffix(t *testing.T, suffix string) []fs.DirEntry {
 	return files
 }
 
+func Test_Openapi2kong_InvalidPaths(t *testing.T) {
+	dir := filepath.Join(fixturePath, "invalid")
+	files := findFilesBySuffix(t, dir, ".yaml")
+
+	for _, file := range files {
+		fileNameIn := file.Name()
+		dataIn, _ := os.ReadFile(filepath.Join(dir, fileNameIn))
+		_, err := Convert(dataIn, O2kOptions{
+			Tags: []string{"OAS3_import", "OAS3file_" + fileNameIn},
+			OIDC: true,
+		})
+		if err == nil {
+			t.Error(fmt.Sprintf("'%s' expected error: %%w", dir+fileNameIn), err)
+		} else {
+			assert.Contains(t, err.Error(), "must have `.paths` in the root of the document")
+		}
+	}
+}
+
 func Test_Openapi2kong(t *testing.T) {
-	files := findFilesBySuffix(t, ".yaml")
+	files := findFilesBySuffix(t, fixturePath, ".yaml")
 
 	for _, file := range files {
 		fileNameIn := file.Name()
 		fileNameExpected := strings.TrimSuffix(fileNameIn, ".yaml") + ".expected.json"
 		fileNameOut := strings.TrimSuffix(fileNameIn, ".yaml") + ".generated.json"
-		// log.Printf("input file: '%v', expected file: '%v'", fileNameIn, fileNameExpected)
 		dataIn, _ := os.ReadFile(fixturePath + fileNameIn)
 		dataOut, err := Convert(dataIn, O2kOptions{
 			Tags: []string{"OAS3_import", "OAS3file_" + fileNameIn},
@@ -59,7 +79,7 @@ func Test_Openapi2kong(t *testing.T) {
 
 func Test_Openapi2kong_InsoCompat(t *testing.T) {
 	suffix := ".expected_inso.json"
-	files := findFilesBySuffix(t, suffix)
+	files := findFilesBySuffix(t, fixturePath, suffix)
 
 	for _, file := range files {
 		fileName := strings.TrimSuffix(file.Name(), suffix)
@@ -67,7 +87,6 @@ func Test_Openapi2kong_InsoCompat(t *testing.T) {
 		fileNameIn := fileName + ".yaml"
 		fileNameExpected := fileName + ".expected_inso.json"
 		fileNameOut := fileName + ".generated_inso.json"
-		// log.Printf("input file: '%v', expected file: '%v'", fileNameIn, fileNameExpected)
 
 		dataIn, _ := os.ReadFile(fixturePath + fileNameIn)
 		dataOut, err := Convert(dataIn, O2kOptions{
