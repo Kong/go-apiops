@@ -2,10 +2,16 @@ package merge
 
 import (
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/kong/go-apiops/deckformat"
 	"github.com/kong/go-apiops/filebasics"
 	"github.com/kong/go-apiops/logbasics"
+)
+
+const (
+	envVarPrefix = "DECK_"
 )
 
 func merge2Files(data1 map[string]interface{}, data2 map[string]interface{}) map[string]interface{} {
@@ -51,6 +57,84 @@ func MustFiles(filenames []string) (result map[string]interface{}, history []int
 	return result, info
 }
 
+// preprocessFormatVersion checks if the _format_version in a file
+// is assigned to an environment variable.
+// If it is, it substitutes the value for further operations.
+func preprocessFormatVersion(data []byte) ([]byte, error) {
+	if len(data) == 0 {
+		return data, nil
+	}
+
+	content := string(data)
+
+	// checking if _format_version is assigned to an env variable
+	formatVersionIndex := strings.Index(content, deckformat.VersionKey)
+	if formatVersionIndex == -1 {
+		return []byte(content), nil
+	}
+
+	// finding the end of line after _format_version
+	lineEnd := strings.Index(content[formatVersionIndex:], "\n")
+	if lineEnd == -1 {
+		// if no newline found, checking till end of string
+		lineEnd = len(content) - formatVersionIndex
+	}
+	if formatVersionIndex+lineEnd > len(content) {
+		return nil, fmt.Errorf("invalid _format_version line")
+	}
+	// only look for template pattern within the _format_version line
+	formatVersionLine := content[formatVersionIndex : formatVersionIndex+lineEnd]
+	templateEnvStart := strings.Index(formatVersionLine, "${{ env \"")
+	if templateEnvStart == -1 {
+		return []byte(content), nil
+	}
+
+	// finding env var name
+	envStart := templateEnvStart + len("${{ env \"")
+	if envStart >= len(formatVersionLine) {
+		return nil, fmt.Errorf("environment variable is not used properly")
+	}
+	envEnd := strings.Index(formatVersionLine[envStart:], "\" }}")
+	if envEnd == -1 {
+		return nil, fmt.Errorf("environment variable quotes not closed")
+	}
+	if envStart+envEnd > len(formatVersionLine) {
+		return nil, fmt.Errorf("invalid environment variable format")
+	}
+	envVarName := formatVersionLine[envStart : envStart+envEnd]
+
+	if !strings.HasPrefix(envVarName, envVarPrefix) {
+		return nil, fmt.Errorf("environment variables in the state file must "+
+			"be prefixed with '%s', found: '%s'", envVarPrefix, envVarName)
+	}
+
+	value := os.Getenv(envVarName)
+	if value == "" {
+		return nil, fmt.Errorf("environment variable '%s' is not set", envVarName)
+	}
+
+	var newValue string
+	var oldValue string
+
+	doubleQuotedString := fmt.Sprintf(`"${{ env "%s" }}"`, envVarName)
+	singleQuotedString := fmt.Sprintf(`'${{ env '%s' }}'`, envVarName)
+
+	if strings.Contains(content, doubleQuotedString) {
+		oldValue = doubleQuotedString
+		newValue = fmt.Sprintf(`"%s"`, value)
+	} else if strings.Contains(content, singleQuotedString) {
+		oldValue = singleQuotedString
+		newValue = fmt.Sprintf(`'%s'`, value)
+	} else {
+		return nil, fmt.Errorf("environment variable '%s' is not templated properly; enclose in outer quotes", envVarName)
+	}
+
+	// replace with env var value
+	content = strings.Replace(content, oldValue, newValue, 1)
+
+	return []byte(content), nil
+}
+
 // Files reads and merges files. Will merge all top-level arrays by simply
 // concatenating them. Any other keys will be copied. The files will be processed
 // in order provided. An error will be returned if files are incompatible.
@@ -68,7 +152,17 @@ func Files(filenames []string) (result map[string]interface{}, history []interfa
 		logbasics.Info("merging file", "filename", filename)
 
 		// read the file
-		data, err := filebasics.DeserializeFile(filename)
+		bytedata, err := filebasics.ReadFile(filename)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		preprocessedData, err := preprocessFormatVersion(bytedata)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		data, err := filebasics.Deserialize(preprocessedData)
 		if err != nil {
 			return nil, nil, err
 		}

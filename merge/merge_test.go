@@ -2,6 +2,7 @@ package merge_test
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	. "github.com/kong/go-apiops/filebasics"
@@ -141,6 +142,84 @@ var _ = Describe("Merge", func() {
 				merge.MustFiles([]string{"bad_file1.yml", "bad_file2.yml"})
 			}
 			Expect(t).Should(Panic())
+		})
+	})
+
+	Describe("MergeFiles with env variables", func() {
+		It("env variables in configuration", func() {
+			// This tests the order of the resulting file, but also the version of the
+			// final file
+			fileList := []string{
+				"./merge_testfiles/file4.yml",
+				"./merge_testfiles/file5.yml",
+			}
+			expected := "test3_expected.json"
+			expectErr := false
+			expectedHist := []interface{}{
+				map[string]interface{}{
+					"filename": "./merge_testfiles/file4.yml",
+				},
+				map[string]interface{}{
+					"filename": "./merge_testfiles/file5.yml",
+				},
+			}
+
+			validateMerge(fileList, expected, expectErr, expectedHist)
+		})
+
+		It("env variables in _format_version: compatible", func() {
+			os.Setenv("DECK_FORMAT_VERSION", "3.0")
+			fileList := []string{
+				"./merge_testfiles/file6.yml",
+				"./merge_testfiles/file7.yml",
+			}
+			expected := "test4_expected.json"
+			expectErr := false
+			expectedHist := []interface{}{
+				map[string]interface{}{
+					"filename": "./merge_testfiles/file6.yml",
+				},
+				map[string]interface{}{
+					"filename": "./merge_testfiles/file7.yml",
+				},
+			}
+
+			validateMerge(fileList, expected, expectErr, expectedHist)
+		})
+
+		It("env variables in _format_version: incompatible", func() {
+			os.Setenv("DECK_FORMAT_VERSION", "3.0")
+			fileList := []string{
+				"./merge_testfiles/file6.yml",
+				"./merge_testfiles/badversion.yml",
+			}
+			expected := "failed to merge ./merge_testfiles/badversion.yml: files are incompatible; " +
+				"major versions are incompatible; 3.0 and 1.0"
+			expectErr := true
+
+			validateMerge(fileList, expected, expectErr, nil)
+		})
+
+		It("env variables in _format_version: missing env variable", func() {
+			os.Unsetenv("DECK_FORMAT_VERSION")
+			fileList := []string{
+				"./merge_testfiles/file6.yml",
+				"./merge_testfiles/file7.yml",
+			}
+			expected := "environment variable 'DECK_FORMAT_VERSION' is not set"
+			expectErr := true
+
+			validateMerge(fileList, expected, expectErr, nil)
+		})
+
+		It("env variables in _format_version: bad env variable", func() {
+			fileList := []string{
+				"./merge_testfiles/badenvvar.yml",
+			}
+			expected := "environment variables in the state file must be prefixed with 'DECK_', found: 'FORMAT_VERSION'"
+			expectErr := true
+
+			validateMerge(fileList, expected, expectErr, nil)
 		})
 	})
 })
