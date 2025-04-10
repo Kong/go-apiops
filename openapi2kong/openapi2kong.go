@@ -713,6 +713,10 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 	//
 	//
 
+	if doc.Paths == nil || doc.Paths.PathItems == nil || doc.Paths.PathItems.Len() == 0 {
+		return nil, fmt.Errorf("must have at least one element in `.paths`. See examples https://github.com/Kong/go-apiops/tree/main/docs")
+	}
+
 	// create a sorted array of paths, to be deterministic in our output order
 	allPaths := doc.Paths.PathItems
 	sortedPaths := make([]string, allPaths.Len())
