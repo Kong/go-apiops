@@ -1,0 +1,45 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "simple-api-overview.upstream",
+      "id": "0907c4ab-d9e4-5d21-813b-c57a97eeaad9",
+      "name": "simple-api-overview",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_20-empty-paths.yaml"
+      ]
+    }
+  ],
+  "upstreams": [
+    {
+      "id": "811c42d6-ef18-5296-a550-7dca2262b4d8",
+      "name": "simple-api-overview.upstream",
+      "tags": [
+        "OAS3_import",
+        "OAS3file_20-empty-paths.yaml"
+      ],
+      "targets": [
+        {
+          "tags": [
+            "OAS3_import",
+            "OAS3file_20-empty-paths.yaml"
+          ],
+          "target": "server1.com:443"
+        },
+        {
+          "tags": [
+            "OAS3_import",
+            "OAS3file_20-empty-paths.yaml"
+          ],
+          "target": "server2.com:443"
+        }
+      ]
+    }
+  ]
+}
