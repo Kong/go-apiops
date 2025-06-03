@@ -1,0 +1,70 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "order-service.example.com",
+      "id": "8b6ad746-12b9-50fd-8604-5e7768c4f5e9",
+      "name": "multi-service-api_orders_post",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "e8d42325-3ee0-57b3-9883-5ea51618f4ac",
+          "methods": [
+            "POST"
+          ],
+          "name": "multi-service-api_orders_post",
+          "paths": [
+            "~/orders$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_21-no-doc-servers.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_21-no-doc-servers.yaml"
+      ]
+    },
+    {
+      "host": "user-service.example.com",
+      "id": "6e5e1d3b-894b-5ce8-b807-532df7b6d01d",
+      "name": "multi-service-api_users_get",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "744254cb-7b0f-527d-a9e3-41998313e8fd",
+          "methods": [
+            "GET"
+          ],
+          "name": "multi-service-api_users_get",
+          "paths": [
+            "~/users$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_21-no-doc-servers.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_21-no-doc-servers.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}

@@ -669,7 +669,14 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create service/upstream from document root: %w", err)
 	}
-	services = append(services, docService)
+
+	// if there are no document-level servers defined
+	// we are skipping to add the default created docService
+	// in the services slice. This is done to ensure that
+	// an unintended extra service is not created.
+	if len(docServers) != 0 {
+		services = append(services, docService)
+	}
 	if docUpstream != nil {
 		upstreams = append(upstreams, docUpstream)
 	}
