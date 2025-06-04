@@ -1,0 +1,27 @@
+openapi: 3.0.0
+info:
+  title: Multi-Service API
+  version: 1.0.0
+
+# this would create a top-level
+# doc service as well as an upstream
+servers:
+  - url: https://server1.com/
+  - url: https://server2.com/
+
+paths:
+  /users:
+    get:
+      # this would create another service
+      servers:
+        - url: https://user-service.example.com
+      responses:
+        '200':
+
+  /orders:
+    # this would create another service
+    servers:
+        - url: https://order-service.example.com
+    post:
+      responses:
+        '201':

@@ -1,0 +1,109 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "multi-service-api.upstream",
+      "id": "eff78c7b-04db-5898-9e25-bd40f5cde525",
+      "name": "multi-service-api",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_22-doc-path-and-ops-servers.yaml"
+      ]
+    },
+    {
+      "host": "order-service.example.com",
+      "id": "90bcf95e-2064-5bcf-b94a-d4294e29c00c",
+      "name": "multi-service-api_orders",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "e8d42325-3ee0-57b3-9883-5ea51618f4ac",
+          "methods": [
+            "POST"
+          ],
+          "name": "multi-service-api_orders_post",
+          "paths": [
+            "~/orders$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_22-doc-path-and-ops-servers.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_22-doc-path-and-ops-servers.yaml"
+      ]
+    },
+    {
+      "host": "user-service.example.com",
+      "id": "6e5e1d3b-894b-5ce8-b807-532df7b6d01d",
+      "name": "multi-service-api_users_get",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "744254cb-7b0f-527d-a9e3-41998313e8fd",
+          "methods": [
+            "GET"
+          ],
+          "name": "multi-service-api_users_get",
+          "paths": [
+            "~/users$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_22-doc-path-and-ops-servers.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_22-doc-path-and-ops-servers.yaml"
+      ]
+    }
+  ],
+  "upstreams": [
+    {
+      "id": "c9507064-ce65-5a42-9501-58faa57ad09c",
+      "name": "multi-service-api.upstream",
+      "tags": [
+        "OAS3_import",
+        "OAS3file_22-doc-path-and-ops-servers.yaml"
+      ],
+      "targets": [
+        {
+          "tags": [
+            "OAS3_import",
+            "OAS3file_22-doc-path-and-ops-servers.yaml"
+          ],
+          "target": "server1.com:443"
+        },
+        {
+          "tags": [
+            "OAS3_import",
+            "OAS3file_22-doc-path-and-ops-servers.yaml"
+          ],
+          "target": "server2.com:443"
+        }
+      ]
+    }
+  ]
+}
