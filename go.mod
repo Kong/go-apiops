@@ -13,7 +13,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.22.2
 	github.com/onsi/gomega v1.36.2
 	github.com/pb33f/libopenapi v0.16.13
-	github.com/spf13/cobra v1.8.1
+	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
 	github.com/vmware-labs/yaml-jsonpath v0.3.2
 	github.com/yuin/gopher-lua v1.1.1
@@ -33,7 +33,7 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mozillazg/go-unidecode v0.2.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/wk8/go-ordered-map/v2 v2.1.8 // indirect
 	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
