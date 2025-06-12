@@ -521,6 +521,18 @@ func getForeignKeyPlugins(
 	return &genericPlugins, &newPluginList
 }
 
+// findPathParamSchema returns the Schema for given path parameter name
+// TODO: see if there is a faster way
+func findPathParamSchema(parameters []*v3.Parameter, paramName string) *openapibase.Schema {
+	for _, param := range parameters {
+		if param.Name == paramName {
+			return param.Schema.Schema()
+		}
+	}
+
+	return nil
+}
+
 // MustConvert is the same as Convert, but will panic if an error is returned.
 func MustConvert(content []byte, opts O2kOptions) map[string]interface{} {
 	result, err := Convert(content, opts)
@@ -1077,7 +1089,16 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 						return nil, fmt.Errorf("path-parameter name exceeds 32 characters: '%s' (sanitized to '%s')",
 							varName, captureName)
 					}
-					regexMatch := "(?<" + captureName + ">[^#?/]+)"
+
+					var regexMatch string = "(?<" + captureName + ">[^#?/]+)"
+
+					var paramSchema = findPathParamSchema(pathitem.Parameters, varName)
+
+					// Check if the parameter is nullable, if so allow empty string as value.
+					if paramSchema != nil && paramSchema.Nullable != nil && *paramSchema.Nullable {
+						regexMatch = "(?<" + captureName + ">[^#?/]*)"
+					}
+
 					placeHolder := "{" + varName + "}"
 					logbasics.Debug("replacing path parameter", "parameter", placeHolder, "regex", regexMatch)
 					convertedPath = strings.Replace(convertedPath, placeHolder, regexMatch, 1)
