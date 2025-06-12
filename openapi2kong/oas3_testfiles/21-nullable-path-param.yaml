@@ -25,7 +25,7 @@ paths:
         4XX:
           description: all 4XX errors
       operationId: customdata
-  ? "/CustomWarehouseData(Warehouse='{Warehouse}',Product='{Product}')"
+  ? "/CustomWarehouseData(Warehouse='{Warehouse}',Product='{Product}',Location='{Location}')"
   : parameters:
       - name: Warehouse
         in: path
@@ -42,8 +42,24 @@ paths:
         schema:
           type: string
           maxLength: 40
+      - name: Location
+        in: path
+        required: true
+        description: Product Number
+        schema:
+          type: string
+          maxLength: 40
     get:
-      summary: List entities from Warehouse based on product ID and warehouse ID
+      summary: List entities from Warehouse based on product ID, location and warehouse ID
+      parameters:
+        - name: Location #overrides the param defined in path level
+          in: path
+          required: true
+          description: Product Number
+          schema:
+            type: string
+            maxLength: 40
+            nullable: true
       tags:
         - WarehouseProductData
       responses:

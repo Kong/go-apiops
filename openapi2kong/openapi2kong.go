@@ -521,9 +521,20 @@ func getForeignKeyPlugins(
 	return &genericPlugins, &newPluginList
 }
 
-// findPathParamSchema returns the Schema for given path parameter name
-func findPathParamSchema(parameters []*v3.Parameter, paramName string) *openapibase.Schema {
-	for _, param := range parameters {
+// findParameterSchema returns the Schema for given parameter name.
+// Path level parameters can be overridden at operation level, so we check operation parameters first
+// and then fall back to path.
+func findParameterSchema(
+	operationParameters []*v3.Parameter,
+	pathParameters []*v3.Parameter,
+	paramName string,
+) *openapibase.Schema {
+	for _, param := range operationParameters {
+		if param.Name == paramName {
+			return param.Schema.Schema()
+		}
+	}
+	for _, param := range pathParameters {
 		if param.Name == paramName {
 			return param.Schema.Schema()
 		}
@@ -1088,7 +1099,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 							varName, captureName)
 					}
 					regexMatch := "(?<" + captureName + ">[^#?/]+)"
-					paramSchema := findPathParamSchema(pathitem.Parameters, varName)
+					paramSchema := findParameterSchema(operation.Parameters, pathitem.Parameters, varName)
 					// Check if the parameter is nullable, if so allow empty string as value.
 					if paramSchema != nil && paramSchema.Nullable != nil && *paramSchema.Nullable {
 						regexMatch = "(?<" + captureName + ">[^#?/]*)"

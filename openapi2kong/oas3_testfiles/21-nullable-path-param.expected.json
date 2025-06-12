@@ -17,7 +17,7 @@
             ],
             "name": "odata-style-api-with-nullable-path-params_customproductdata",
             "paths": [
-              "~/CustomWarehouseData\\(Warehouse='(?\u003cwarehouse\u003e[^#?/]*)',Product='(?\u003cproduct\u003e[^#?/]+)'\\)$"
+              "~/CustomWarehouseData\\(Warehouse='(?\u003cwarehouse\u003e[^#?/]*)',Product='(?\u003cproduct\u003e[^#?/]+)',Location='(?\u003clocation\u003e[^#?/]*)'\\)$"
             ],
             "plugins": [],
             "regex_priority": 100,
@@ -52,4 +52,4 @@
       }
     ],
     "upstreams": []
-  }
+}
