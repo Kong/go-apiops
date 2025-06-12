@@ -1,0 +1,54 @@
+openapi: 3.0.0
+info:
+  title: OData style API with nullable path params
+  version: 0.0.1
+servers:
+  - url: http://backend.com/path
+paths:
+  /custom/{customId}:
+    parameters:
+      - name: customId
+        in: path
+        required: true
+        description: Custom ID
+        schema:
+          type: string
+          maxLength: 4
+    get:
+      summary: Read the custom information
+      description: Read the custom information of the API
+      tags:
+        - Metadata
+      responses:
+        "200":
+          description: Retrieved metadata
+        4XX:
+          description: all 4XX errors
+      operationId: customdata
+  ? "/CustomWarehouseData(Warehouse='{Warehouse}',Product='{Product}')"
+  : parameters:
+      - name: Warehouse
+        in: path
+        required: true
+        description: ID of warehouse
+        schema:
+          type: string
+          maxLength: 4
+          nullable: true
+      - name: Product
+        in: path
+        required: true
+        description: Product Number
+        schema:
+          type: string
+          maxLength: 40
+    get:
+      summary: List entities from Warehouse based on product ID and warehouse ID
+      tags:
+        - WarehouseProductData
+      responses:
+        "200":
+          description: Retrieved product entities
+        4XX:
+          description: all 4XX errors
+      operationId: customproductdata

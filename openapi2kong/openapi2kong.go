@@ -522,7 +522,6 @@ func getForeignKeyPlugins(
 }
 
 // findPathParamSchema returns the Schema for given path parameter name
-// TODO: see if there is a faster way
 func findPathParamSchema(parameters []*v3.Parameter, paramName string) *openapibase.Schema {
 	for _, param := range parameters {
 		if param.Name == paramName {
@@ -1090,10 +1089,8 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 							varName, captureName)
 					}
 
-					var regexMatch string = "(?<" + captureName + ">[^#?/]+)"
-
-					var paramSchema = findPathParamSchema(pathitem.Parameters, varName)
-
+					regexMatch := "(?<" + captureName + ">[^#?/]+)"
+					paramSchema := findPathParamSchema(pathitem.Parameters, varName)
 					// Check if the parameter is nullable, if so allow empty string as value.
 					if paramSchema != nil && paramSchema.Nullable != nil && *paramSchema.Nullable {
 						regexMatch = "(?<" + captureName + ">[^#?/]*)"

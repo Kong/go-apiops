@@ -1,0 +1,55 @@
+{
+    "_format_version": "3.0",
+    "services": [
+      {
+        "host": "backend.com",
+        "id": "aac33fce-7ade-5b69-9249-97bea965698e",
+        "name": "odata-style-api-with-nullable-path-params",
+        "path": "/path",
+        "plugins": [],
+        "port": 80,
+        "protocol": "http",
+        "routes": [
+          {
+            "id": "649b2718-47a3-57ec-aec0-b8a4f1bf010d",
+            "methods": [
+              "GET"
+            ],
+            "name": "odata-style-api-with-nullable-path-params_customproductdata",
+            "paths": [
+              "~/CustomWarehouseData\\(Warehouse='(?\u003cwarehouse\u003e[^#?/]*)',Product='(?\u003cproduct\u003e[^#?/]+)'\\)$"
+            ],
+            "plugins": [],
+            "regex_priority": 100,
+            "strip_path": false,
+            "tags": [
+              "OAS3_import",
+              "OAS3file_21-nullable-path-param.yaml"
+            ]
+          },
+          {
+            "id": "dd39d9e0-196d-509d-b141-13e77ce94f81",
+            "methods": [
+              "GET"
+            ],
+            "name": "odata-style-api-with-nullable-path-params_customdata",
+            "paths": [
+              "~/custom/(?\u003ccustomid\u003e[^#?/]+)$"
+            ],
+            "plugins": [],
+            "regex_priority": 100,
+            "strip_path": false,
+            "tags": [
+              "OAS3_import",
+              "OAS3file_21-nullable-path-param.yaml"
+            ]
+          }
+        ],
+        "tags": [
+          "OAS3_import",
+          "OAS3file_21-nullable-path-param.yaml"
+        ]
+      }
+    ],
+    "upstreams": []
+  }
