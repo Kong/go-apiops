@@ -528,7 +528,6 @@ func findPathParamSchema(parameters []*v3.Parameter, paramName string) *openapib
 			return param.Schema.Schema()
 		}
 	}
-
 	return nil
 }
 
@@ -1088,14 +1087,12 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 						return nil, fmt.Errorf("path-parameter name exceeds 32 characters: '%s' (sanitized to '%s')",
 							varName, captureName)
 					}
-
 					regexMatch := "(?<" + captureName + ">[^#?/]+)"
 					paramSchema := findPathParamSchema(pathitem.Parameters, varName)
 					// Check if the parameter is nullable, if so allow empty string as value.
 					if paramSchema != nil && paramSchema.Nullable != nil && *paramSchema.Nullable {
 						regexMatch = "(?<" + captureName + ">[^#?/]*)"
 					}
-
 					placeHolder := "{" + varName + "}"
 					logbasics.Debug("replacing path parameter", "parameter", placeHolder, "regex", regexMatch)
 					convertedPath = strings.Replace(convertedPath, placeHolder, regexMatch, 1)
