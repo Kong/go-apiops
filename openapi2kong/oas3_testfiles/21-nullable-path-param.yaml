@@ -34,7 +34,7 @@ paths:
         schema:
           type: string
           maxLength: 4
-          nullable: true
+          minLength: 0
       - name: Product
         in: path
         required: true
@@ -59,7 +59,7 @@ paths:
           schema:
             type: string
             maxLength: 40
-            nullable: true
+            minLength: 0
       tags:
         - WarehouseProductData
       responses:

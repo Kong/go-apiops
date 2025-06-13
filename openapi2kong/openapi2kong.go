@@ -1100,8 +1100,8 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 					}
 					regexMatch := "(?<" + captureName + ">[^#?/]+)"
 					paramSchema := findParameterSchema(operation.Parameters, pathitem.Parameters, varName)
-					// Check if the parameter is nullable, if so allow empty string as value.
-					if paramSchema != nil && paramSchema.Nullable != nil && *paramSchema.Nullable {
+					// Check if the parameter has a minLength defined, if 0, allow empty string
+					if paramSchema != nil && paramSchema.MinLength != nil && *paramSchema.MinLength == 0 {
 						regexMatch = "(?<" + captureName + ">[^#?/]*)"
 					}
 					placeHolder := "{" + varName + "}"
