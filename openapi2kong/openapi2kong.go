@@ -521,6 +521,27 @@ func getForeignKeyPlugins(
 	return &genericPlugins, &newPluginList
 }
 
+// findParameterSchema returns the Schema for given parameter name.
+// Path level parameters can be overridden at operation level, so we check operation parameters first
+// and then fall back to path.
+func findParameterSchema(
+	operationParameters []*v3.Parameter,
+	pathParameters []*v3.Parameter,
+	paramName string,
+) *openapibase.Schema {
+	for _, param := range operationParameters {
+		if param.Name == paramName {
+			return param.Schema.Schema()
+		}
+	}
+	for _, param := range pathParameters {
+		if param.Name == paramName {
+			return param.Schema.Schema()
+		}
+	}
+	return nil
+}
+
 // MustConvert is the same as Convert, but will panic if an error is returned.
 func MustConvert(content []byte, opts O2kOptions) map[string]interface{} {
 	result, err := Convert(content, opts)
@@ -1085,6 +1106,11 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 							varName, captureName)
 					}
 					regexMatch := "(?<" + captureName + ">[^#?/]+)"
+					paramSchema := findParameterSchema(operation.Parameters, pathitem.Parameters, varName)
+					// Check if the parameter has a minLength defined, if 0, allow empty string
+					if paramSchema != nil && paramSchema.MinLength != nil && *paramSchema.MinLength == 0 {
+						regexMatch = "(?<" + captureName + ">[^#?/]*)"
+					}
 					placeHolder := "{" + varName + "}"
 					logbasics.Debug("replacing path parameter", "parameter", placeHolder, "regex", regexMatch)
 					convertedPath = strings.Replace(convertedPath, placeHolder, regexMatch, 1)
