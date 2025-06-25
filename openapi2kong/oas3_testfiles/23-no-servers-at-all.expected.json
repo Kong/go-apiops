@@ -1,0 +1,38 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "localhost",
+      "id": "a49d53c1-c2ce-5d7c-a72c-e2c376de9e93",
+      "name": "simple-api",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "046fbd3e-5b29-5d21-b7dd-637c5b1060df",
+          "methods": [
+            "GET"
+          ],
+          "name": "simple-api_hello_get",
+          "paths": [
+            "~/hello$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_23-no-servers-at-all.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_23-no-servers-at-all.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}
