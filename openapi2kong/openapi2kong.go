@@ -563,7 +563,9 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 	upstreams := make([]interface{}, 0)
 
 	var (
-		err            error
+		err              error
+		removeDocService bool // set to true if no docServers are present;
+		// it's used in case services is empty
 		doc            v3.Document             // the OAS3 document we're operating on
 		kongComponents *map[string]interface{} // contents of OAS key `/components/x-kong/`
 		kongTags       []string                // tags to attach to Kong entities
@@ -691,12 +693,19 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 		return nil, fmt.Errorf("failed to create service/upstream from document root: %w", err)
 	}
 
+	services = append(services, docService)
 	// if there are no document-level servers defined
-	// we are skipping to add the default created docService
+	// we want to skip adding the default created docService
 	// in the services slice. This is done to ensure that
 	// an unintended extra service is not created.
-	if len(docServers) != 0 {
-		services = append(services, docService)
+	// However, if there are no servers defined, anywhere
+	// else in the document, we still want to
+	// create the default docService, so as to not return
+	// an empty services array.
+	// If there are other servers defined, we will
+	// remove the docService from the services slice in the end.
+	if len(docServers) == 0 {
+		removeDocService = true
 	}
 	if docUpstream != nil {
 		upstreams = append(upstreams, docUpstream)
@@ -1147,7 +1156,12 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 	}
 
 	// export arrays with services, upstreams, and plugins to the final object
-	result["services"] = services
+	if len(services) > 1 && removeDocService {
+		// we have more than one service, and the docService is not needed, so remove it
+		result["services"] = services[1:]
+	} else {
+		result["services"] = services
+	}
 	result["upstreams"] = upstreams
 	if len(*foreignKeyPlugins) > 0 {
 
