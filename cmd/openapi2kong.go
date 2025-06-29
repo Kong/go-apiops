@@ -77,12 +77,21 @@ func executeOpenapi2Kong(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
+	var ignoreCircularRefs bool
+	{
+		ignoreCircularRefs, err = cmd.Flags().GetBool("ignore-circular-refs")
+		if err != nil {
+			return fmt.Errorf("failed getting cli argument 'ignore-circular-refs'; %w", err)
+		}
+	}
+
 	options := openapi2kong.O2kOptions{
 		Tags:                 entityTags,
 		DocName:              docName,
 		OIDC:                 generateSecurity,
 		IgnoreSecurityErrors: ignoreSecurityErrors,
 		InsoCompat:           insoCompatibility,
+		IgnoreCircularRefs:   ignoreCircularRefs,
 	}
 
 	trackInfo := deckformat.HistoryNewEntry("openapi2kong")
@@ -137,4 +146,5 @@ directive from the file)`)
 		"security directives")
 	openapi2kongCmd.Flags().BoolP("ignore-security-errors", "", false, "ignore errors for unsupported security schemes")
 	openapi2kongCmd.Flags().BoolP("inso-compatible", "", false, "generate the config in an Inso compatible way")
+	openapi2kongCmd.Flags().BoolP("ignore-circular-refs", "", false, "ignore circular references in the spec")
 }

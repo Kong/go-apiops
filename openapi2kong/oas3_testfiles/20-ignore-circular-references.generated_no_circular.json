@@ -1,0 +1,63 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "some.random.url",
+      "id": "68804eaf-310b-508e-ae22-fe6a7b9ab716",
+      "name": "testing-circular",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "ce628b39-dec4-5171-a149-df610ebca091",
+          "methods": [
+            "GET"
+          ],
+          "name": "testing-circular_categories_get",
+          "paths": [
+            "~/categories$"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "parameter_schema": [
+                  {
+                    "explode": true,
+                    "in": "query",
+                    "name": "classificationId",
+                    "required": true,
+                    "schema": "{\"format\":\"int32\",\"type\":\"integer\"}",
+                    "style": "form"
+                  }
+                ],
+                "verbose_response": true,
+                "version": "draft4"
+              },
+              "enabled": true,
+              "id": "7ed4fd33-1079-5822-84cf-fcfd81b22dd5",
+              "name": "request-validator",
+              "tags": [
+                "OAS3_import",
+                "OAS3file_20-ignore-circular-references.circular-yaml"
+              ],
+              "version": "draft4"
+            }
+          ],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_20-ignore-circular-references.circular-yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_20-ignore-circular-references.circular-yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}

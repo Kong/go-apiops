@@ -14,6 +14,7 @@ import (
 	"github.com/kong/go-apiops/jsonbasics"
 	"github.com/kong/go-apiops/logbasics"
 	"github.com/pb33f/libopenapi"
+	"github.com/pb33f/libopenapi/datamodel"
 	openapibase "github.com/pb33f/libopenapi/datamodel/high/base"
 	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
 	"github.com/pb33f/libopenapi/orderedmap"
@@ -45,6 +46,8 @@ type O2kOptions struct {
 	OIDC bool
 	// Ignore security errors (non-OIDC and AND/OR logic)
 	IgnoreSecurityErrors bool
+	// Ignore circular references
+	IgnoreCircularRefs bool
 }
 
 // setDefaults sets the defaults for the OpenAPI2Kong operation.
@@ -614,6 +617,14 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 	openapiDoc, err := libopenapi.NewDocument(content)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing OAS3 file: [%w]", err)
+	}
+
+	// Check if circular references must be ignored
+	if opts.IgnoreCircularRefs {
+		docConfig := datamodel.NewDocumentConfiguration()
+		docConfig.IgnoreArrayCircularReferences = true
+		docConfig.IgnorePolymorphicCircularReferences = true
+		openapiDoc.SetConfiguration(docConfig)
 	}
 
 	// var errors []error
