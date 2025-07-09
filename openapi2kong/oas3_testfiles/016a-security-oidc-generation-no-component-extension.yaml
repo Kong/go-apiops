@@ -1,0 +1,35 @@
+# security directives can generate oidc plugin configs
+
+openapi: '3.0.0'
+info:
+  title: OIDC tests
+  version: v2
+servers:
+  - url: /
+
+# defining a toplevel security spec
+security:
+  - doclevel-oidc: ["top-scope"]
+
+# overriding the top level with per operation ones below
+paths:
+  /path1:
+    get:
+      operationId: OpsId1
+      # this should get the plugin per doclevel-oidc specs, since we do not override
+      summary: List API versions
+      responses:
+        '200':
+          description: |-
+            200 response
+
+
+components:
+  securitySchemes:
+    doclevel-oidc:
+      type: openIdConnect
+      openIdConnectUrl: https://konghq.com/top-level
+      x-kong-security-openid-connect:
+        config:
+          run_on_preflight: false
+          scopes_required: ["scope2", "scope1"]

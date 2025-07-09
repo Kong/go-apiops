@@ -1,0 +1,51 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "localhost",
+      "id": "bcda787b-18bc-5f83-85f2-1cf83b5f8eb3",
+      "name": "oidc-tests",
+      "path": "/",
+      "plugins": [
+        {
+          "config": {
+            "issuer": "https://konghq.com/top-level",
+            "run_on_preflight": false,
+            "scopes_required": [
+              "scope1",
+              "scope2",
+              "top-scope"
+            ]
+          },
+          "name": "openid-connect"
+        }
+      ],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "558eb5de-46b9-5500-ae2a-9a8e321e9d65",
+          "methods": [
+            "GET"
+          ],
+          "name": "oidc-tests_opsid1",
+          "paths": [
+            "~/path1$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_016a-security-oidc-generation-no-component-extension.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_016a-security-oidc-generation-no-component-extension.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}
