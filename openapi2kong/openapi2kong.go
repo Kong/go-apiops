@@ -377,7 +377,8 @@ func getPluginsList(
 	}
 
 	if extensions == nil && componentExtensions == nil {
-		return nil, nil
+		emptyList := make([]*map[string]interface{}, 0)
+		return &emptyList, nil
 	}
 
 	// there are extensions, go check if there are plugins
