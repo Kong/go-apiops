@@ -378,6 +378,7 @@ func getPluginsList(
 
 	if extensions == nil && componentExtensions == nil {
 		emptyList := make([]*map[string]interface{}, 0)
+		// We will return an empty list instead of nil so consumers can avoid having to do nil check.
 		return &emptyList, nil
 	}
 
