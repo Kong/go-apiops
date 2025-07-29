@@ -90,6 +90,118 @@ var _ = Describe("plugins", func() {
 			  }`))
 		})
 
+		It("supports complex selectors", func() {
+			dataInput := []byte(`{
+  "services": [
+    {
+      "host": "api.example.com",
+      "name": "example",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "name": "customer_post",
+          "methods": [ "POST" ],
+          "paths": [
+            "~/accounts/customers$"
+          ],
+          "plugins": []
+        },
+        {
+          "name": "demo_one_get",
+          "methods": [ "GET" ],
+          "paths": [
+            "~/path/to/certificates$"
+          ],
+          "plugins": []
+        },
+        {
+          "name": "demo_two_get",
+          "methods": [ "OPTIONS", "GET" ],
+          "paths": [
+            "~/path/to/schedules$"
+          ],
+          "plugins": []
+        },
+        {
+          "name": "demo_three_delete",
+          "methods": [ "DELETE" ],
+          "paths": [
+            "~/path/to/schedules$"
+          ],
+          "plugins": []
+        }
+      ]
+    }
+  ],
+}`)
+
+			plugger := plugins.Plugger{}
+			plugger.SetData(filebasics.MustDeserialize(dataInput))
+			plugger.SetSelectors([]string{
+				"$.services[*].routes[?(@.methods[?(@=='GET' ) || (@=='POST')])]",
+			})
+			plugger.AddPlugin(map[string]interface{}{
+				"name": "plugin-added",
+			}, false)
+
+			result := filebasics.MustSerialize(plugger.GetData(), filebasics.OutputFormatJSON)
+			Expect(result).To(MatchJSON(`{
+  "services": [
+    {
+      "host": "api.example.com",
+      "name": "example",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "name": "customer_post",
+          "methods": [ "POST" ],
+          "paths": [
+            "~/accounts/customers$"
+          ],
+          "plugins": [{
+            "name": "plugin-added"
+          }]
+        },
+        {
+          "name": "demo_one_get",
+          "methods": [ "GET" ],
+          "paths": [
+            "~/path/to/certificates$"
+          ],
+          "plugins": [{
+            "name": "plugin-added"
+          }]
+        },
+        {
+          "name": "demo_two_get",
+          "methods": [ "OPTIONS", "GET" ],
+          "paths": [
+            "~/path/to/schedules$"
+          ],
+          "plugins": [{
+            "name": "plugin-added"
+          }]
+        },
+        {
+          "name": "demo_three_delete",
+          "methods": [ "DELETE" ],
+          "paths": [
+            "~/path/to/schedules$"
+          ],
+          "plugins": []
+        }
+      ]
+    }
+  ]
+		}`))
+		})
+
 		It("only adds to plugin-arrays based on the selector", func() {
 			dataInput := []byte(`
 				{ "services": [
