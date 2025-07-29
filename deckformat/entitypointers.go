@@ -172,7 +172,3 @@ func GetEntities(deckfile *yaml.Node, entityType string) []*yaml.Node {
 
 	return allEntities
 }
-
-func init() {
-	initPointerCollections()
-}
