@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/kong/go-apiops/logbasics"
-	"github.com/vmware-labs/yaml-jsonpath/pkg/yamlpath"
+	"github.com/speakeasy-api/jsonpath/pkg/jsonpath"
 	"gopkg.in/yaml.v3"
 )
 
@@ -17,9 +17,9 @@ import (
 // Represents a set of JSONpath selectors. Call NewSelectorSet to create one.
 // The SelectorSet can be empty, in which case it will return only empty results.
 type SelectorSet struct {
-	selectors   []*yamlpath.Path // the compiled selectors
-	source      []string         // matching source strings of the selectors
-	initialized bool             // indicator whether is was initialized or not
+	selectors   []*jsonpath.JSONPath // the compiled selectors
+	source      []string             // matching source strings of the selectors
+	initialized bool                 // indicator whether is was initialized or not
 }
 
 // NewSelectorSet compiles the given selectors into a list of yaml nodes.
@@ -31,11 +31,11 @@ func NewSelectorSet(selectors []string) (SelectorSet, error) {
 		err error
 	)
 
-	set.selectors = make([]*yamlpath.Path, len(selectors))
+	set.selectors = make([]*jsonpath.JSONPath, len(selectors))
 	set.source = make([]string, len(selectors))
 	for i, selector := range selectors {
 		set.source[i] = selector
-		set.selectors[i], err = yamlpath.NewPath(selector)
+		set.selectors[i], err = jsonpath.NewPath(selector)
 		if err != nil {
 			return SelectorSet{}, fmt.Errorf("selector '%s' is not a valid JSONpath expression; %w", selector, err)
 		}
@@ -76,11 +76,9 @@ func (set *SelectorSet) Find(nodeToSearch *yaml.Node) (NodeSet, error) {
 	results := make(NodeSet, 0)
 	seen := make(map[*yaml.Node]bool)
 	for i, selector := range set.selectors {
-		matches, err := selector.Find(nodeToSearch)
-		if err != nil {
-			return nil, fmt.Errorf("failed to execute selector '%s'; %w", set.source[i], err)
-		}
+		matches := selector.Query(nodeToSearch)
 		logbasics.Debug("selector results", "selector", set.source[i], "#found", len(matches))
+
 		for _, match := range matches {
 			if match != nil && !seen[match] {
 				results = append(results, match)

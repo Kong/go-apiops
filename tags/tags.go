@@ -8,7 +8,7 @@ import (
 	"github.com/kong/go-apiops/jsonbasics"
 	"github.com/kong/go-apiops/logbasics"
 	"github.com/kong/go-apiops/yamlbasics"
-	"github.com/vmware-labs/yaml-jsonpath/pkg/yamlpath"
+	"github.com/speakeasy-api/jsonpath/pkg/jsonpath"
 	"gopkg.in/yaml.v3"
 )
 
@@ -24,7 +24,7 @@ func init() {
 type Tagger struct {
 	// list of JSONpointers to entities that can hold tags, so the selector
 	// returns entities that can hold tags, not the tag arrays themselves
-	selectors []*yamlpath.Path
+	selectors []*jsonpath.JSONPath
 	// list of Nodes (selected by the selectors) representing entities that can
 	// hold tags, not the tag arrays themselves
 	tagOwners []*yaml.Node
@@ -55,12 +55,12 @@ func (ts *Tagger) SetSelectors(selectors []string) error {
 		selectors = defaultSelectors
 	}
 
-	compiledSelectors := make([]*yamlpath.Path, len(selectors))
+	compiledSelectors := make([]*jsonpath.JSONPath, len(selectors))
 	for i, selector := range selectors {
 		logbasics.Debug("compiling JSONpath", "path", selector)
-		compiledpath, err := yamlpath.NewPath(selector)
+		compiledpath, err := jsonpath.NewPath(selector)
 		if err != nil {
-			return fmt.Errorf("selector '%s' is not a valid JSONpath expression; %w", selector, err)
+			return fmt.Errorf("selector '%s' is not a valid JSONpath expression; %s", selector, err.Error())
 		}
 		compiledSelectors[i] = compiledpath
 	}
@@ -95,10 +95,7 @@ func (ts *Tagger) search() error {
 	targets := make([]*yaml.Node, 0)
 	refs := make(map[*yaml.Node]bool, 0) // keep track of already found nodes
 	for idx, selector := range ts.selectors {
-		nodes, err := selector.Find(ts.data)
-		if err != nil {
-			return err
-		}
+		nodes := selector.Query(ts.data)
 
 		// 'nodes' is an array of nodes matching the selector
 		objCount := 0

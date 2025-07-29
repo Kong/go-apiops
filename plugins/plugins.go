@@ -12,7 +12,7 @@ import (
 	"github.com/kong/go-apiops/jsonbasics"
 	"github.com/kong/go-apiops/logbasics"
 	"github.com/kong/go-apiops/yamlbasics"
-	"github.com/vmware-labs/yaml-jsonpath/pkg/yamlpath"
+	"github.com/speakeasy-api/jsonpath/pkg/jsonpath"
 	"gopkg.in/yaml.v3"
 )
 
@@ -58,7 +58,7 @@ type Plugger struct {
 	// list of JSONpointers to entities that can hold plugins, so the selector
 	// returns entities that can hold plugins, not the plugin arrays themselves.
 	// The default value is the main plugins array (at the file top-level).
-	selectors []*yamlpath.Path
+	selectors []*jsonpath.JSONPath
 	// list of Nodes (selected by the selectors) representing entities that can
 	// hold plugins, not the plugin arrays themselves
 	pluginOwners []*yaml.Node
@@ -106,12 +106,12 @@ func (ts *Plugger) SetSelectors(selectors []string) error {
 		selectors = defaultSelectors
 	}
 
-	compiledSelectors := make([]*yamlpath.Path, len(selectors))
+	compiledSelectors := make([]*jsonpath.JSONPath, len(selectors))
 	for i, selector := range selectors {
 		logbasics.Debug("compiling JSONpath", "path", selector)
-		compiledpath, err := yamlpath.NewPath(selector)
+		compiledpath, err := jsonpath.NewPath(selector)
 		if err != nil {
-			return fmt.Errorf("selector '%s' is not a valid JSONpath expression; %w", selector, err)
+			return fmt.Errorf("selector '%s' is not a valid JSONpath expression; %s", selector, err.Error())
 		}
 		compiledSelectors[i] = compiledpath
 	}
@@ -146,15 +146,13 @@ func (ts *Plugger) search() error {
 	// build list of targets by executing the selectors one by one
 	targets := make([]*yaml.Node, 0)
 	refs := make(map[*yaml.Node]bool, 0) // keeps references to prevent duplicates
-	for idx, selector := range ts.selectors {
-		nodes, err := selector.Find(ts.data)
-		if err != nil {
-			return err
-		}
 
-		// 'nodes' is an array of nodes matching the selector
+	for idx, selector := range ts.selectors {
+		results := selector.Query(ts.data)
+
+		// 'results' contains YAML nodes matching the selector
 		objCount := 0
-		for _, node := range nodes {
+		for _, node := range results {
 			// since we're updating object fields, we'll skip anything that is
 			// not a JSONobject
 			if node.Kind == yaml.MappingNode && !refs[node] {
@@ -163,7 +161,7 @@ func (ts *Plugger) search() error {
 				objCount++
 			}
 		}
-		logbasics.Debug("selector results", "selector", idx, "results", len(nodes), "objects", objCount)
+		logbasics.Debug("selector results", "selector", idx, "results", len(results), "objects", objCount)
 	}
 	ts.pluginOwners = targets
 

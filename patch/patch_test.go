@@ -75,7 +75,7 @@ var _ = Describe("Patch", func() {
 			err := patch.Parse(data, "file1.yml:patches[1]")
 
 			Expect(err).To(MatchError("file1.yml:patches[1].selectors[0] is not a valid JSONpath " +
-				"expression; invalid character ' ' at position 3, following \"not\""))
+				"expression; Error at line 1, column 0: expected '$'\nnot valid\n^..\n"))
 		})
 
 		It("fails on non object/array 'values'", func() {
@@ -261,7 +261,7 @@ var _ = Describe("Patch", func() {
 			data := []byte(`{}`)
 			err := testPatch.ApplyToNodes(jsonbasics.ConvertToYamlNode(MustDeserialize(data)))
 			Expect(err).To(MatchError("selector 'bad JSONpath' is not a valid JSONpath expression; " +
-				"invalid character ' ' at position 3, following \"bad\""))
+				"Error at line 1, column 0: expected '$'\nbad JSONpath\n^..\n"))
 		})
 	})
 
@@ -367,7 +367,7 @@ var _ = Describe("Patch", func() {
 			}`))
 		})
 
-		XIt("works with recursive descent using filters", func() {
+		It("works with recursive descent using filters", func() {
 			data := []byte(`{
 				"services": [
 					{

@@ -6,7 +6,7 @@ import (
 	"github.com/kong/go-apiops/jsonbasics"
 	"github.com/kong/go-apiops/logbasics"
 	"github.com/kong/go-apiops/yamlbasics"
-	"github.com/vmware-labs/yaml-jsonpath/pkg/yamlpath"
+	"github.com/speakeasy-api/jsonpath/pkg/jsonpath"
 	"gopkg.in/yaml.v3"
 )
 
@@ -16,7 +16,7 @@ var DefaultSelector = []string{"$"}
 type DeckPatch struct {
 	// Format         string                 // Name of the format specified
 	SelectorSources []string               // Source query for the JSONpath object
-	Selectors       []*yamlpath.Path       // JSONpath object
+	Selectors       []*jsonpath.JSONPath   // JSONpath object
 	ObjValues       map[string]interface{} // Values to set on target objects
 	ArrValues       []interface{}          // Values to set on target arrays
 	Remove          []string               // List of keys to remove from the target object
@@ -41,11 +41,11 @@ func (patch *DeckPatch) Parse(obj map[string]interface{}, breadCrumb string) (er
 	}
 
 	// compile JSONpath expressions
-	patch.Selectors = make([]*yamlpath.Path, len(patch.SelectorSources))
+	patch.Selectors = make([]*jsonpath.JSONPath, len(patch.SelectorSources))
 	for i, selector := range patch.SelectorSources {
-		patch.Selectors[i], err = yamlpath.NewPath(selector)
+		patch.Selectors[i], err = jsonpath.NewPath(selector)
 		if err != nil {
-			return fmt.Errorf("%s.selectors[%d] is not a valid JSONpath expression; %w", breadCrumb, i, err)
+			return fmt.Errorf("%s.selectors[%d] is not a valid JSONpath expression; %s", breadCrumb, i, err.Error())
 		}
 	}
 
@@ -159,9 +159,9 @@ func (patch *DeckPatch) ApplyToNodes(yamlData *yaml.Node) (err error) {
 
 	//nolint:gosimple
 	if patch.Selectors == nil || len(patch.Selectors) == 0 {
-		patch.Selectors = make([]*yamlpath.Path, len(patch.SelectorSources))
+		patch.Selectors = make([]*jsonpath.JSONPath, len(patch.SelectorSources))
 		for i, selector := range patch.SelectorSources {
-			patch.Selectors[i], err = yamlpath.NewPath(selector)
+			patch.Selectors[i], err = jsonpath.NewPath(selector)
 			if err != nil {
 				return fmt.Errorf("selector '%s' is not a valid JSONpath expression; %w", selector, err)
 			}
@@ -170,15 +170,11 @@ func (patch *DeckPatch) ApplyToNodes(yamlData *yaml.Node) (err error) {
 
 	// query the yamlData using the selector
 	nodes := make([]*yaml.Node, 0)
-	for _, selector := range patch.Selectors {
-		moreNodes, err := selector.Find(yamlData)
-		if err != nil {
-			return err
-		}
-		nodes = append(nodes, moreNodes...)
-	}
 
-	// 'nodes' is an array of nodes matching the selectors
+	for _, selector := range patch.Selectors {
+		results := selector.Query(yamlData)
+		nodes = append(nodes, results...)
+	} // 'nodes' is an array of nodes matching the selectors
 	for _, node := range nodes {
 		if len(patch.ArrValues) > 0 {
 			// since we're updating array fields, we'll skip anything that is

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/vmware-labs/yaml-jsonpath/pkg/yamlpath"
+	"github.com/speakeasy-api/jsonpath/pkg/jsonpath"
 	"gopkg.in/yaml.v3"
 )
 
@@ -161,18 +161,18 @@ func GetEntities(deckfile *yaml.Node, entityType string) []*yaml.Node {
 	}
 
 	for _, entitySelector := range entitySelectors {
-		query, err := yamlpath.NewPath(entitySelector)
+		query, err := jsonpath.NewPath(entitySelector)
 		if err != nil {
 			panic("failed compiling " + entityType + " selector")
 		}
 
-		entities, err := query.Find(deckfile)
-		if err != nil {
-			panic("failed to collect " + entityType + " from the input data")
-		}
-
+		entities := query.Query(deckfile)
 		allEntities = append(allEntities, entities...)
 	}
 
 	return allEntities
+}
+
+func init() {
+	initPointerCollections()
 }
