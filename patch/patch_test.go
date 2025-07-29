@@ -332,6 +332,76 @@ var _ = Describe("Patch", func() {
 			}`))
 		})
 
+		It("works with plain recursive descent", func() {
+			data := []byte(`{
+				"services": [
+					{
+						"name": "one",
+						"routes": [
+							{
+								"name": "demo-route_get",
+								"methods": ["GET"]
+							}
+						]
+					}
+				]
+			}`)
+			selector := "$..routes[*]"
+			valueFlags := []string{
+				"added:\"field\"",
+			}
+
+			Expect(applyUpdates(data, selector, valueFlags)).To(MatchJSON(`{
+				"services": [
+					{
+						"name": "one",
+						"routes": [
+							{
+								"added": "field",
+								"name": "demo-route_get",
+								"methods": ["GET"]
+							}
+						]
+					}
+				]
+			}`))
+		})
+
+		XIt("works with recursive descent using filters", func() {
+			data := []byte(`{
+				"services": [
+					{
+						"name": "one",
+						"routes": [
+							{
+								"name": "demo-route_get",
+								"methods": ["GET"]
+							}
+						]
+					}
+				]
+			}`)
+			selector := "$..routes[?(@.name==\"demo-route_get\")]"
+			valueFlags := []string{
+				"added:\"field\"",
+			}
+
+			Expect(applyUpdates(data, selector, valueFlags)).To(MatchJSON(`{
+				"services": [
+					{
+						"name": "one",
+						"routes": [
+							{
+								"added": "field",
+								"name": "demo-route_get",
+								"methods": ["GET"]
+							}
+						]
+					}
+				]
+			}`))
+		})
+
 		It("skips non-objects", func() {
 			data := []byte(`{
 				"plugins": [
