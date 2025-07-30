@@ -75,7 +75,7 @@ var _ = Describe("Patch", func() {
 			err := patch.Parse(data, "file1.yml:patches[1]")
 
 			Expect(err).To(MatchError("file1.yml:patches[1].selectors[0] is not a valid JSONpath " +
-				"expression; invalid character ' ' at position 3, following \"not\""))
+				"expression; Error at line 1, column 0: expected '$'\nnot valid\n^..\n"))
 		})
 
 		It("fails on non object/array 'values'", func() {
@@ -261,7 +261,7 @@ var _ = Describe("Patch", func() {
 			data := []byte(`{}`)
 			err := testPatch.ApplyToNodes(jsonbasics.ConvertToYamlNode(MustDeserialize(data)))
 			Expect(err).To(MatchError("selector 'bad JSONpath' is not a valid JSONpath expression; " +
-				"invalid character ' ' at position 3, following \"bad\""))
+				"Error at line 1, column 0: expected '$'\nbad JSONpath\n^..\n"))
 		})
 	})
 
@@ -325,6 +325,76 @@ var _ = Describe("Patch", func() {
 							{
 								"name": "two",
 								"one": "one"
+							}
+						]
+					}
+				]
+			}`))
+		})
+
+		It("works with plain recursive descent", func() {
+			data := []byte(`{
+				"services": [
+					{
+						"name": "one",
+						"routes": [
+							{
+								"name": "demo-route_get",
+								"methods": ["GET"]
+							}
+						]
+					}
+				]
+			}`)
+			selector := "$..routes[*]"
+			valueFlags := []string{
+				"added:\"field\"",
+			}
+
+			Expect(applyUpdates(data, selector, valueFlags)).To(MatchJSON(`{
+				"services": [
+					{
+						"name": "one",
+						"routes": [
+							{
+								"added": "field",
+								"name": "demo-route_get",
+								"methods": ["GET"]
+							}
+						]
+					}
+				]
+			}`))
+		})
+
+		It("works with recursive descent using filters", func() {
+			data := []byte(`{
+				"services": [
+					{
+						"name": "one",
+						"routes": [
+							{
+								"name": "demo-route_get",
+								"methods": ["GET"]
+							}
+						]
+					}
+				]
+			}`)
+			selector := "$..routes[?(@.name==\"demo-route_get\")]"
+			valueFlags := []string{
+				"added:\"field\"",
+			}
+
+			Expect(applyUpdates(data, selector, valueFlags)).To(MatchJSON(`{
+				"services": [
+					{
+						"name": "one",
+						"routes": [
+							{
+								"added": "field",
+								"name": "demo-route_get",
+								"methods": ["GET"]
 							}
 						]
 					}

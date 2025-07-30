@@ -45,7 +45,7 @@ var _ = Describe("tags", func() {
 			tagger := tags.Tagger{}
 			err := tagger.SetSelectors([]string{"bad one"})
 			Expect(err).To(MatchError("selector 'bad one' is not a valid JSONpath expression; " +
-				"invalid character ' ' at position 3, following \"bad\""))
+				"Error at line 1, column 0: expected '$'\nbad one\n^..\n"))
 		})
 	})
 
