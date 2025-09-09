@@ -547,6 +547,59 @@ func findParameterSchema(
 	return nil
 }
 
+// Returns header parameters which can be used for routing for an operation
+func findHeaderParamsForRouting(
+	operationLevelParameters []*v3.Parameter,
+	pathLevelParameters []*v3.Parameter,
+) []*v3.Parameter {
+	headerParamProcessed := make(map[string]bool)
+	var result []*v3.Parameter // Store in array so output is deterministic - iterating over map is not.
+
+	for _, param := range operationLevelParameters {
+		if param.In == "header" && param.Schema != nil &&
+			param.Schema.Schema() != nil && len(param.Schema.Schema().Enum) > 0 {
+			headerParamProcessed[param.Name] = true
+			result = append(result, param)
+		}
+	}
+
+	for _, param := range pathLevelParameters {
+		// Operation level params override path level params, so ignore if already present.
+		if param.In == "header" && param.Schema != nil && param.Schema.Schema() != nil &&
+			len(param.Schema.Schema().Enum) > 0 && !headerParamProcessed[param.Name] {
+			headerParamProcessed[param.Name] = true
+			result = append(result, param)
+		}
+	}
+
+	return result
+}
+
+// Based on given headers and their possible values, create all possible combinations
+func constructHeaderCombinationsForRouting(headers []*v3.Parameter) []map[string]any {
+	headerValues := make([][]any, len(headers))
+	headerNames := make([]string, len(headers))
+	for i := 0; i < len(headers); i++ {
+		headerNames[i] = headers[i].Name
+		for _, enumMember := range headers[i].Schema.Schema().Enum {
+			headerValues[i] = append(headerValues[i], enumMember.Value)
+		}
+	}
+	headerValueCombinations := crossProduct(headerValues...)
+
+	var result []map[string]any
+	for _, combination := range headerValueCombinations {
+		headerMap := make(map[string]any)
+		for i := 0; i < len(headerNames); i++ {
+			// Header is an array of values.
+			headerMap[headerNames[i]] = []any{combination[i]}
+		}
+		result = append(result, headerMap)
+	}
+
+	return result
+}
+
 // MustConvert is the same as Convert, but will panic if an error is returned.
 func MustConvert(content []byte, opts O2kOptions) map[string]interface{} {
 	result, err := Convert(content, opts)
@@ -1163,7 +1216,25 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 				route["strip_path"] = false // Default to false since we do not want to strip full-regex paths by default
 			}
 
-			operationRoutes = append(operationRoutes, route)
+			headerParams := findHeaderParamsForRouting(operation.Parameters, pathitem.Parameters)
+			if len(headerParams) > 0 {
+				// This operation has header parameters, we need to create different routes based on the header values
+				headerValueCombinations := constructHeaderCombinationsForRouting(headerParams)
+
+				newRoutes := make([]interface{}, 0)
+				for i, combination := range headerValueCombinations {
+					clonedRoute := jsonbasics.DeepCopyObject(route)
+					clonedRoute["headers"] = combination
+					clonedRoute["name"] = fmt.Sprintf("%s_%v", operationBaseName, i)
+					if !opts.SkipID {
+						clonedRoute["id"] = uuid.NewSHA1(opts.UUIDNamespace, []byte(clonedRoute["name"].(string))).String()
+					}
+					newRoutes = append(newRoutes, clonedRoute)
+				}
+				operationRoutes = append(operationRoutes, newRoutes...)
+			} else {
+				operationRoutes = append(operationRoutes, route)
+			}
 			operationService["routes"] = operationRoutes
 		}
 	}
