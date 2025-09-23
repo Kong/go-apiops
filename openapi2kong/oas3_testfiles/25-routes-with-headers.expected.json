@@ -1,0 +1,188 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "server1.com",
+      "id": "0907c4ab-d9e4-5d21-813b-c57a97eeaad9",
+      "name": "simple-api-overview",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "4d47cf34-1c69-5228-acf1-b2c05994bd02",
+          "methods": [
+            "GET"
+          ],
+          "name": "simple-api-overview_get-doc-service",
+          "paths": [
+            "~/path1/(?\u003cpathparam\u003e[^#?/]+)$"
+          ],
+          "plugins": [],
+          "regex_priority": 100,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_25-routes-with-headers.yaml"
+          ]
+        },
+        {
+          "headers": {
+            "X-Method-Level-Int-Header": [
+              "1"
+            ],
+            "X-Path-Level-API-Version": [
+              "v1"
+            ]
+          },
+          "id": "7d086c23-ab4b-567d-969b-356acd50e716",
+          "methods": [
+            "GET"
+          ],
+          "name": "simple-api-overview_get-path2-service_0",
+          "paths": [
+            "~/path2$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_25-routes-with-headers.yaml"
+          ]
+        },
+        {
+          "headers": {
+            "X-Method-Level-Int-Header": [
+              "1"
+            ],
+            "X-Path-Level-API-Version": [
+              "v2"
+            ]
+          },
+          "id": "433a9a6b-712c-5b47-8c70-64ce872aabea",
+          "methods": [
+            "GET"
+          ],
+          "name": "simple-api-overview_get-path2-service_1",
+          "paths": [
+            "~/path2$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_25-routes-with-headers.yaml"
+          ]
+        },
+        {
+          "headers": {
+            "X-Method-Level-Int-Header": [
+              "2"
+            ],
+            "X-Path-Level-API-Version": [
+              "v1"
+            ]
+          },
+          "id": "f8027c37-0b74-5e33-aeba-173407cdc809",
+          "methods": [
+            "GET"
+          ],
+          "name": "simple-api-overview_get-path2-service_2",
+          "paths": [
+            "~/path2$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_25-routes-with-headers.yaml"
+          ]
+        },
+        {
+          "headers": {
+            "X-Method-Level-Int-Header": [
+              "2"
+            ],
+            "X-Path-Level-API-Version": [
+              "v2"
+            ]
+          },
+          "id": "66217d2a-5a98-5803-b917-deec54e2c11e",
+          "methods": [
+            "GET"
+          ],
+          "name": "simple-api-overview_get-path2-service_3",
+          "paths": [
+            "~/path2$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_25-routes-with-headers.yaml"
+          ]
+        },
+        {
+          "headers": {
+            "X-Method-Level-Int-Header": [
+              "3"
+            ],
+            "X-Path-Level-API-Version": [
+              "v1"
+            ]
+          },
+          "id": "df2fd6f0-3aaa-5888-80fa-30a218fe26a5",
+          "methods": [
+            "GET"
+          ],
+          "name": "simple-api-overview_get-path2-service_4",
+          "paths": [
+            "~/path2$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_25-routes-with-headers.yaml"
+          ]
+        },
+        {
+          "headers": {
+            "X-Method-Level-Int-Header": [
+              "3"
+            ],
+            "X-Path-Level-API-Version": [
+              "v2"
+            ]
+          },
+          "id": "168aa36e-da1e-5b6f-9c8e-5242ee9516a5",
+          "methods": [
+            "GET"
+          ],
+          "name": "simple-api-overview_get-path2-service_5",
+          "paths": [
+            "~/path2$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_25-routes-with-headers.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_25-routes-with-headers.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}

@@ -1,0 +1,53 @@
+openapi: '3.0.0'
+info:
+  title: Simple API overview
+  version: v2
+servers:
+  - url: https://server1.com/
+paths:
+  /path1/{pathParam}:
+    parameters:
+      - in: path
+        name: pathParam
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: get-doc-service
+      summary: List API versions
+      responses:
+        '200':
+          description: |-
+            200 response
+  /path2:
+    parameters:
+      - in: header
+        name: X-Path-Level-API-Version
+        required: true
+        schema:
+          type: string
+          enum:
+          - v1
+          - v2
+    get:
+      parameters:
+        - in: header
+          name: X-Method-Level-Int-Header
+          required: true
+          schema:
+            type: integer
+            enum:
+            - 1
+            - 2
+            - 3
+        - in: header
+          name: X-Method-Level-No-Enum-Header
+          required: true
+          schema:
+            type: string
+      operationId: get-path2-service
+      summary: List API versions Path2
+      responses:
+        '200':
+          description: |-
+            200 response

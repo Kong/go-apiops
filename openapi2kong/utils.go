@@ -103,3 +103,26 @@ func convertYamlNodeToBytes(node *yaml.Node) ([]byte, error) {
 	}
 	return yaml.Marshal(data)
 }
+
+// crossProduct computes the Cartesian product of the input slices.
+// The slices can be of any type
+func crossProduct(slices ...[]any) [][]any {
+	if len(slices) == 0 {
+		return [][]any{{}}
+	}
+
+	result := [][]any{{}}
+	for _, slice := range slices {
+		var next [][]any
+		for _, prefix := range result {
+			for _, elem := range slice {
+				newTuple := append([]any{}, prefix...)
+				newTuple = append(newTuple, elem)
+				next = append(next, newTuple)
+			}
+		}
+		result = next
+	}
+
+	return result
+}
