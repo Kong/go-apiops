@@ -256,6 +256,10 @@ func getOIDCdefaults(
 		schemes := doc.Components.SecuritySchemes
 		scheme, _ = schemes.Get(schemeName)
 
+		if scheme == nil {
+			return nil, fmt.Errorf("security scheme not found in components: '%s'", schemeName)
+		}
+
 		if scheme.Type != "openIdConnect" {
 			// non-OIDC security directives are not supported
 			if !ignoreSecurityErrors {
