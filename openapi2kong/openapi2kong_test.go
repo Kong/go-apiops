@@ -167,3 +167,37 @@ paths:
 		assert.Contains(t, err.Error(), "path-parameter name exceeds 32 characters")
 	}
 }
+
+func Test_Openapi2kong_missingSecurityScheme(t *testing.T) {
+	testDataString := `
+openapi: 3.0.3
+info:
+  title: Missing security scheme test
+  version: v1
+servers:
+  - url: "https://example.com"
+
+paths:
+  /foobar:
+    get:
+      operationId: opsid
+      responses:
+        "200":
+          description: OK
+      security:
+        - missingScheme: []
+
+components:
+  securitySchemes:
+    defaultApiKey:
+      type: apiKey
+      name: api-key
+      in: header
+`
+	_, err := Convert([]byte(testDataString), O2kOptions{OIDC: true})
+	if err == nil {
+		t.Error("Expected error, but got none")
+	} else {
+		assert.Contains(t, err.Error(), "security scheme not found in components")
+	}
+}
