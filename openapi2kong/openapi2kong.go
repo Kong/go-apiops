@@ -259,9 +259,8 @@ func getOIDCdefaults(
 		if scheme == nil {
 			if !ignoreSecurityErrors {
 				return nil, fmt.Errorf("no security-schemes with name '%s' found in components", schemeName)
-			} else {
-				return inherited, nil
 			}
+			return inherited, nil
 		}
 
 		// Check if scheme type is openIdConnect (case-insensitive, accepting camelCase, kebab-case and snake_case)
@@ -270,9 +269,8 @@ func getOIDCdefaults(
 			// non-OIDC security directives are not supported
 			if !ignoreSecurityErrors {
 				return nil, fmt.Errorf("only security-schemes of type 'openIdConnect' are supported")
-			} else {
-				return inherited, nil
 			}
+			return inherited, nil
 		}
 	}
 
