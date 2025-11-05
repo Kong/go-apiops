@@ -256,7 +256,17 @@ func getOIDCdefaults(
 		schemes := doc.Components.SecuritySchemes
 		scheme, _ = schemes.Get(schemeName)
 
-		if scheme.Type != "openIdConnect" {
+		if scheme == nil {
+			if !ignoreSecurityErrors {
+				return nil, fmt.Errorf("no security-schemes with name '%s' found in components", schemeName)
+			} else {
+				return inherited, nil
+			}
+		}
+
+		// Check if scheme type is openIdConnect (case-insensitive, accepting camelCase, kebab-case and snake_case)
+		normalizedType := strings.ToLower(strings.ReplaceAll(strings.ReplaceAll(scheme.Type, "_", ""), "-", ""))
+		if normalizedType != "openidconnect" {
 			// non-OIDC security directives are not supported
 			if !ignoreSecurityErrors {
 				return nil, fmt.Errorf("only security-schemes of type 'openIdConnect' are supported")

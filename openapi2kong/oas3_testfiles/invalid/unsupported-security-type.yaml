@@ -1,0 +1,22 @@
+# This should fail with unsupported security scheme type when OIDC is enabled
+
+openapi: '3.0.0'
+info:
+  title: Invalid security - unsupported scheme type
+  version: v1
+servers:
+  - url: https://server1.com/
+security:
+  - apiKey: []
+components:
+  securitySchemes:
+    apiKey:
+      type: apiKey  # Not openIdConnect
+      in: header
+      name: X-API-Key
+paths:
+  /test:
+    get:
+      responses:
+        "200":
+          description: OK

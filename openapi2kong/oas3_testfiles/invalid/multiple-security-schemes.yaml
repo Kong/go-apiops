@@ -1,0 +1,26 @@
+# This should fail with multiple security schemes within a requirement when OIDC is enabled
+
+openapi: '3.0.0'
+info:
+  title: Invalid security - multiple schemes in requirement
+  version: v1
+servers:
+  - url: https://server1.com/
+security:
+  - oauth2: []
+    apiKey: []  # Multiple schemes in one requirement (AND logic)
+components:
+  securitySchemes:
+    oauth2:
+      type: openIdConnect
+      openIdConnectUrl: https://example.com/.well-known/openid_configuration
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+paths:
+  /test:
+    get:
+      responses:
+        "200":
+          description: OK

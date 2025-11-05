@@ -1,0 +1,21 @@
+# This should fail with missing security scheme reference when OIDC is enabled
+
+openapi: '3.0.0'
+info:
+  title: Invalid security - missing scheme reference
+  version: v1
+servers:
+  - url: https://server1.com/
+security:
+  - nonExistentScheme: []  # References a scheme that doesn't exist
+components:
+  securitySchemes:
+    existingScheme:
+      type: openIdConnect
+      openIdConnectUrl: https://example.com/.well-known/openid_configuration
+paths:
+  /test:
+    get:
+      responses:
+        "200":
+          description: OK
