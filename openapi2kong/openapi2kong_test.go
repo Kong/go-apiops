@@ -38,18 +38,37 @@ func Test_Openapi2kong_InvalidPaths(t *testing.T) {
 	dir := filepath.Join(fixturePath, "invalid")
 	files := findFilesBySuffix(t, dir, ".yaml")
 
+	// Define expected error messages for different test files
+	expectedErrors := map[string]string{
+		"no-paths.yaml":                       "must have `.paths` in the root of the document",
+		"multiple-security-requirements.yaml": "only a single security-requirement is supported",
+		"multiple-security-schemes.yaml":      "within a security-requirement only a single security-scheme is supported",
+		"unsupported-security-type.yaml":      "only security-schemes of type 'openIdConnect' are supported",
+		"missing-security-scheme.yaml":        "no security-schemes with name 'nonExistentScheme' found in components",
+	}
+
 	for _, file := range files {
 		fileNameIn := file.Name()
-		dataIn, _ := os.ReadFile(filepath.Join(dir, fileNameIn))
-		_, err := Convert(dataIn, O2kOptions{
-			Tags: []string{"OAS3_import", "OAS3file_" + fileNameIn},
-			OIDC: true,
+		t.Run(fileNameIn, func(t *testing.T) {
+			dataIn, _ := os.ReadFile(filepath.Join(dir, fileNameIn))
+			_, err := Convert(dataIn, O2kOptions{
+				Tags: []string{"OAS3_import", "OAS3file_" + fileNameIn},
+				OIDC: true,
+			})
+
+			if err == nil {
+				t.Errorf("'%s' expected error but got none", fileNameIn)
+			} else {
+				expectedError, exists := expectedErrors[fileNameIn]
+				if !exists {
+					t.Errorf("No expected error defined for test file: %s", fileNameIn)
+				} else {
+					assert.Contains(t, err.Error(), expectedError,
+						"Error message for '%s' should contain '%s', but got: %s",
+						fileNameIn, expectedError, err.Error())
+				}
+			}
 		})
-		if err == nil {
-			t.Error(fmt.Sprintf("'%s' expected error: %%w", dir+fileNameIn), err)
-		} else {
-			assert.Contains(t, err.Error(), "must have `.paths` in the root of the document")
-		}
 	}
 }
 

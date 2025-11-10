@@ -1,0 +1,26 @@
+# This should fail with multiple security requirements when OIDC is enabled
+
+openapi: '3.0.0'
+info:
+  title: Invalid security - multiple requirements
+  version: v1
+servers:
+  - url: https://server1.com/
+security:
+  - oauth2: []
+  - apiKey: []  # Multiple security requirements
+components:
+  securitySchemes:
+    oauth2:
+      type: openIdConnect
+      openIdConnectUrl: https://example.com/.well-known/openid_configuration
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+paths:
+  /test:
+    get:
+      responses:
+        "200":
+          description: OK
