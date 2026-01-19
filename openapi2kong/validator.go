@@ -61,7 +61,11 @@ func generateParameterSchema(operation *v3.Operation, path *v3.PathItem,
 		}
 	}
 
-	combinedParameters = append(combinedParameters, operationParameters...)
+	if operationParameters != nil {
+		combinedParameters = append(combinedParameters, operationParameters...)
+	} else {
+		combinedParameters = append(combinedParameters, pathParameters...)
+	}
 
 	result := make([]map[string]interface{}, len(combinedParameters))
 	i := 0

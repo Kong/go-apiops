@@ -1,0 +1,30 @@
+openapi: 3.0.0
+
+info:
+  description: Test service
+  version: 1.0.0
+  title: Test Service
+
+x-kong-plugin-request-validator:
+  enabled: true
+
+paths:
+  /sample-group/sample-service/sample-api/v1/get-result:
+    get:
+      parameters:
+        - in: header
+          name: env
+          required: true
+          schema:
+            type: string
+          enum:
+            - qa
+      summary: Get Results
+      description: Get Results.
+      responses:
+        "200":
+          description: The request has succeeded.
+    options:
+      responses:
+        "200":
+          description: Generic OPTIONS response
