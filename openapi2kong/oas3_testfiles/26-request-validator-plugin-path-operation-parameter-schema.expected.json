@@ -11,11 +11,16 @@
       "protocol": "https",
       "routes": [
         {
-          "id": "04fe9734-c93d-59bc-8723-528a778996c3",
+          "headers": {
+            "env": [
+              "dev"
+            ]
+          },
+          "id": "4c11d945-2325-5817-9249-2a1973c229af",
           "methods": [
             "GET"
           ],
-          "name": "test-service_sample-group-sample-service-sample-api-v1-get-result_get",
+          "name": "test-service_sample-group-sample-service-sample-api-v1-get-result_get_0",
           "paths": [
             "~/sample-group/sample-service/sample-api/v1/get-result$"
           ],
@@ -51,36 +56,19 @@
           ]
         },
         {
-          "id": "a9452a70-c0fe-5a3b-8446-c329ba5c55e2",
+          "headers": {
+            "env": [
+              "dev"
+            ]
+          },
+          "id": "13fe35c4-9665-5433-8d0b-a840713d32db",
           "methods": [
             "OPTIONS"
           ],
-          "name": "test-service_sample-group-sample-service-sample-api-v1-get-result_options",
+          "name": "test-service_sample-group-sample-service-sample-api-v1-get-result_options_0",
           "paths": [
             "~/sample-group/sample-service/sample-api/v1/get-result$"
           ],
-          "plugins": [],
-          "regex_priority": 200,
-          "strip_path": false,
-          "tags": [
-            "OAS3_import",
-            "OAS3file_26-request-validator-plugin-path-operation-parameter-schema.yaml"
-          ]
-        },
-        {
-          "headers": {
-            "env": [
-              "qa"
-            ]
-          },
-          "id": "8377d503-1bba-522a-a206-f91323442674",
-          "methods": [
-            "GET"
-          ],
-          "name": "test-service_sample-group-sample-service-sample-api-v2-get-result_get_0",
-          "paths": [
-            "~/sample-group/sample-service/sample-api/v2/get-result$"
-          ],
           "plugins": [
             {
               "config": {
@@ -90,59 +78,14 @@
                     "in": "header",
                     "name": "env",
                     "required": true,
-                    "schema": "{\"enum\":[\"qa\"],\"type\":\"string\"}",
+                    "schema": "{\"enum\":[\"dev\"],\"type\":\"string\"}",
                     "style": "simple"
                   }
                 ],
                 "version": "draft4"
               },
               "enabled": true,
-              "id": "ddb9f3cc-b11a-58f2-87e0-e47d8eca0242",
-              "name": "request-validator",
-              "tags": [
-                "OAS3_import",
-                "OAS3file_26-request-validator-plugin-path-operation-parameter-schema.yaml"
-              ]
-            }
-          ],
-          "regex_priority": 200,
-          "strip_path": false,
-          "tags": [
-            "OAS3_import",
-            "OAS3file_26-request-validator-plugin-path-operation-parameter-schema.yaml"
-          ]
-        },
-        {
-          "headers": {
-            "env": [
-              "qa"
-            ]
-          },
-          "id": "c7f298fd-0673-5232-838c-d51a17edb71e",
-          "methods": [
-            "OPTIONS"
-          ],
-          "name": "test-service_sample-group-sample-service-sample-api-v2-get-result_options_0",
-          "paths": [
-            "~/sample-group/sample-service/sample-api/v2/get-result$"
-          ],
-          "plugins": [
-            {
-              "config": {
-                "parameter_schema": [
-                  {
-                    "explode": false,
-                    "in": "header",
-                    "name": "env",
-                    "required": true,
-                    "schema": "{\"enum\":[\"qa\"],\"type\":\"string\"}",
-                    "style": "simple"
-                  }
-                ],
-                "version": "draft4"
-              },
-              "enabled": true,
-              "id": "1da08580-9237-584f-8213-9d64c1a87782",
+              "id": "eb7440df-3f27-5647-bab9-fec82845e2b9",
               "name": "request-validator",
               "tags": [
                 "OAS3_import",
