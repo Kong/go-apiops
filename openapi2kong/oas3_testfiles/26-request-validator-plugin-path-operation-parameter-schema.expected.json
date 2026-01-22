@@ -13,7 +13,7 @@
         {
           "headers": {
             "env": [
-              "dev"
+              "qa"
             ]
           },
           "id": "4c11d945-2325-5817-9249-2a1973c229af",
@@ -33,7 +33,7 @@
                     "in": "header",
                     "name": "env",
                     "required": true,
-                    "schema": "{\"type\":\"string\"}",
+                    "schema": "{\"enum\":[\"qa\"],\"type\":\"string\"}",
                     "style": "simple"
                   }
                 ],

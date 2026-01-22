@@ -25,8 +25,8 @@ paths:
           required: true
           schema:
             type: string
-          enum:
-            - qa
+            enum:
+              - qa
       summary: Get Results
       description: Get Results.
       responses:
