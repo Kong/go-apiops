@@ -1,0 +1,78 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "localhost",
+      "id": "b69ec2b7-0b2b-5e52-8e37-7126b9237f56",
+      "name": "test-service",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "04fe9734-c93d-59bc-8723-528a778996c3",
+          "methods": [
+            "GET"
+          ],
+          "name": "test-service_sample-group-sample-service-sample-api-v1-get-result_get",
+          "paths": [
+            "~/sample-group/sample-service/sample-api/v1/get-result$"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "parameter_schema": [
+                  {
+                    "explode": false,
+                    "in": "header",
+                    "name": "env",
+                    "required": true,
+                    "schema": "{\"type\":\"string\"}",
+                    "style": "simple"
+                  }
+                ],
+                "version": "draft4"
+              },
+              "enabled": true,
+              "id": "8384b338-2d12-5035-902c-a20fd9ddd6fb",
+              "name": "request-validator",
+              "tags": [
+                "OAS3_import",
+                "OAS3file_26-request-validator-plugin-operation-parameter-schema.yaml"
+              ]
+            }
+          ],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_26-request-validator-plugin-operation-parameter-schema.yaml"
+          ]
+        },
+        {
+          "id": "a9452a70-c0fe-5a3b-8446-c329ba5c55e2",
+          "methods": [
+            "OPTIONS"
+          ],
+          "name": "test-service_sample-group-sample-service-sample-api-v1-get-result_options",
+          "paths": [
+            "~/sample-group/sample-service/sample-api/v1/get-result$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_26-request-validator-plugin-operation-parameter-schema.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_26-request-validator-plugin-operation-parameter-schema.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}

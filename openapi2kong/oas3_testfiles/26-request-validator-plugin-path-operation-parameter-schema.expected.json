@@ -1,0 +1,111 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "localhost",
+      "id": "b69ec2b7-0b2b-5e52-8e37-7126b9237f56",
+      "name": "test-service",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "headers": {
+            "env": [
+              "qa"
+            ]
+          },
+          "id": "4c11d945-2325-5817-9249-2a1973c229af",
+          "methods": [
+            "GET"
+          ],
+          "name": "test-service_sample-group-sample-service-sample-api-v1-get-result_get_0",
+          "paths": [
+            "~/sample-group/sample-service/sample-api/v1/get-result$"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "parameter_schema": [
+                  {
+                    "explode": false,
+                    "in": "header",
+                    "name": "env",
+                    "required": true,
+                    "schema": "{\"enum\":[\"qa\"],\"type\":\"string\"}",
+                    "style": "simple"
+                  }
+                ],
+                "version": "draft4"
+              },
+              "enabled": true,
+              "id": "8384b338-2d12-5035-902c-a20fd9ddd6fb",
+              "name": "request-validator",
+              "tags": [
+                "OAS3_import",
+                "OAS3file_26-request-validator-plugin-path-operation-parameter-schema.yaml"
+              ]
+            }
+          ],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_26-request-validator-plugin-path-operation-parameter-schema.yaml"
+          ]
+        },
+        {
+          "headers": {
+            "env": [
+              "dev"
+            ]
+          },
+          "id": "13fe35c4-9665-5433-8d0b-a840713d32db",
+          "methods": [
+            "OPTIONS"
+          ],
+          "name": "test-service_sample-group-sample-service-sample-api-v1-get-result_options_0",
+          "paths": [
+            "~/sample-group/sample-service/sample-api/v1/get-result$"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "parameter_schema": [
+                  {
+                    "explode": false,
+                    "in": "header",
+                    "name": "env",
+                    "required": true,
+                    "schema": "{\"enum\":[\"dev\"],\"type\":\"string\"}",
+                    "style": "simple"
+                  }
+                ],
+                "version": "draft4"
+              },
+              "enabled": true,
+              "id": "eb7440df-3f27-5647-bab9-fec82845e2b9",
+              "name": "request-validator",
+              "tags": [
+                "OAS3_import",
+                "OAS3file_26-request-validator-plugin-path-operation-parameter-schema.yaml"
+              ]
+            }
+          ],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_26-request-validator-plugin-path-operation-parameter-schema.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_26-request-validator-plugin-path-operation-parameter-schema.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}
