@@ -6,7 +6,7 @@ import (
 
 	"github.com/kong/go-apiops/logbasics"
 	"github.com/kong/go-apiops/yamlbasics"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 )
 
 // ApplyNamespaceHost applies the namespace to the hosts field of the selected routes

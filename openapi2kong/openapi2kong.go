@@ -18,7 +18,7 @@ import (
 	openapibase "github.com/pb33f/libopenapi/datamodel/high/base"
 	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
 	"github.com/pb33f/libopenapi/orderedmap"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 )
 
 const (
@@ -694,12 +694,10 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 	v3Model, errs := openapiDoc.BuildV3Model()
 
 	// if anything went wrong when building the v3 model,
-	// a slice of errors will be returned
-	if len(errs) > 0 {
-		for i := range errs {
-			logbasics.Error(errs[i], "error while building v3 document model \n")
-		}
-		return nil, fmt.Errorf("cannot create v3 model from document: %d errors reported", len(errs))
+	// an error will be returned
+	if errs != nil {
+		logbasics.Error(errs, "error while building v3 document model \n")
+		return nil, fmt.Errorf("cannot create v3 model from document: %w", errs)
 	}
 
 	if v3Model != nil {

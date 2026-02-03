@@ -36,7 +36,7 @@ func Test_parseServerUris(t *testing.T) {
 		t.Errorf("did not expect error: %v", err)
 	}
 	if diff := cmp.Diff(targets, expected); diff != "" {
-		t.Errorf(diff) //nolint:staticcheck
+		t.Errorf("diff: %s", diff)
 	}
 
 	variables := orderedmap.New[string, *v3.ServerVariable]()
@@ -69,7 +69,7 @@ func Test_parseServerUris(t *testing.T) {
 		t.Errorf("did not expect error: %v", err)
 	}
 	if diff := cmp.Diff(targets, expected); diff != "" {
-		t.Errorf(diff) //nolint:staticcheck
+		t.Errorf("diff: %s", diff)
 	}
 
 	// returns error on a bad URL
@@ -98,7 +98,7 @@ func Test_parseServerUris(t *testing.T) {
 		t.Errorf("did not expect error: %v", err)
 	}
 	if diff := cmp.Diff(targets, expected); diff != "" {
-		t.Errorf(diff) //nolint:staticcheck
+		t.Errorf("diff: %s", diff)
 	}
 
 	// returns no error if servers is nil
@@ -113,7 +113,7 @@ func Test_parseServerUris(t *testing.T) {
 		t.Errorf("did not expect error: %v", err)
 	}
 	if diff := cmp.Diff(targets, expected); diff != "" {
-		t.Errorf(diff) //nolint:staticcheck
+		t.Errorf("diff: %s", diff)
 	}
 }
 
