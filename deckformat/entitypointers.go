@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/speakeasy-api/jsonpath/pkg/jsonpath"
-	"gopkg.in/yaml.v3"
+	"github.com/pb33f/jsonpath/pkg/jsonpath"
+	"go.yaml.in/yaml/v4"
 )
 
 // EntityPointers is a map of entity names to an array of JSONpointers that can be used to find

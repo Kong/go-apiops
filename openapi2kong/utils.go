@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/kong/go-slugify"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 )
 
 // Slugify converts a name to a valid Kong name by removing and replacing unallowed characters

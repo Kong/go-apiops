@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/kong/go-apiops/logbasics"
-	"github.com/speakeasy-api/jsonpath/pkg/jsonpath"
-	"gopkg.in/yaml.v3"
+	"github.com/pb33f/jsonpath/pkg/jsonpath"
+	"go.yaml.in/yaml/v4"
 )
 
 //
