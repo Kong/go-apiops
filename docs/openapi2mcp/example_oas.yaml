@@ -1,0 +1,321 @@
+---
+# This is an annotated OpenAPI spec demonstrating the openapi2mcp conversion features.
+# It shows how to use MCP-specific extensions and Kong extensions to customize
+# the generated MCP tool definitions.
+
+openapi: 3.0.0
+
+info:
+  description: KongAir Flight Booking Service
+  version: 1.0.0
+  title: KongAir Flights API
+
+servers:
+- url: https://api.kongair.example.com/v1
+  description: Production server
+- url: https://api-staging.kongair.example.com/v1
+  description: Staging server
+  # When multiple servers are specified, an Upstream entity is created
+  # with multiple targets for load balancing.
+
+x-kong-name: kongair-flights
+  # Override the service name. If not specified, the service name is derived
+  # from info.title converted to kebab-case (e.g., "kongair-flights-api").
+
+x-kong-tags: [mcp, flights, kongair]
+  # Tags to apply to all generated Kong entities (Service, Route, Plugin).
+  # These can be overridden via the --select-tag CLI flag.
+
+x-kong-service-defaults:
+  # Default values for the generated Kong Service entity.
+  # See https://docs.konghq.com/gateway/latest/admin-api/#service-object
+  retries: 5
+  connect_timeout: 30000
+  write_timeout: 30000
+  read_timeout: 30000
+
+x-kong-route-defaults:
+  # Default values for the generated Kong Route entity.
+  # See https://docs.konghq.com/gateway/latest/admin-api/#route-object
+  preserve_host: true
+
+x-kong-upstream-defaults:
+  # Default values for the generated Kong Upstream entity (when multiple servers exist).
+  # See https://docs.konghq.com/gateway/latest/admin-api/#upstream-object
+  hash_on: ip
+  healthchecks:
+    passive:
+      unhealthy:
+        http_failures: 3
+
+paths:
+  /flights:
+    get:
+      operationId: getFlights
+      summary: List available flights
+      description: Retrieves a paginated list of available flights with optional filtering by date, origin, and destination airports.
+      # The tool description uses "description" field first, falling back to "summary".
+      # In this case, the longer description will be used as the MCP tool description,
+      # while "summary" will be used for annotations.title.
+      parameters:
+        - name: date
+          in: query
+          description: Filter flights by departure date (ISO 8601 format)
+          required: false
+          schema:
+            type: string
+            format: date
+            # Note: "format" is stripped from the schema in MCP tool output
+            # Only essential properties (type, properties, required, items) are kept
+        - name: origin
+          in: query
+          description: Filter by origin airport code (e.g., SFO, LAX)
+          required: false
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 3
+            # Note: minLength/maxLength are stripped from MCP output
+        - name: destination
+          in: query
+          description: Filter by destination airport code
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Maximum number of results to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Flight'
+
+  /flights/{flightNumber}:
+    parameters:
+      # Path-level parameters are inherited by all operations under this path
+      - name: flightNumber
+        in: path
+        description: The unique flight number (e.g., KA123)
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getFlightDetails
+      summary: Get flight details
+      description: Retrieve detailed information about a specific flight including real-time status, gate information, and crew details.
+      responses:
+        '200':
+          description: Flight details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlightDetails'
+
+  /flights/{flightNumber}/bookings:
+    parameters:
+      - name: flightNumber
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      x-kong-mcp-tool-name: book-flight
+        # Override the generated tool name. Without this extension,
+        # the tool name would be derived from operationId: "create-flight-booking"
+      x-kong-mcp-tool-description: Book a seat on a KongAir flight for a passenger. Requires passenger details and optional seat preferences.
+        # Override the tool description. This takes highest priority over
+        # both "description" and "summary" fields.
+      operationId: createFlightBooking
+      summary: Book a flight
+      description: Creates a new booking for the specified flight.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                passenger_name:
+                  type: string
+                  description: Full name of the passenger as it appears on ID
+                passenger_email:
+                  type: string
+                  format: email
+                seat_preference:
+                  type: string
+                  enum: [window, aisle, middle]
+                  description: Preferred seat location
+              required:
+                - passenger_name
+                - passenger_email
+      responses:
+        '201':
+          description: Booking created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+
+  /internal/health:
+    get:
+      x-kong-mcp-exclude: true
+        # Exclude this operation from MCP tool generation.
+        # Health check endpoints typically shouldn't be exposed as AI tools.
+      operationId: healthCheck
+      summary: Health check endpoint
+      responses:
+        '200':
+          description: Service is healthy
+
+  /internal/metrics:
+    get:
+      x-kong-mcp-exclude: true
+        # Another internal endpoint excluded from MCP tools
+      operationId: getMetrics
+      summary: Prometheus metrics endpoint
+      responses:
+        '200':
+          description: Metrics in Prometheus format
+
+  /bookings/{bookingId}:
+    parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getBooking
+      summary: Get booking details
+      # Only "summary" is provided here, so it will be used as the tool description
+      responses:
+        '200':
+          description: Booking details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+    delete:
+      operationId: cancelBooking
+      summary: Cancel a booking
+      description: Cancel an existing booking. Cancellation policies and refund rules apply based on the time until departure.
+      responses:
+        '204':
+          description: Booking cancelled
+
+  /bookings/{bookingId}/check-in:
+    parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      operationId: checkIn
+      summary: Check in for flight
+      description: Complete online check-in for a booking. Returns boarding pass information.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                seat_selection:
+                  type: string
+                  description: Specific seat number if available (e.g., 12A)
+      responses:
+        '200':
+          description: Check-in successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoardingPass'
+
+components:
+  schemas:
+    Flight:
+      type: object
+      properties:
+        flight_number:
+          type: string
+        origin:
+          type: string
+        destination:
+          type: string
+        departure_time:
+          type: string
+          format: date-time
+        arrival_time:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [scheduled, boarding, departed, arrived, cancelled]
+        available_seats:
+          type: integer
+
+    FlightDetails:
+      allOf:
+        - $ref: '#/components/schemas/Flight'
+        - type: object
+          properties:
+            gate:
+              type: string
+            terminal:
+              type: string
+            aircraft_type:
+              type: string
+
+    Booking:
+      type: object
+      properties:
+        booking_id:
+          type: string
+          format: uuid
+        flight_number:
+          type: string
+        passenger_name:
+          type: string
+        passenger_email:
+          type: string
+        seat_number:
+          type: string
+        status:
+          type: string
+          enum: [confirmed, checked_in, cancelled]
+        created_at:
+          type: string
+          format: date-time
+
+    BoardingPass:
+      type: object
+      properties:
+        booking_id:
+          type: string
+        flight_number:
+          type: string
+        passenger_name:
+          type: string
+        seat_number:
+          type: string
+        gate:
+          type: string
+        boarding_time:
+          type: string
+          format: date-time
+        barcode:
+          type: string
+          description: QR code data for scanning
