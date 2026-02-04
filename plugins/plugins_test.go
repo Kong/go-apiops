@@ -524,5 +524,80 @@ var _ = Describe("plugins", func() {
 			}, true)
 			Expect(err).To(MatchError("plugin 0 has foreign keys, but they are only supported in the main plugin array"))
 		})
+
+		It("supports @.name selectors", func() {
+			dataInput := []byte(`{
+  "_format_version": 3,
+  "_workspace": "test",
+  "services": [
+    {
+      "name": "productfetch-service",
+      "host": "upstream-api.example.com",
+      "port": 443,
+      "protocol": "https",
+      "path": "/api",
+      "routes": [
+        {
+          "name": "productfetch_v1-fetch-products",
+          "paths": [
+            "/v1/products"
+          ],
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "strip_path": true,
+          "preserve_host": false
+        }
+      ]
+    }
+  ]
+}
+`)
+
+			plugger := plugins.Plugger{}
+			plugger.SetData(filebasics.MustDeserialize(dataInput))
+			plugger.SetSelectors([]string{
+				"$..routes[?(@.name=='productfetch_v1-fetch-products')]",
+			})
+			plugger.AddPlugin(map[string]interface{}{
+				"name": "plugin-added",
+			}, false)
+
+			result := filebasics.MustSerialize(plugger.GetData(), filebasics.OutputFormatJSON)
+			Expect(result).To(MatchJSON(`{
+  "_format_version": 3,
+  "_workspace": "test",
+  "services": [
+    {
+      "name": "productfetch-service",
+      "host": "upstream-api.example.com",
+      "port": 443,
+      "protocol": "https",
+      "path": "/api",
+      "routes": [
+        {
+          "name": "productfetch_v1-fetch-products",
+          "paths": [
+            "/v1/products"
+          ],
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "strip_path": true,
+          "preserve_host": false,
+          "plugins": [
+            {
+              "name": "plugin-added"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+`))
+		})
 	})
 })
