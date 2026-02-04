@@ -34,7 +34,7 @@ var _ = Describe("Merge", func() {
 				result := MustSerialize(res, OutputFormatJSON)
 
 				MustWriteSerializedFile("./merge_testfiles/"+
-					strings.Replace(expected, "_expected.", "_generated.", -1), res, OutputFormatJSON)
+					strings.ReplaceAll(expected, "_expected.", "_generated."), res, OutputFormatJSON)
 
 				Expect(result).To(MatchJSON(expectedResult))
 			}
