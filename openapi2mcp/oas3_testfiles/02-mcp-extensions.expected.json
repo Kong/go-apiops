@@ -1,0 +1,89 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "api.example.com",
+      "id": "0cef4d36-9c39-5ac2-9d9f-190d8ea8a252",
+      "name": "flights-service",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "b9cc2f2b-2428-59bf-b355-2c4026dd0a08",
+          "name": "flights-service-mcp",
+          "paths": [
+            "/flights-service-mcp"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "mode": "conversion-listener",
+                "tools": [
+                  {
+                    "annotations": {
+                      "title": "Create booking"
+                    },
+                    "description": "Creates a new flight booking with the specified passenger details and flight information",
+                    "method": "POST",
+                    "name": "create-booking",
+                    "path": "/bookings",
+                    "request_body": {
+                      "content": {
+                        "application/json": {
+                          "schema": {
+                            "properties": {
+                              "flight_id": {
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        }
+                      },
+                      "required": true
+                    }
+                  },
+                  {
+                    "annotations": {
+                      "title": "Get flights"
+                    },
+                    "description": "Retrieve all scheduled KongAir flights for a specific date",
+                    "method": "GET",
+                    "name": "list-flights",
+                    "parameters": [
+                      {
+                        "in": "query",
+                        "name": "date",
+                        "required": false,
+                        "schema": {
+                          "type": "string"
+                        }
+                      }
+                    ],
+                    "path": "/flights"
+                  }
+                ]
+              },
+              "id": "15606d9f-b942-5adf-976f-bdbb9e24bd47",
+              "name": "ai-mcp-proxy",
+              "tags": [
+                "OAS3_import",
+                "OAS3file_02-mcp-extensions.yaml"
+              ]
+            }
+          ],
+          "tags": [
+            "OAS3_import",
+            "OAS3file_02-mcp-extensions.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_02-mcp-extensions.yaml"
+      ]
+    }
+  ]
+}

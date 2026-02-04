@@ -1,0 +1,11 @@
+openapi: 3.0.0
+info:
+  title: Multi Server API
+servers:
+  - url: https://server1.example.com/api
+  - url: https://server2.example.com/api
+paths:
+  /items:
+    get:
+      operationId: list-items
+      summary: List all items

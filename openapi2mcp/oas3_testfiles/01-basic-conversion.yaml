@@ -1,0 +1,42 @@
+openapi: 3.0.0
+info:
+  title: Flights Service
+servers:
+  - url: https://shared-services.kong-sales-engineering.com/kongair
+paths:
+  /flights:
+    get:
+      summary: Get KongAir planned flights
+      operationId: get-flights
+      parameters:
+        - name: date
+          in: query
+          description: Filter by date (defaults to current day)
+          required: false
+          schema:
+            type: string
+            format: date
+  /flights/{flightNumber}/bookings:
+    post:
+      summary: Book a flight
+      operationId: book-flight
+      parameters:
+        - name: flightNumber
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                passenger_name:
+                  type: string
+                passenger_email:
+                  type: string
+              required:
+                - passenger_name
+                - passenger_email

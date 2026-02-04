@@ -1,0 +1,108 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "api.example.com",
+      "id": "a49d53c1-c2ce-5d7c-a72c-e2c376de9e93",
+      "name": "simple-api",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "f7867c0b-488d-57c5-ae54-68b69916c422",
+          "name": "simple-api-mcp",
+          "paths": [
+            "/simple-api-mcp"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "mode": "conversion-listener",
+                "tools": [
+                  {
+                    "annotations": {
+                      "title": "List all users"
+                    },
+                    "description": "List all users",
+                    "method": "GET",
+                    "name": "list-users",
+                    "path": "/users"
+                  },
+                  {
+                    "annotations": {
+                      "title": "Get a user by ID"
+                    },
+                    "description": "Get a user by ID",
+                    "method": "GET",
+                    "name": "get-user",
+                    "parameters": [
+                      {
+                        "in": "path",
+                        "name": "userId",
+                        "required": true,
+                        "schema": {
+                          "type": "string"
+                        }
+                      }
+                    ],
+                    "path": "/users/{userId}"
+                  }
+                ]
+              },
+              "id": "079e4dfb-892f-5015-85f6-1e73358bbf76",
+              "name": "ai-mcp-proxy",
+              "tags": [
+                "OAS3_import",
+                "OAS3file_04-direct-route.yaml"
+              ]
+            }
+          ],
+          "tags": [
+            "OAS3_import",
+            "OAS3file_04-direct-route.yaml"
+          ]
+        },
+        {
+          "id": "8ee40f6f-ac2c-5476-a3e3-7085d5e138a9",
+          "methods": [
+            "GET"
+          ],
+          "name": "simple-api_list-users",
+          "paths": [
+            "~/users$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_04-direct-route.yaml"
+          ]
+        },
+        {
+          "id": "592b00d2-940a-5b61-8d87-c0084e212371",
+          "methods": [
+            "GET"
+          ],
+          "name": "simple-api_get-user",
+          "paths": [
+            "~/users/(?\u003cuserid\u003e[^#?/]+)$"
+          ],
+          "plugins": [],
+          "regex_priority": 100,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_04-direct-route.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_04-direct-route.yaml"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "api.example.com",
+      "id": "a49d53c1-c2ce-5d7c-a72c-e2c376de9e93",
+      "name": "simple-api",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "f7867c0b-488d-57c5-ae54-68b69916c422",
+          "name": "simple-api-mcp",
+          "paths": [
+            "/custom/mcp/path"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "mode": "conversion-listener",
+                "tools": [
+                  {
+                    "annotations": {
+                      "title": "List all items"
+                    },
+                    "description": "List all items",
+                    "method": "GET",
+                    "name": "list-items",
+                    "path": "/items"
+                  }
+                ]
+              },
+              "id": "079e4dfb-892f-5015-85f6-1e73358bbf76",
+              "name": "ai-mcp-proxy",
+              "tags": [
+                "OAS3_import",
+                "OAS3file_06-custom-path-prefix.yaml"
+              ]
+            }
+          ],
+          "tags": [
+            "OAS3_import",
+            "OAS3file_06-custom-path-prefix.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_06-custom-path-prefix.yaml"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "multi-server-api.upstream",
+      "id": "75b3477b-1d8f-5f6b-b594-4d0e1d5a8ab4",
+      "name": "multi-server-api",
+      "path": "/api",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "29c780c2-9663-5632-813e-659f7df0f45c",
+          "name": "multi-server-api-mcp",
+          "paths": [
+            "/multi-server-api-mcp"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "mode": "conversion-listener",
+                "tools": [
+                  {
+                    "annotations": {
+                      "title": "List all items"
+                    },
+                    "description": "List all items",
+                    "method": "GET",
+                    "name": "list-items",
+                    "path": "/items"
+                  }
+                ]
+              },
+              "id": "3ea297e1-9bb1-5b29-9b6a-69130c4ffdfe",
+              "name": "ai-mcp-proxy",
+              "tags": [
+                "OAS3_import",
+                "OAS3file_07-multiple-servers.yaml"
+              ]
+            }
+          ],
+          "tags": [
+            "OAS3_import",
+            "OAS3file_07-multiple-servers.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_07-multiple-servers.yaml"
+      ]
+    }
+  ],
+  "upstreams": [
+    {
+      "id": "fdaf4aad-438c-597b-a3e7-122e30cedbe5",
+      "name": "multi-server-api.upstream",
+      "tags": [
+        "OAS3_import",
+        "OAS3file_07-multiple-servers.yaml"
+      ],
+      "targets": [
+        {
+          "tags": [
+            "OAS3_import",
+            "OAS3file_07-multiple-servers.yaml"
+          ],
+          "target": "server1.example.com:443"
+        },
+        {
+          "tags": [
+            "OAS3_import",
+            "OAS3file_07-multiple-servers.yaml"
+          ],
+          "target": "server2.example.com:443"
+        }
+      ]
+    }
+  ]
+}
