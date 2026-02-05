@@ -157,8 +157,7 @@ func (patch *DeckPatch) ApplyToNodes(yamlData *yaml.Node) (err error) {
 		logbasics.Info("Patch has no selectors specified")
 	}
 
-	//nolint:gosimple
-	if patch.Selectors == nil || len(patch.Selectors) == 0 {
+	if len(patch.Selectors) == 0 {
 		patch.Selectors = make([]*jsonpath.JSONPath, len(patch.SelectorSources))
 		for i, selector := range patch.SelectorSources {
 			patch.Selectors[i], err = jsonpath.NewPath(selector)
