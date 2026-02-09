@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.yaml.in/yaml/v4"
 )
 
 const fixturePath = "./oas3_testfiles/"
@@ -77,22 +78,38 @@ func Test_Openapi2kong(t *testing.T) {
 
 	for _, file := range files {
 		fileNameIn := file.Name()
-		fileNameExpected := strings.TrimSuffix(fileNameIn, ".yaml") + ".expected.json"
-		fileNameOut := strings.TrimSuffix(fileNameIn, ".yaml") + ".generated.json"
-		dataIn, _ := os.ReadFile(fixturePath + fileNameIn)
-		dataOut, err := Convert(dataIn, O2kOptions{
-			Tags: []string{"OAS3_import", "OAS3file_" + fileNameIn},
-			OIDC: true,
+		fileNameBase := strings.TrimSuffix(fileNameIn, ".yaml")
+		t.Run(fileNameBase, func(t *testing.T) {
+			fileNameExpected := fileNameBase + ".expected.json"
+			fileNameOut := fileNameBase + ".generated.json"
+			dataIn, _ := os.ReadFile(fixturePath + fileNameIn)
+
+			// Test option configuration
+			allHeadersRequired := false
+
+			var config map[string]any
+			yaml.Unmarshal(dataIn, &config)
+			if testConfig, ok := config["x-test-config"].(map[string]any); ok {
+				if val, ok := testConfig["treatAllHeadersAsRequired"]; ok {
+					allHeadersRequired = val.(bool)
+				}
+			}
+
+			dataOut, err := Convert(dataIn, O2kOptions{
+				Tags:                      []string{"OAS3_import", "OAS3file_" + fileNameIn},
+				OIDC:                      true,
+				TreatAllHeadersAsRequired: allHeadersRequired,
+			})
+			if err != nil {
+				t.Error(fmt.Sprintf("'%s' didn't expect error: %%w", fixturePath+fileNameIn), err)
+			} else {
+				JSONOut, _ := json.MarshalIndent(dataOut, "", "  ")
+				os.WriteFile(fixturePath+fileNameOut, JSONOut, 0o600)
+				JSONExpected, _ := os.ReadFile(fixturePath + fileNameExpected)
+				assert.JSONEq(t, string(JSONExpected), string(JSONOut),
+					"'%s': the JSON blobs should be equal", fixturePath+fileNameIn)
+			}
 		})
-		if err != nil {
-			t.Error(fmt.Sprintf("'%s' didn't expect error: %%w", fixturePath+fileNameIn), err)
-		} else {
-			JSONOut, _ := json.MarshalIndent(dataOut, "", "  ")
-			os.WriteFile(fixturePath+fileNameOut, JSONOut, 0o600)
-			JSONExpected, _ := os.ReadFile(fixturePath + fileNameExpected)
-			assert.JSONEq(t, string(JSONExpected), string(JSONOut),
-				"'%s': the JSON blobs should be equal", fixturePath+fileNameIn)
-		}
 	}
 }
 
