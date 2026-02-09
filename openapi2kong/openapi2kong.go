@@ -48,6 +48,8 @@ type O2kOptions struct {
 	IgnoreSecurityErrors bool
 	// Ignore circular references
 	IgnoreCircularRefs bool
+	// Generate separate routes for each header enum even if required: false
+	TreatAllHeadersAsRequired bool
 }
 
 // setDefaults sets the defaults for the OpenAPI2Kong operation.
@@ -559,13 +561,13 @@ func findParameterSchema(
 func findHeaderParamsForRouting(
 	operationLevelParameters []*v3.Parameter,
 	pathLevelParameters []*v3.Parameter,
+	treatAllHeadersAsRequired bool,
 ) []*v3.Parameter {
 	headerParamProcessed := make(map[string]bool)
 	var result []*v3.Parameter // Store in array so output is deterministic - iterating over map is not.
 
 	for _, param := range operationLevelParameters {
-		if param.In == "header" && param.Schema != nil &&
-			param.Schema.Schema() != nil && len(param.Schema.Schema().Enum) > 0 {
+		if shouldAddHeaderParameter(param, treatAllHeadersAsRequired) {
 			headerParamProcessed[param.Name] = true
 			result = append(result, param)
 		}
@@ -573,14 +575,19 @@ func findHeaderParamsForRouting(
 
 	for _, param := range pathLevelParameters {
 		// Operation level params override path level params, so ignore if already present.
-		if param.In == "header" && param.Schema != nil && param.Schema.Schema() != nil &&
-			len(param.Schema.Schema().Enum) > 0 && !headerParamProcessed[param.Name] {
+		if shouldAddHeaderParameter(param, treatAllHeadersAsRequired) && !headerParamProcessed[param.Name] {
 			headerParamProcessed[param.Name] = true
 			result = append(result, param)
 		}
 	}
 
 	return result
+}
+
+func shouldAddHeaderParameter(param *v3.Parameter, treatAllHeadersAsRequired bool) bool {
+	hasEnum := param.Schema != nil && param.Schema.Schema() != nil && len(param.Schema.Schema().Enum) > 0
+	isRequired := *param.Required || treatAllHeadersAsRequired
+	return param.In == "header" && hasEnum && isRequired
 }
 
 // Based on given headers and their possible values, create all possible combinations
@@ -1222,7 +1229,8 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 				route["strip_path"] = false // Default to false since we do not want to strip full-regex paths by default
 			}
 
-			headerParams := findHeaderParamsForRouting(operation.Parameters, pathitem.Parameters)
+			headerParams := findHeaderParamsForRouting(operation.Parameters, pathitem.Parameters, opts.TreatAllHeadersAsRequired)
+
 			if len(headerParams) > 0 {
 				// This operation has header parameters, we need to create different routes based on the header values
 				headerValueCombinations := constructHeaderCombinationsForRouting(headerParams)
