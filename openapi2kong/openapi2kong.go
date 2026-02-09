@@ -1242,6 +1242,28 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 					clonedRoute["name"] = fmt.Sprintf("%s_%v", operationBaseName, i)
 					if !opts.SkipID {
 						clonedRoute["id"] = uuid.NewSHA1(opts.UUIDNamespace, []byte(clonedRoute["name"].(string))).String()
+
+						// Update the route plugin IDs to take in to account the header
+						// or we get duplicate plugin IDs
+						if clonedRoute["plugins"] != nil {
+							combinationJSON, err := json.Marshal(combination)
+							if err != nil {
+								return nil, fmt.Errorf("failed to marshal header combination for plugin ID generation: %w", err)
+							}
+
+							headerBase := string(combinationJSON)
+
+							plugins, ok := clonedRoute["plugins"].([]any)
+							if ok {
+								for k, v := range plugins {
+									p, ok := v.(map[string]interface{})
+									if ok {
+										p["id"] = createPluginID(opts.UUIDNamespace, operationBaseName+headerBase, p)
+									}
+									plugins[k] = p
+								}
+							}
+						}
 					}
 					newRoutes = append(newRoutes, clonedRoute)
 				}
