@@ -1,0 +1,20 @@
+openapi: 3.0.0
+info:
+  title: Simple API
+servers:
+  - url: https://api.example.com
+paths:
+  /users:
+    get:
+      operationId: list-users
+      summary: List all users
+  /users/{userId}:
+    get:
+      operationId: get-user
+      summary: Get a user by ID
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string

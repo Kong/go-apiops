@@ -1,0 +1,10 @@
+openapi: 3.0.0
+info:
+  title: Simple API
+servers:
+  - url: https://api.example.com
+paths:
+  /users:
+    get:
+      operationId: list-users
+      summary: List all users

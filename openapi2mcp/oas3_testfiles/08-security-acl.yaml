@@ -1,0 +1,116 @@
+---
+openapi: 3.0.0
+
+info:
+  description: KongAir Flights service provides the scheduled flights for KongAir
+  version: 0.1.0
+  title: KongAir Flights
+
+x-kong-name: kongair-flights
+
+x-kong-mcp-default-acl:
+  - scope: tools
+    allow:
+      - "flights:read"
+
+servers:
+- url: https://mock-e91bb6429fe84bfeb970620df9499e52.mock.insomnia.run
+  description: KongAir API Server
+
+paths:
+  "/flights":
+    get:
+      security:
+        - okta_oauth2:
+            - flights:read
+      x-kong-mcp-tool-name: get-cool-flights
+      summary: Get KongAir planned flights
+      description: |
+        Returns all the scheduled flights for a given day
+      operationId: get-flights
+      parameters:
+        - name: date
+          in: query
+          description: Filter by date (defaults to current day)
+          required: false
+          schema:
+            type: string
+    post:
+      security:
+        - okta_oauth2:
+            - flights:write
+      summary: Create a new flight
+      description: |
+        Creates a new scheduled flight entry
+      operationId: create-flight
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - number
+                - route_id
+                - scheduled_departure
+                - scheduled_arrival
+              properties:
+                number:
+                  type: string
+                route_id:
+                  type: string
+                scheduled_departure:
+                  type: string
+                  format: date-time
+                scheduled_arrival:
+                  type: string
+                  format: date-time
+
+  "/flights/{flightNumber}":
+    get:
+      security:
+        - okta_oauth2:
+            - flights:read
+      summary: Get a specific flight by flight number
+      description: |
+        Returns a specific flight given its flight number
+      operationId: get-flight-by-number
+      parameters:
+        - name: flightNumber
+          in: path
+          description: The flight number
+          required: true
+          schema:
+            type: string
+
+  "/flights/{flightNumber}/details":
+    get:
+      security:
+        - okta_oauth2:
+            - flights:read
+      x-kong-mcp-exclude: true
+      summary: Fetch more details about a flight
+      description: Fetch more details about a flight
+      operationId: get-flight-details
+      parameters:
+      - name: flightNumber
+        in: path
+        description: The flight number
+        required: true
+        schema:
+          type: string
+
+components:
+  securitySchemes:
+    okta_oauth2:
+      type: oauth2
+      x-kong-mcp-acl:
+        acl_attribute_type: oauth_access_token
+        access_token_claim_field: scp
+      flows:
+        authorizationCode:
+          authorizationUrl: https://example.okta.com/oauth2/default/v1/authorize
+          tokenUrl: https://example.okta.com/oauth2/default/v1/token
+          scopes:
+            flights:read: Read access to flight resources
+            flights:write: Write access to flight resources
