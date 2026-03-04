@@ -1,0 +1,71 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "connect_timeout": 30000,
+      "host": "api.example.com",
+      "id": "fdac7b37-a1ab-5285-8d5d-03df0060d00a",
+      "name": "api-with-kong-extensions",
+      "path": "/v1",
+      "plugins": [
+        {
+          "config": {
+            "minute": 100,
+            "policy": "local"
+          },
+          "id": "aa34328e-ed4e-5fe2-b13c-36511cf99ed5",
+          "name": "rate-limiting",
+          "tags": [
+            "production",
+            "v1"
+          ]
+        }
+      ],
+      "port": 443,
+      "protocol": "https",
+      "retries": 5,
+      "routes": [
+        {
+          "id": "5858ba16-9cbf-5b09-8eb6-436b3fc6b255",
+          "name": "api-with-kong-extensions-mcp",
+          "paths": [
+            "/api-with-kong-extensions-mcp"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "mode": "conversion-listener",
+                "tools": [
+                  {
+                    "annotations": {
+                      "title": "List all items"
+                    },
+                    "description": "List all items",
+                    "method": "GET",
+                    "name": "list-items",
+                    "path": "/items"
+                  }
+                ]
+              },
+              "id": "02813e53-ee50-560c-883a-ee1c4fe6b47c",
+              "name": "ai-mcp-proxy",
+              "tags": [
+                "production",
+                "v1"
+              ]
+            }
+          ],
+          "preserve_host": true,
+          "tags": [
+            "production",
+            "v1"
+          ]
+        }
+      ],
+      "tags": [
+        "production",
+        "v1"
+      ]
+    }
+  ]
+}

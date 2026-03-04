@@ -1,0 +1,150 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "mock-e91bb6429fe84bfeb970620df9499e52.mock.insomnia.run",
+      "id": "259da73d-d48d-59b5-99fc-dbd49ce1a1d7",
+      "name": "kongair-flights",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "6916ad46-4c19-56d8-aaad-0c09dba4b135",
+          "name": "kongair-flights-mcp",
+          "paths": [
+            "/kongair-flights-mcp"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "access_token_claim_field": "scp",
+                "acl_attribute_type": "oauth_access_token",
+                "default_acl": [
+                  {
+                    "allow": [
+                      "flights:read"
+                    ],
+                    "scope": "tools"
+                  }
+                ],
+                "mode": "conversion-listener",
+                "tools": [
+                  {
+                    "acl": {
+                      "allow": [
+                        "flights:read"
+                      ]
+                    },
+                    "annotations": {
+                      "title": "Get KongAir planned flights"
+                    },
+                    "description": "Returns all the scheduled flights for a given day\n",
+                    "method": "GET",
+                    "name": "get-cool-flights",
+                    "parameters": [
+                      {
+                        "description": "Filter by date (defaults to current day)",
+                        "in": "query",
+                        "name": "date",
+                        "required": false,
+                        "schema": {
+                          "type": "string"
+                        }
+                      }
+                    ],
+                    "path": "/flights"
+                  },
+                  {
+                    "acl": {
+                      "allow": [
+                        "flights:write"
+                      ]
+                    },
+                    "annotations": {
+                      "title": "Create a new flight"
+                    },
+                    "description": "Creates a new scheduled flight entry\n",
+                    "method": "POST",
+                    "name": "create-flight",
+                    "path": "/flights",
+                    "request_body": {
+                      "content": {
+                        "application/json": {
+                          "schema": {
+                            "properties": {
+                              "number": {
+                                "type": "string"
+                              },
+                              "route_id": {
+                                "type": "string"
+                              },
+                              "scheduled_arrival": {
+                                "type": "string"
+                              },
+                              "scheduled_departure": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "number",
+                              "route_id",
+                              "scheduled_departure",
+                              "scheduled_arrival"
+                            ],
+                            "type": "object"
+                          }
+                        }
+                      },
+                      "required": true
+                    }
+                  },
+                  {
+                    "acl": {
+                      "allow": [
+                        "flights:read"
+                      ]
+                    },
+                    "annotations": {
+                      "title": "Get a specific flight by flight number"
+                    },
+                    "description": "Returns a specific flight given its flight number\n",
+                    "method": "GET",
+                    "name": "get-flight-by-number",
+                    "parameters": [
+                      {
+                        "description": "The flight number",
+                        "in": "path",
+                        "name": "flightNumber",
+                        "required": true,
+                        "schema": {
+                          "type": "string"
+                        }
+                      }
+                    ],
+                    "path": "/flights/{flightNumber}"
+                  }
+                ]
+              },
+              "id": "7d56a807-dd7f-5660-8de3-d7611dd5ad28",
+              "name": "ai-mcp-proxy",
+              "tags": [
+                "OAS3_import",
+                "OAS3file_08-security-acl.yaml"
+              ]
+            }
+          ],
+          "tags": [
+            "OAS3_import",
+            "OAS3file_08-security-acl.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_08-security-acl.yaml"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,107 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "shared-services.kong-sales-engineering.com",
+      "id": "0cef4d36-9c39-5ac2-9d9f-190d8ea8a252",
+      "name": "flights-service",
+      "path": "/kongair",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "b9cc2f2b-2428-59bf-b355-2c4026dd0a08",
+          "name": "flights-service-mcp",
+          "paths": [
+            "/flights-service-mcp"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "mode": "conversion-listener",
+                "tools": [
+                  {
+                    "annotations": {
+                      "title": "Get KongAir planned flights"
+                    },
+                    "description": "Get KongAir planned flights",
+                    "method": "GET",
+                    "name": "get-flights",
+                    "parameters": [
+                      {
+                        "description": "Filter by date (defaults to current day)",
+                        "in": "query",
+                        "name": "date",
+                        "required": false,
+                        "schema": {
+                          "type": "string"
+                        }
+                      }
+                    ],
+                    "path": "/flights"
+                  },
+                  {
+                    "annotations": {
+                      "title": "Book a flight"
+                    },
+                    "description": "Book a flight",
+                    "method": "POST",
+                    "name": "book-flight",
+                    "parameters": [
+                      {
+                        "in": "path",
+                        "name": "flightNumber",
+                        "required": true,
+                        "schema": {
+                          "type": "string"
+                        }
+                      }
+                    ],
+                    "path": "/flights/{flightNumber}/bookings",
+                    "request_body": {
+                      "content": {
+                        "application/json": {
+                          "schema": {
+                            "properties": {
+                              "passenger_email": {
+                                "type": "string"
+                              },
+                              "passenger_name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "passenger_name",
+                              "passenger_email"
+                            ],
+                            "type": "object"
+                          }
+                        }
+                      },
+                      "required": true
+                    }
+                  }
+                ]
+              },
+              "id": "15606d9f-b942-5adf-976f-bdbb9e24bd47",
+              "name": "ai-mcp-proxy",
+              "tags": [
+                "OAS3_import",
+                "OAS3file_01-basic-conversion.yaml"
+              ]
+            }
+          ],
+          "tags": [
+            "OAS3_import",
+            "OAS3file_01-basic-conversion.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_01-basic-conversion.yaml"
+      ]
+    }
+  ]
+}

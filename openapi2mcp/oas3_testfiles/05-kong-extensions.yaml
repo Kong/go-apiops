@@ -1,0 +1,22 @@
+openapi: 3.0.0
+info:
+  title: API with Kong Extensions
+x-kong-tags:
+  - production
+  - v1
+x-kong-service-defaults:
+  retries: 5
+  connect_timeout: 30000
+x-kong-route-defaults:
+  preserve_host: true
+x-kong-plugin-rate-limiting:
+  config:
+    minute: 100
+    policy: local
+servers:
+  - url: https://api.example.com/v1
+paths:
+  /items:
+    get:
+      operationId: list-items
+      summary: List all items

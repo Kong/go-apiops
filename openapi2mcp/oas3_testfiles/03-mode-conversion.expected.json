@@ -1,0 +1,55 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "api.example.com",
+      "id": "a49d53c1-c2ce-5d7c-a72c-e2c376de9e93",
+      "name": "simple-api",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "f7867c0b-488d-57c5-ae54-68b69916c422",
+          "name": "simple-api-mcp",
+          "paths": [
+            "/simple-api-mcp"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "mode": "conversion",
+                "tools": [
+                  {
+                    "annotations": {
+                      "title": "List all users"
+                    },
+                    "description": "List all users",
+                    "method": "GET",
+                    "name": "list-users",
+                    "path": "/users"
+                  }
+                ]
+              },
+              "id": "079e4dfb-892f-5015-85f6-1e73358bbf76",
+              "name": "ai-mcp-proxy",
+              "tags": [
+                "OAS3_import",
+                "OAS3file_03-mode-conversion.yaml"
+              ]
+            }
+          ],
+          "tags": [
+            "OAS3_import",
+            "OAS3file_03-mode-conversion.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_03-mode-conversion.yaml"
+      ]
+    }
+  ]
+}
