@@ -40,7 +40,7 @@
                 "version": "draft4"
               },
               "enabled": true,
-              "id": "ddb9f3cc-b11a-58f2-87e0-e47d8eca0242",
+              "id": "60c1ec68-951a-5aa6-999b-ab57a3960692",
               "name": "request-validator",
               "tags": [
                 "OAS3_import",
@@ -85,7 +85,7 @@
                 "version": "draft4"
               },
               "enabled": true,
-              "id": "1da08580-9237-584f-8213-9d64c1a87782",
+              "id": "26fd997b-a957-544c-a9e7-a394c4e04240",
               "name": "request-validator",
               "tags": [
                 "OAS3_import",
