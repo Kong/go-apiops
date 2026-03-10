@@ -1268,9 +1268,11 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 					newRoutes = append(newRoutes, clonedRoute)
 				}
 				operationRoutes = append(operationRoutes, newRoutes...)
-			} else {
-				operationRoutes = append(operationRoutes, route)
 			}
+
+			// If no required header params exist, we add one route.
+			// In case they exist, this acts as a fallback route without header based routing.
+			operationRoutes = append(operationRoutes, route)
 			operationService["routes"] = operationRoutes
 		}
 	}
