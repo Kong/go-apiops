@@ -176,6 +176,23 @@
             "OAS3_import",
             "OAS3file_25-routes-with-headers.yaml"
           ]
+        },
+        {
+          "id": "27ea9a0a-216e-5c92-ae0b-8c9aa8493750",
+          "methods": [
+            "GET"
+          ],
+          "name": "simple-api-overview_get-path2-service",
+          "paths": [
+            "~/path2$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_25-routes-with-headers.yaml"
+          ]
         }
       ],
       "tags": [

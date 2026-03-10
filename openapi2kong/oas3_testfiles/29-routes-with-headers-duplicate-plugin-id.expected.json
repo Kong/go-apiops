@@ -83,6 +83,38 @@
             "OAS3_import",
             "OAS3file_29-routes-with-headers-duplicate-plugin-id.yaml"
           ]
+        },
+        {
+          "id": "4773c6b3-8ca7-548b-85eb-4a45ae2be299",
+          "methods": [
+            "POST"
+          ],
+          "name": "example-api_exampleoperation",
+          "paths": [
+            "~/api/v1/example$"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "limit": [
+                  500
+                ]
+              },
+              "enabled": true,
+              "id": "9770aa9c-6849-5a68-824f-f3b3ae31f2e5",
+              "name": "rate-limiting-advanced",
+              "tags": [
+                "OAS3_import",
+                "OAS3file_29-routes-with-headers-duplicate-plugin-id.yaml"
+              ]
+            }
+          ],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_29-routes-with-headers-duplicate-plugin-id.yaml"
+          ]
         }
       ],
       "tags": [
