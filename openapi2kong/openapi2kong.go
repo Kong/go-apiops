@@ -586,7 +586,9 @@ func findHeaderParamsForRouting(
 
 func shouldAddHeaderParameter(param *v3.Parameter, treatAllHeadersAsRequired bool) bool {
 	hasEnum := param.Schema != nil && param.Schema.Schema() != nil && len(param.Schema.Schema().Enum) > 0
-	isRequired := *param.Required || treatAllHeadersAsRequired
+
+	isParamRequired := param.Required != nil && *param.Required
+	isRequired := isParamRequired || treatAllHeadersAsRequired
 	return param.In == "header" && hasEnum && isRequired
 }
 
