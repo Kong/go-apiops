@@ -5,16 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net/url"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
 	"github.com/kong/go-apiops/jsonbasics"
 	"github.com/kong/go-apiops/logbasics"
-	"github.com/kong/go-slugify"
+	"github.com/kong/go-apiops/openapi2kong"
 	"github.com/pb33f/libopenapi"
 	"github.com/pb33f/libopenapi/datamodel"
 	openapibase "github.com/pb33f/libopenapi/datamodel/high/base"
@@ -24,16 +22,9 @@ import (
 )
 
 const (
-	formatVersionKey   = "_format_version"
-	formatVersionValue = "3.0"
-
 	// MCP proxy modes
 	ModeConversionListener = "conversion-listener"
 	ModeConversion         = "conversion"
-
-	// Default schemes
-	httpScheme  = "http"
-	httpsScheme = "https"
 )
 
 // O2MOptions defines the options for an OpenAPI to MCP conversion operation
@@ -69,27 +60,6 @@ func (opts *O2MOptions) setDefaults() {
 	}
 }
 
-// Slugify converts a name to a valid Kong name by removing and replacing unallowed characters
-// and sanitizing non-latin characters. Multiple inputs will be concatenated using '_'.
-func Slugify(name ...string) string {
-	slugifier := (&slugify.Slugifier{}).ToLower(true).InvalidChar("-").WordSeparator("-")
-	concatBy := "_"
-
-	for i, elem := range name {
-		name[i] = slugifier.Slugify(elem)
-	}
-
-	// drop empty strings from the array
-	for i := 0; i < len(name); i++ {
-		if name[i] == "" {
-			name = append(name[:i], name[i+1:]...)
-			i--
-		}
-	}
-
-	return strings.Join(name, concatBy)
-}
-
 // toKebabCase converts a string to kebab-case
 // Handles camelCase, PascalCase, snake_case, and existing kebab-case
 func toKebabCase(s string) string {
@@ -113,61 +83,6 @@ func toKebabCase(s string) string {
 	s = strings.Trim(s, "-")
 
 	return s
-}
-
-// getKongTags returns the provided tags or if nil, then the `x-kong-tags` property,
-// validated to be a string array.
-func getKongTags(doc v3.Document, tagsProvided []string) ([]string, error) {
-	if tagsProvided != nil {
-		return tagsProvided, nil
-	}
-
-	if doc.Extensions == nil {
-		return make([]string, 0), nil
-	}
-
-	kongTags, ok := doc.Extensions.Get("x-kong-tags")
-	if !ok {
-		return make([]string, 0), nil
-	}
-
-	resultArray := make([]string, len(kongTags.Content))
-	for i, v := range kongTags.Content {
-		var tagsValue interface{}
-		err := yaml.Unmarshal([]byte(v.Value), &tagsValue)
-		if err != nil {
-			return nil, fmt.Errorf("expected 'x-kong-tags' to be an array of strings: %w", err)
-		}
-
-		switch tag := tagsValue.(type) {
-		case string:
-			resultArray[i] = tag
-		default:
-			return nil, fmt.Errorf("expected 'x-kong-tags' to be an array of strings")
-		}
-	}
-
-	return resultArray, nil
-}
-
-// getKongName returns the `x-kong-name` property, validated to be a string
-func getKongName(extensions *orderedmap.Map[string, *yaml.Node]) (string, error) {
-	if extensions == nil {
-		return "", nil
-	}
-
-	xKongName, ok := extensions.Get("x-kong-name")
-	if !ok {
-		return "", nil
-	}
-
-	var name string
-	err := yaml.Unmarshal([]byte(xKongName.Value), &name)
-	if err != nil {
-		return "", fmt.Errorf("expected 'x-kong-name' to be a string: %w", err)
-	}
-
-	return name, nil
 }
 
 // getXKongComponents will return a map of the '/components/x-kong/' object.
@@ -283,28 +198,12 @@ func dereferenceJSONObject(
 	return *result, nil
 }
 
-// getServiceDefaults returns a JSON string containing the service defaults
-func getServiceDefaults(
-	extensions *orderedmap.Map[string, *yaml.Node],
-	components *map[string]interface{},
-) ([]byte, error) {
-	return getXKongObject(extensions, "x-kong-service-defaults", components)
-}
-
 // getRouteDefaults returns a JSON string containing the route defaults
 func getRouteDefaults(
 	extensions *orderedmap.Map[string, *yaml.Node],
 	components *map[string]interface{},
 ) ([]byte, error) {
 	return getXKongObject(extensions, "x-kong-route-defaults", components)
-}
-
-// getUpstreamDefaults returns a JSON string containing the upstream defaults
-func getUpstreamDefaults(
-	extensions *orderedmap.Map[string, *yaml.Node],
-	components *map[string]interface{},
-) ([]byte, error) {
-	return getXKongObject(extensions, "x-kong-upstream-defaults", components)
 }
 
 // getMCPProxyConfig returns the x-kong-mcp-proxy override config
@@ -533,255 +432,6 @@ func getExtensionString(extensions *orderedmap.Map[string, *yaml.Node], key stri
 	return value, nil
 }
 
-// getPluginsList returns a list of plugins from x-kong-plugin-* extensions
-func getPluginsList(
-	extensions *orderedmap.Map[string, *yaml.Node],
-	uuidNamespace uuid.UUID,
-	baseName string,
-	components *map[string]interface{},
-	tags []string,
-	skipID bool,
-) ([]*map[string]interface{}, error) {
-	plugins := make(map[string]*map[string]interface{})
-
-	if extensions == nil {
-		return make([]*map[string]interface{}, 0), nil
-	}
-
-	extension := extensions.First()
-	for extension != nil {
-		extensionName := extension.Key()
-		if strings.HasPrefix(extensionName, "x-kong-plugin-") {
-			pluginName := strings.TrimPrefix(extensionName, "x-kong-plugin-")
-
-			jsonstr, err := getXKongObject(extensions, extensionName, components)
-			if err != nil {
-				return nil, err
-			}
-
-			var pluginConfig map[string]interface{}
-			err = json.Unmarshal(jsonstr, &pluginConfig)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse JSON object for '%s': %w", extensionName, err)
-			}
-
-			pluginConfig["name"] = pluginName
-			if !skipID {
-				pluginConfig["id"] = uuid.NewSHA1(uuidNamespace, []byte(baseName+".plugin."+pluginName)).String()
-			}
-			pluginConfig["tags"] = tags
-
-			delete(pluginConfig, "service")
-			delete(pluginConfig, "route")
-
-			plugins[pluginName] = &pluginConfig
-		}
-
-		extension = extension.Next()
-	}
-
-	// Sort plugins by name for deterministic output
-	sortedNames := make([]string, 0, len(plugins))
-	for pluginName := range plugins {
-		sortedNames = append(sortedNames, pluginName)
-	}
-	sort.Strings(sortedNames)
-
-	sorted := make([]*map[string]interface{}, len(plugins))
-	for i, pluginName := range sortedNames {
-		sorted[i] = plugins[pluginName]
-	}
-	return sorted, nil
-}
-
-// parseServerUris parses the server URIs after rendering template variables
-func parseServerUris(servers []*v3.Server) ([]*url.URL, error) {
-	var targets []*url.URL
-
-	if len(servers) == 0 {
-		uriObject, _ := url.ParseRequestURI("/")
-		targets = make([]*url.URL, 1)
-		targets[0] = uriObject
-	} else {
-		targets = make([]*url.URL, len(servers))
-
-		for i, server := range servers {
-			uriString := server.URL
-
-			pair := server.Variables.First()
-			for pair != nil {
-				name := pair.Key()
-				svar := pair.Value()
-				uriString = strings.ReplaceAll(uriString, "{"+name+"}", svar.Default)
-				pair = pair.Next()
-			}
-
-			uriObject, err := url.ParseRequestURI(uriString)
-			if err != nil {
-				return targets, fmt.Errorf("failed to parse uri '%s'; %w", uriString, err)
-			}
-
-			if uriObject.Path == "" {
-				uriObject.Path = "/"
-			}
-
-			targets[i] = uriObject
-		}
-	}
-
-	return targets, nil
-}
-
-// setServerDefaults sets the scheme and port if missing
-func setServerDefaults(targets []*url.URL, schemeDefault string) {
-	for _, target := range targets {
-		if target.Host == "" {
-			target.Host = "localhost"
-		}
-
-		if target.Scheme == "" {
-			switch target.Port() {
-			case "80":
-				target.Scheme = httpScheme
-			case "443":
-				target.Scheme = httpsScheme
-			default:
-				target.Scheme = schemeDefault
-			}
-		}
-
-		if target.Host != "" && target.Port() == "" {
-			if target.Scheme == httpScheme {
-				target.Host = target.Host + ":80"
-			}
-			if target.Scheme == httpsScheme {
-				target.Host = target.Host + ":443"
-			}
-		}
-	}
-}
-
-// createKongUpstream creates a new upstream entity
-func createKongUpstream(
-	baseName string,
-	servers []*v3.Server,
-	upstreamDefaults []byte,
-	tags []string,
-	uuidNamespace uuid.UUID,
-	skipID bool,
-) (map[string]interface{}, error) {
-	var upstream map[string]interface{}
-
-	if upstreamDefaults != nil {
-		_ = json.Unmarshal(upstreamDefaults, &upstream)
-	} else {
-		upstream = make(map[string]interface{})
-	}
-
-	upstreamName := baseName + ".upstream"
-	if !skipID {
-		upstream["id"] = uuid.NewSHA1(uuidNamespace, []byte(upstreamName)).String()
-	}
-	upstream["name"] = upstreamName
-	upstream["tags"] = tags
-
-	targets, err := parseServerUris(servers)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate upstream: %w", err)
-	}
-
-	setServerDefaults(targets, httpsScheme)
-
-	upstreamTargets := make([]map[string]interface{}, len(targets))
-	for i, target := range targets {
-		t := make(map[string]interface{})
-		t["target"] = target.Host
-		t["tags"] = tags
-		upstreamTargets[i] = t
-	}
-	upstream["targets"] = upstreamTargets
-
-	return upstream, nil
-}
-
-// CreateKongService creates a new Kong service entity, and optional upstream
-func CreateKongService(
-	baseName string,
-	servers []*v3.Server,
-	serviceDefaults []byte,
-	upstreamDefaults []byte,
-	tags []string,
-	uuidNamespace uuid.UUID,
-	skipID bool,
-) (map[string]interface{}, map[string]interface{}, error) {
-	var (
-		service  map[string]interface{}
-		upstream map[string]interface{}
-	)
-
-	if serviceDefaults != nil {
-		_ = json.Unmarshal(serviceDefaults, &service)
-	} else {
-		service = make(map[string]interface{})
-	}
-
-	if !skipID {
-		service["id"] = uuid.NewSHA1(uuidNamespace, []byte(baseName+".service")).String()
-	}
-	service["name"] = baseName
-	service["tags"] = tags
-	service["plugins"] = make([]interface{}, 0)
-	service["routes"] = make([]interface{}, 0)
-
-	targets, err := parseServerUris(servers)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create service: %w", err)
-	}
-
-	scheme := httpsScheme
-	if service["protocol"] != nil {
-		scheme = service["protocol"].(string)
-	}
-	setServerDefaults(targets, scheme)
-
-	if service["protocol"] == nil {
-		scheme = targets[0].Scheme
-		service["protocol"] = scheme
-	}
-	if service["path"] == nil {
-		service["path"] = targets[0].Path
-	}
-	if service["port"] == nil {
-		if targets[0].Port() != "" {
-			parsedPort, err := strconv.ParseUint(targets[0].Port(), 10, 16)
-			if err != nil {
-				return nil, nil, err
-			}
-			service["port"] = parsedPort
-		} else {
-			if scheme != httpScheme {
-				service["port"] = 443
-			} else {
-				service["port"] = 80
-			}
-		}
-	}
-
-	if service["host"] == nil {
-		if len(targets) == 1 && upstreamDefaults == nil {
-			service["host"] = targets[0].Hostname()
-		} else {
-			upstream, err = createKongUpstream(baseName, servers, upstreamDefaults, tags, uuidNamespace, skipID)
-			if err != nil {
-				return nil, nil, err
-			}
-			service["host"] = upstream["name"]
-		}
-	}
-
-	return service, upstream, nil
-}
-
 // simplifySchema simplifies an OpenAPI schema to essential properties
 func simplifySchema(schema *openapibase.Schema) map[string]interface{} {
 	if schema == nil {
@@ -986,126 +636,67 @@ func Convert(content []byte, opts O2MOptions) (map[string]interface{}, error) {
 	opts.setDefaults()
 	logbasics.Debug("received OpenAPI2MCP options", "options", opts)
 
-	// Set up output document
-	result := make(map[string]interface{})
-	result[formatVersionKey] = formatVersionValue
-	services := make([]interface{}, 0)
-	upstreams := make([]interface{}, 0)
+	// convert to openapi2kong options
+	o2kOpts := openapi2kong.O2kOptions{
+		Tags:          opts.Tags,
+		DocName:       opts.DocName,
+		UUIDNamespace: opts.UUIDNamespace,
+		SkipID:        opts.SkipID,
+	}
 
-	var (
-		err            error
-		doc            v3.Document
-		kongComponents *map[string]interface{}
-		kongTags       []string
+	// generate the base Kong configuration
+	result, err := openapi2kong.Convert(content, o2kOpts)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate base Kong configuration: %w", err)
+	}
 
-		docBaseName         string
-		docServers          []*v3.Server
-		docServiceDefaults  []byte
-		docUpstreamDefaults []byte
-		docRouteDefaults    []byte
-		docService          map[string]interface{}
-		docUpstream         map[string]interface{}
-	)
-
-	// Load and parse the OAS file
+	// Load and parse the OAS file to get the v3 model
 	openapiDoc, err := libopenapi.NewDocument(content)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing OAS3 file: [%w]", err)
 	}
-
-	// Configure document options
 	docConfig := datamodel.NewDocumentConfiguration()
 	docConfig.IgnoreArrayCircularReferences = true
 	docConfig.IgnorePolymorphicCircularReferences = true
 	openapiDoc.SetConfiguration(docConfig)
-
 	v3Model, errs := openapiDoc.BuildV3Model()
 	if errs != nil {
 		logbasics.Error(errs, "error while building v3 document model")
 		return nil, fmt.Errorf("cannot create v3 model from document: %w", errs)
 	}
-
+	var doc v3.Document
 	if v3Model != nil {
 		doc = v3Model.Model
 	}
 
-	// Collect tags
-	if kongTags, err = getKongTags(doc, opts.Tags); err != nil {
-		return nil, err
+	// get the main service
+	services, ok := result["services"].([]interface{})
+	if !ok || len(services) == 0 {
+		return nil, fmt.Errorf("no services generated")
 	}
+	docService, ok := services[0].(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("generated service is not a valid object")
+	}
+	docBaseName := docService["name"].(string)
 
-	// Set document level elements
-	docServers = doc.Servers
+	// handle routes
+	if !opts.IncludeDirectRoute {
+		docService["routes"] = make([]interface{}, 0)
+	}
+	routes := docService["routes"].([]interface{})
 
-	// Determine document name
-	docBaseName = opts.DocName
-	if docBaseName == "" {
-		if docBaseName, err = getKongName(doc.Extensions); err != nil {
-			return nil, err
-		}
-		if docBaseName == "" {
-			if doc.Info != nil && doc.Info.Title != "" {
-				docBaseName = doc.Info.Title
-			} else {
-				id, err := uuid.NewRandom()
-				if err != nil {
-					return nil, fmt.Errorf("failed to generate UUID: %w", err)
-				}
-				docBaseName = id.String()
-			}
-		}
-	}
-	docBaseName = Slugify(docBaseName)
-
-	if kongComponents, err = getXKongComponents(doc); err != nil {
-		return nil, err
-	}
-
-	// Get defaults
-	if docServiceDefaults, err = getServiceDefaults(doc.Extensions, kongComponents); err != nil {
-		return nil, err
-	}
-	if docUpstreamDefaults, err = getUpstreamDefaults(doc.Extensions, kongComponents); err != nil {
-		return nil, err
-	}
-	if docRouteDefaults, err = getRouteDefaults(doc.Extensions, kongComponents); err != nil {
-		return nil, err
-	}
-
-	// Create the Kong service and optional upstream
-	docService, docUpstream, err = CreateKongService(
-		docBaseName,
-		docServers,
-		docServiceDefaults,
-		docUpstreamDefaults,
-		kongTags,
-		opts.UUIDNamespace,
-		opts.SkipID,
-	)
+	// get kong components and defaults
+	kongComponents, err := getXKongComponents(doc)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create service/upstream: %w", err)
+		return nil, err
 	}
-
-	services = append(services, docService)
-	if docUpstream != nil {
-		upstreams = append(upstreams, docUpstream)
-	}
-
-	// Get document-level plugins
-	docPlugins, err := getPluginsList(
-		doc.Extensions, opts.UUIDNamespace, docBaseName, kongComponents, kongTags, opts.SkipID)
+	docRouteDefaults, err := getRouteDefaults(doc.Extensions, kongComponents)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get plugins list: %w", err)
-	}
-	docService["plugins"] = docPlugins
-
-	// Check for paths
-	if doc.Paths == nil {
-		return nil, fmt.Errorf("must have `.paths` in the root of the document")
+		return nil, err
 	}
 
 	// Detect ACL security configuration
-	// If any oauth2 security scheme has x-kong-mcp-acl, we'll generate ACL entries
 	_, aclConfig, err := findACLSecurityScheme(doc)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read security scheme ACL config: %w", err)
@@ -1122,62 +713,59 @@ func Convert(content []byte, opts O2MOptions) (map[string]interface{}, error) {
 
 	// Build MCP tools from all operations
 	tools := make([]interface{}, 0)
-
-	// Create sorted array of paths for deterministic output
-	allPaths := doc.Paths.PathItems
-	sortedPaths := make([]string, 0, allPaths.Len())
-	path := allPaths.First()
-	for path != nil {
-		sortedPaths = append(sortedPaths, path.Key())
-		path = path.Next()
-	}
-	sort.Strings(sortedPaths)
-
-	for _, pathKey := range sortedPaths {
-		pathItem, ok := allPaths.Get(pathKey)
-		if !ok {
-			continue
+	if doc.Paths != nil {
+		allPaths := doc.Paths.PathItems
+		sortedPaths := make([]string, 0, allPaths.Len())
+		path := allPaths.First()
+		for path != nil {
+			sortedPaths = append(sortedPaths, path.Key())
+			path = path.Next()
 		}
+		sort.Strings(sortedPaths)
 
-		operations := pathItem.GetOperations()
-		sortedMethods := make([]string, 0, operations.Len())
-		method := operations.First()
-		for method != nil {
-			sortedMethods = append(sortedMethods, method.Key())
-			method = method.Next()
-		}
-		sort.Strings(sortedMethods)
-
-		for _, methodKey := range sortedMethods {
-			operation, ok := operations.Get(methodKey)
+		for _, pathKey := range sortedPaths {
+			pathItem, ok := allPaths.Get(pathKey)
 			if !ok {
 				continue
 			}
 
-			// Check if operation is excluded
-			excluded, err := getExtensionBool(operation.Extensions, "x-kong-mcp-exclude")
-			if err != nil {
-				return nil, err
+			operations := pathItem.GetOperations()
+			sortedMethods := make([]string, 0, operations.Len())
+			method := operations.First()
+			for method != nil {
+				sortedMethods = append(sortedMethods, method.Key())
+				method = method.Next()
 			}
-			if excluded {
-				continue
-			}
+			sort.Strings(sortedMethods)
 
-			// Get per-tool ACL from security requirements
-			var toolACL map[string]interface{}
-			if aclConfig != nil {
-				toolACL, err = getOperationACL(operation.Security, doc.Security, doc, opts.IgnoreSecurityErrors)
-				if err != nil {
-					return nil, fmt.Errorf("failed to get ACL for %s %s: %w", methodKey, pathKey, err)
+			for _, methodKey := range sortedMethods {
+				operation, ok := operations.Get(methodKey)
+				if !ok {
+					continue
 				}
-			}
 
-			tool, err := buildMCPTool(pathKey, methodKey, operation, pathItem.Parameters, toolACL)
-			if err != nil {
-				return nil, fmt.Errorf("failed to build MCP tool for %s %s: %w", methodKey, pathKey, err)
-			}
+				excluded, err := getExtensionBool(operation.Extensions, "x-kong-mcp-exclude")
+				if err != nil {
+					return nil, err
+				}
+				if excluded {
+					continue
+				}
 
-			tools = append(tools, tool)
+				var toolACL map[string]interface{}
+				if aclConfig != nil {
+					toolACL, err = getOperationACL(operation.Security, doc.Security, doc, opts.IgnoreSecurityErrors)
+					if err != nil {
+						return nil, fmt.Errorf("failed to get ACL for %s %s: %w", methodKey, pathKey, err)
+					}
+				}
+
+				tool, err := buildMCPTool(pathKey, methodKey, operation, pathItem.Parameters, toolACL)
+				if err != nil {
+					return nil, fmt.Errorf("failed to build MCP tool for %s %s: %w", methodKey, pathKey, err)
+				}
+				tools = append(tools, tool)
+			}
 		}
 	}
 
@@ -1199,7 +787,7 @@ func Convert(content []byte, opts O2MOptions) (map[string]interface{}, error) {
 	}
 	mcpRoute["name"] = mcpRouteName
 	mcpRoute["paths"] = []string{mcpRoutePath}
-	mcpRoute["tags"] = kongTags
+	mcpRoute["tags"] = docService["tags"]
 
 	// Build ai-mcp-proxy plugin config
 	mcpPluginConfig := map[string]interface{}{
@@ -1207,7 +795,6 @@ func Convert(content []byte, opts O2MOptions) (map[string]interface{}, error) {
 		"tools": tools,
 	}
 
-	// Add ACL configuration to plugin config if security was detected
 	if aclConfig != nil {
 		if v, ok := aclConfig["acl_attribute_type"]; ok {
 			mcpPluginConfig["acl_attribute_type"] = v
@@ -1220,7 +807,6 @@ func Convert(content []byte, opts O2MOptions) (map[string]interface{}, error) {
 		mcpPluginConfig["default_acl"] = defaultACL
 	}
 
-	// Check for x-kong-mcp-proxy override
 	mcpProxyOverride, err := getMCPProxyConfig(doc.Extensions, kongComponents)
 	if err != nil {
 		return nil, err
@@ -1228,9 +814,8 @@ func Convert(content []byte, opts O2MOptions) (map[string]interface{}, error) {
 	if mcpProxyOverride != nil {
 		var override map[string]interface{}
 		_ = json.Unmarshal(mcpProxyOverride, &override)
-		// Merge override into config (override takes precedence except for tools)
 		for k, v := range override {
-			if k != "tools" { // Don't override generated tools
+			if k != "tools" {
 				mcpPluginConfig[k] = v
 			}
 		}
@@ -1244,125 +829,19 @@ func Convert(content []byte, opts O2MOptions) (map[string]interface{}, error) {
 	if !opts.SkipID {
 		mcpPlugin["id"] = uuid.NewSHA1(opts.UUIDNamespace, []byte(mcpRouteName+".plugin.ai-mcp-proxy")).String()
 	}
-	mcpPlugin["tags"] = kongTags
+	mcpPlugin["tags"] = docService["tags"]
 
 	mcpRoute["plugins"] = []interface{}{mcpPlugin}
 
 	// Add MCP route to service
-	routes := docService["routes"].([]interface{})
-	routes = append(routes, mcpRoute)
-
-	// Optionally add direct routes (non-MCP)
-	if opts.IncludeDirectRoute {
-		directRoutes := buildDirectRoutes(doc, docBaseName, docRouteDefaults, kongTags, opts.UUIDNamespace, opts.SkipID)
-		routes = append(routes, directRoutes...)
-	}
-
+	routes = append([]interface{}{mcpRoute}, routes...)
 	docService["routes"] = routes
 
-	// Build result
-	result["services"] = services
-	if len(upstreams) > 0 {
-		result["upstreams"] = upstreams
+	if upstreams, ok := result["upstreams"].([]interface{}); ok {
+		if len(upstreams) == 0 {
+			delete(result, "upstreams")
+		}
 	}
 
 	return result, nil
-}
-
-// buildDirectRoutes builds traditional Kong routes for direct API access (non-MCP)
-func buildDirectRoutes(
-	doc v3.Document,
-	baseName string,
-	routeDefaults []byte,
-	tags []string,
-	uuidNamespace uuid.UUID,
-	skipID bool,
-) []interface{} {
-	routes := make([]interface{}, 0)
-
-	if doc.Paths == nil {
-		return routes
-	}
-
-	allPaths := doc.Paths.PathItems
-	sortedPaths := make([]string, 0, allPaths.Len())
-	path := allPaths.First()
-	for path != nil {
-		sortedPaths = append(sortedPaths, path.Key())
-		path = path.Next()
-	}
-	sort.Strings(sortedPaths)
-
-	for _, pathKey := range sortedPaths {
-		pathItem, ok := allPaths.Get(pathKey)
-		if !ok {
-			continue
-		}
-
-		operations := pathItem.GetOperations()
-		sortedMethods := make([]string, 0, operations.Len())
-		method := operations.First()
-		for method != nil {
-			sortedMethods = append(sortedMethods, method.Key())
-			method = method.Next()
-		}
-		sort.Strings(sortedMethods)
-
-		for _, methodKey := range sortedMethods {
-			operation, ok := operations.Get(methodKey)
-			if !ok {
-				continue
-			}
-
-			// Build route name
-			var routeName string
-			if operation.OperationId != "" {
-				routeName = baseName + "_" + Slugify(operation.OperationId)
-			} else {
-				routeName = baseName + "_" + Slugify(pathKey) + "_" + strings.ToLower(methodKey)
-			}
-
-			route := make(map[string]interface{})
-			if routeDefaults != nil {
-				_ = json.Unmarshal(routeDefaults, &route)
-				delete(route, "service")
-			}
-
-			if !skipID {
-				route["id"] = uuid.NewSHA1(uuidNamespace, []byte(routeName+".route")).String()
-			}
-
-			// Convert path parameters to regex
-			convertedPath := pathKey
-			charsToEscape := []string{"(", ")", ".", "+", "?", "*", "[", "$"}
-			for _, char := range charsToEscape {
-				convertedPath = strings.ReplaceAll(convertedPath, char, "\\"+char)
-			}
-
-			re := regexp.MustCompile(`{([^}]+)}`)
-			regexPriority := 200
-			if matches := re.FindAllStringSubmatch(convertedPath, -1); matches != nil {
-				regexPriority = 100
-				for _, match := range matches {
-					varName := match[1]
-					captureName := strings.ReplaceAll(strings.ToLower(varName), "-", "_")
-					regexMatch := "(?<" + captureName + ">[^#?/]+)"
-					placeHolder := "{" + varName + "}"
-					convertedPath = strings.Replace(convertedPath, placeHolder, regexMatch, 1)
-				}
-			}
-
-			route["name"] = routeName
-			route["paths"] = []string{"~" + convertedPath + "$"}
-			route["methods"] = []string{strings.ToUpper(methodKey)}
-			route["tags"] = tags
-			route["regex_priority"] = regexPriority
-			route["strip_path"] = false
-			route["plugins"] = make([]interface{}, 0)
-
-			routes = append(routes, route)
-		}
-	}
-
-	return routes
 }

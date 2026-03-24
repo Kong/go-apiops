@@ -301,6 +301,7 @@ paths:
       parameters:
         - name: date
           in: query
+          required: false
           schema:
             type: string
             format: date
