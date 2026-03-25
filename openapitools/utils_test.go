@@ -1,4 +1,4 @@
-package openapi2kong
+package openapitools
 
 import (
 	"testing"
@@ -45,7 +45,7 @@ func TestCrossProduct(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			result := crossProduct(tc.slices...)
+			result := CrossProduct(tc.slices...)
 			assert.Equal(t, tc.expectedResult, result)
 		})
 	}

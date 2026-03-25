@@ -1,4 +1,4 @@
-package openapi2kong
+package openapitools
 
 import (
 	"encoding/json"

@@ -1,4 +1,4 @@
-package openapi2kong
+package openapitools
 
 import (
 	"fmt"
@@ -39,10 +39,10 @@ func Slugify(insoCompat bool, name ...string) string {
 	return strings.Join(name, concatBy)
 }
 
-// sanitizeRegexCapture will remove illegal characters from the path-variable name.
+// SanitizeRegexCapture will remove illegal characters from the path-variable name.
 // The returned name will be valid for PCRE regex captures; Alphanumeric + '_', starting
 // with [a-zA-Z].
-func sanitizeRegexCapture(varName string, insoCompat bool) string {
+func SanitizeRegexCapture(varName string, insoCompat bool) string {
 	var regexName *slugify.Slugifier
 	if insoCompat {
 		regexName = (&slugify.Slugifier{}).ToLower(false).InvalidChar("_").WordSeparator("_")
@@ -52,7 +52,8 @@ func sanitizeRegexCapture(varName string, insoCompat bool) string {
 	return regexName.Slugify(varName)
 }
 
-func dereferenceJSONObject(
+// DereferenceJSONObject will dereference a JSON object.
+func DereferenceJSONObject(
 	value map[string]interface{},
 	components *map[string]interface{},
 ) (map[string]interface{}, error) {
@@ -95,7 +96,8 @@ func dereferenceJSONObject(
 	return *result, nil
 }
 
-func convertYamlNodeToBytes(node *yaml.Node) ([]byte, error) {
+// ConvertYamlNodeToBytes will convert a yaml node to bytes.
+func ConvertYamlNodeToBytes(node *yaml.Node) ([]byte, error) {
 	var data interface{}
 	err := node.Decode(&data)
 	if err != nil {
@@ -104,9 +106,9 @@ func convertYamlNodeToBytes(node *yaml.Node) ([]byte, error) {
 	return yaml.Marshal(data)
 }
 
-// crossProduct computes the Cartesian product of the input slices.
+// CrossProduct computes the Cartesian product of the input slices.
 // The slices can be of any type
-func crossProduct(slices ...[]any) [][]any {
+func CrossProduct(slices ...[]any) [][]any {
 	if len(slices) == 0 {
 		return [][]any{{}}
 	}

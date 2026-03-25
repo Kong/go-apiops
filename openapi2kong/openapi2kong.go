@@ -13,6 +13,7 @@ import (
 	"github.com/kong/go-apiops/filebasics"
 	"github.com/kong/go-apiops/jsonbasics"
 	"github.com/kong/go-apiops/logbasics"
+	"github.com/kong/go-apiops/openapitools"
 	"github.com/pb33f/libopenapi"
 	"github.com/pb33f/libopenapi/datamodel"
 	openapibase "github.com/pb33f/libopenapi/datamodel/high/base"
@@ -137,7 +138,7 @@ func getXKongObject(
 		return nil, nil
 	}
 
-	xKongObjectBytes, err := convertYamlNodeToBytes(xKongObject)
+	xKongObjectBytes, err := openapitools.ConvertYamlNodeToBytes(xKongObject)
 	if err != nil {
 		return nil, fmt.Errorf("expected '%s' to be a YAML object", key)
 	}
@@ -149,7 +150,7 @@ func getXKongObject(
 		return nil, fmt.Errorf("expected '%s' to be a JSON/YAML object", key)
 	}
 
-	object, err := dereferenceJSONObject(jsonObject, components)
+	object, err := openapitools.DereferenceJSONObject(jsonObject, components)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +173,7 @@ func getXKongComponents(doc v3.Document) (*map[string]interface{}, error) {
 		return &components, nil
 	}
 
-	xKongComponentsBytes, err := convertYamlNodeToBytes(xKongComponents)
+	xKongComponentsBytes, err := openapitools.ConvertYamlNodeToBytes(xKongComponents)
 	if err != nil {
 		return nil, fmt.Errorf("expected '/components/x-kong' to be a YAML object")
 	}
@@ -602,7 +603,7 @@ func constructHeaderCombinationsForRouting(headers []*v3.Parameter) []map[string
 			headerValues[i] = append(headerValues[i], enumMember.Value)
 		}
 	}
-	headerValueCombinations := crossProduct(headerValues...)
+	headerValueCombinations := openapitools.CrossProduct(headerValues...)
 
 	var result []map[string]any
 	for _, combination := range headerValueCombinations {
@@ -749,7 +750,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 			}
 		}
 	}
-	docBaseName = Slugify(opts.InsoCompat, docBaseName)
+	docBaseName = openapitools.Slugify(opts.InsoCompat, docBaseName)
 	logbasics.Info("document name (namespace for UUID generation)", "name", docBaseName)
 
 	if kongComponents, err = getXKongComponents(doc); err != nil {
@@ -768,7 +769,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 	}
 
 	// create the top-level docService and (optional) docUpstream
-	docService, docUpstream, err = CreateKongService(docBaseName, docServers, docServiceDefaults,
+	docService, docUpstream, err = openapitools.CreateKongService(docBaseName, docServers, docServiceDefaults,
 		docUpstreamDefaults, kongTags, opts.UUIDNamespace, opts.SkipID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create service/upstream from document root: %w", err)
@@ -863,7 +864,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 		if pathBaseName == "" {
 			// no given name, so use the path itself to construct the name
 			if !opts.InsoCompat {
-				pathBaseName = Slugify(opts.InsoCompat, pathKey)
+				pathBaseName = openapitools.Slugify(opts.InsoCompat, pathKey)
 				if strings.HasSuffix(pathKey, "/") {
 					// a common case is 2 paths, one with and one without a trailing "/" so to prevent
 					// duplicate names being generated, we add a "~" suffix as a special case to cater
@@ -872,10 +873,10 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 				}
 			} else {
 				// we need inso compatibility
-				pathBaseName = Slugify(opts.InsoCompat, pathKey)
+				pathBaseName = openapitools.Slugify(opts.InsoCompat, pathKey)
 			}
 		} else {
-			pathBaseName = Slugify(opts.InsoCompat, pathBaseName)
+			pathBaseName = openapitools.Slugify(opts.InsoCompat, pathBaseName)
 		}
 		if pathBaseName != "" {
 			pathBaseName = docBaseName + nameConcatChar + pathBaseName
@@ -926,7 +927,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 		if newPathService {
 			// create the path-level service and (optional) upstream
 			logbasics.Debug("creating path-level service/upstream")
-			pathService, pathUpstream, err = CreateKongService(
+			pathService, pathUpstream, err = openapitools.CreateKongService(
 				pathBaseName,
 				pathServers,
 				pathServiceDefaults,
@@ -1019,23 +1020,23 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 			if operationBaseName != "" {
 				if opts.InsoCompat {
 					// an x-kong-name was provided, so build as "doc-name"
-					operationBaseName = docBaseName + nameConcatChar + Slugify(opts.InsoCompat, operationBaseName)
+					operationBaseName = docBaseName + nameConcatChar + openapitools.Slugify(opts.InsoCompat, operationBaseName)
 				} else {
 					// an x-kong-name was provided, so build as "doc-path-name"
-					operationBaseName = pathBaseName + nameConcatChar + Slugify(opts.InsoCompat, operationBaseName)
+					operationBaseName = pathBaseName + nameConcatChar + openapitools.Slugify(opts.InsoCompat, operationBaseName)
 				}
 			} else {
 				operationBaseName = operation.OperationId
 				if operationBaseName == "" {
 					// no operation ID provided, so build as "doc-path-method"
 					if opts.InsoCompat {
-						operationBaseName = pathBaseName + nameConcatChar + Slugify(opts.InsoCompat, strings.ToLower(methodKey))
+						operationBaseName = pathBaseName + nameConcatChar + openapitools.Slugify(opts.InsoCompat, strings.ToLower(methodKey))
 					} else {
-						operationBaseName = pathBaseName + nameConcatChar + Slugify(opts.InsoCompat, methodKey)
+						operationBaseName = pathBaseName + nameConcatChar + openapitools.Slugify(opts.InsoCompat, methodKey)
 					}
 				} else {
 					// operation ID is provided, so build as "doc-operationid"
-					operationBaseName = docBaseName + nameConcatChar + Slugify(opts.InsoCompat, operationBaseName)
+					operationBaseName = docBaseName + nameConcatChar + openapitools.Slugify(opts.InsoCompat, operationBaseName)
 				}
 			}
 			logbasics.Debug("operation base name (namespace for UUID generation)", "name", operationBaseName)
@@ -1082,7 +1083,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 			if newOperationService {
 				// create the operation-level service and (optional) upstream
 				logbasics.Debug("creating operation-level service/upstream")
-				operationService, operationUpstream, err = CreateKongService(
+				operationService, operationUpstream, err = openapitools.CreateKongService(
 					operationBaseName,
 					operationServers,
 					operationServiceDefaults,
@@ -1190,7 +1191,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 					varName := match[1]
 					// match single segment; '/', '?', and '#' can mark the end of a segment
 					// see https://github.com/OAI/OpenAPI-Specification/issues/291#issuecomment-316593913
-					captureName := sanitizeRegexCapture(varName, opts.InsoCompat)
+					captureName := openapitools.SanitizeRegexCapture(varName, opts.InsoCompat)
 					if len(captureName) >= 32 {
 						return nil, fmt.Errorf("path-parameter name exceeds 32 characters: '%s' (sanitized to '%s')",
 							varName, captureName)
