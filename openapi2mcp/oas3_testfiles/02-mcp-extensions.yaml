@@ -1,0 +1,37 @@
+openapi: 3.0.0
+info:
+  title: Flights Service
+servers:
+  - url: https://api.example.com
+paths:
+  /internal/health:
+    get:
+      x-kong-mcp-exclude: true
+      operationId: health-check
+      summary: Health check endpoint
+  /flights:
+    get:
+      x-kong-mcp-tool-name: list-flights
+      x-kong-mcp-tool-description: Retrieve all scheduled KongAir flights for a specific date
+      operationId: get-flights
+      summary: Get flights
+      parameters:
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+  /bookings:
+    post:
+      operationId: create-booking
+      summary: Create booking
+      description: Creates a new flight booking with the specified passenger details and flight information
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                flight_id:
+                  type: string

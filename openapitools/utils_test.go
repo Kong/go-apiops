@@ -1,6 +1,7 @@
-package openapi2kong
+package openapitools
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -45,8 +46,30 @@ func TestCrossProduct(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			result := crossProduct(tc.slices...)
+			result := CrossProduct(tc.slices...)
 			assert.Equal(t, tc.expectedResult, result)
+		})
+	}
+}
+
+func Test_ToKebabCase(t *testing.T) {
+	// Test tool name kebab-case normalization
+	testCases := []struct {
+		input    string
+		expected string
+	}{
+		{"getFlights", "get-flights"},
+		{"get_flights", "get-flights"},
+		{"GetFlights", "get-flights"},
+		{"get-flights", "get-flights"},
+		{"listAllUsers", "list-all-users"},
+		{"CreateNewItem", "create-new-item"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.input, func(t *testing.T) {
+			result := ToKebabCase(tc.input)
+			assert.Equal(t, tc.expected, result, fmt.Sprintf("ToKebabCase(%s)", tc.input))
 		})
 	}
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/kong/go-apiops/jsonbasics"
 	"github.com/kong/go-apiops/logbasics"
+	"github.com/kong/go-apiops/openapitools"
 	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
 )
 
@@ -96,7 +97,7 @@ func generateParameterSchema(operation *v3.Operation, path *v3.PathItem,
 			paramConf["in"] = parameter.In
 
 			if parameter.In == "path" {
-				paramConf["name"] = sanitizeRegexCapture(parameter.Name, insoCompat)
+				paramConf["name"] = openapitools.SanitizeRegexCapture(parameter.Name, insoCompat)
 			} else {
 				paramConf["name"] = parameter.Name
 			}

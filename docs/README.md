@@ -40,6 +40,26 @@ The general pattern for this command is to provide an OAS file and output to a d
 deck file openapi2kong --spec <input-oas-file> --output-file <output-deck-file>
 ```
 ---
+### `openapi2mcp`
+
+The `openapi2mcp` transformation converts an OpenAPI Specification (OAS) to a Kong declarative
+configuration with the `ai-mcp-proxy` plugin for [Model Context Protocol (MCP)](https://modelcontextprotocol.io/)
+tool definitions. This allows you to expose your REST APIs as MCP tools for AI agents and LLM applications.
+
+For full documentation, see the [openapi2mcp docs](openapi2mcp/README.md).
+
+For full usage instructions, see the command help:
+
+```sh
+deck file openapi2mcp --help
+```
+
+Basic usage:
+
+```sh
+deck file openapi2mcp --spec <input-oas-file> --output-file <output-deck-file>
+```
+---
 ### `merge`
 
 The `merge` transformation will merge 2 or more Kong Declarative configurations into a single output.
