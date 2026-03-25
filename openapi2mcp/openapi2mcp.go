@@ -5,14 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"regexp"
 	"sort"
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/kong/go-apiops/jsonbasics"
 	"github.com/kong/go-apiops/logbasics"
 	"github.com/kong/go-apiops/openapi2kong"
+	"github.com/kong/go-apiops/openapitools"
 	"github.com/pb33f/libopenapi"
 	"github.com/pb33f/libopenapi/datamodel"
 	openapibase "github.com/pb33f/libopenapi/datamodel/high/base"
@@ -60,158 +59,12 @@ func (opts *O2MOptions) setDefaults() {
 	}
 }
 
-// toKebabCase converts a string to kebab-case
-// Handles camelCase, PascalCase, snake_case, and existing kebab-case
-func toKebabCase(s string) string {
-	// First, replace underscores and spaces with hyphens
-	s = strings.ReplaceAll(s, "_", "-")
-	s = strings.ReplaceAll(s, " ", "-")
-
-	// Insert hyphens before uppercase letters (for camelCase/PascalCase)
-	re := regexp.MustCompile(`([a-z0-9])([A-Z])`)
-	s = re.ReplaceAllString(s, "${1}-${2}")
-
-	// Convert to lowercase
-	s = strings.ToLower(s)
-
-	// Remove any double hyphens
-	for strings.Contains(s, "--") {
-		s = strings.ReplaceAll(s, "--", "-")
-	}
-
-	// Trim leading/trailing hyphens
-	s = strings.Trim(s, "-")
-
-	return s
-}
-
-// getXKongComponents will return a map of the '/components/x-kong/' object.
-func getXKongComponents(doc v3.Document) (*map[string]interface{}, error) {
-	var components map[string]interface{}
-
-	if doc.Components == nil || doc.Components.Extensions == nil {
-		return &map[string]interface{}{}, nil
-	}
-
-	xKongComponents, ok := doc.Components.Extensions.Get("x-kong")
-	if !ok || xKongComponents == nil {
-		return &components, nil
-	}
-
-	xKongComponentsBytes, err := convertYamlNodeToBytes(xKongComponents)
-	if err != nil {
-		return nil, fmt.Errorf("expected '/components/x-kong' to be a YAML object")
-	}
-
-	var xKong interface{}
-	_ = yaml.Unmarshal(xKongComponentsBytes, &xKong)
-	components, err = jsonbasics.ToObject(xKong)
-	if err != nil {
-		return nil, fmt.Errorf("expected '/components/x-kong' to be a JSON/YAML object")
-	}
-
-	return &components, nil
-}
-
-// convertYamlNodeToBytes converts a YAML node to bytes
-func convertYamlNodeToBytes(node *yaml.Node) ([]byte, error) {
-	var data interface{}
-	err := node.Decode(&data)
-	if err != nil {
-		return nil, err
-	}
-	return yaml.Marshal(data)
-}
-
-// getXKongObject returns specified 'key' from the extension properties if available.
-func getXKongObject(
-	extensions *orderedmap.Map[string, *yaml.Node],
-	key string,
-	components *map[string]interface{},
-) ([]byte, error) {
-	if extensions == nil {
-		return nil, nil
-	}
-
-	xKongObject, ok := extensions.Get(key)
-	if !ok || xKongObject == nil {
-		return nil, nil
-	}
-
-	xKongObjectBytes, err := convertYamlNodeToBytes(xKongObject)
-	if err != nil {
-		return nil, fmt.Errorf("expected '%s' to be a YAML object", key)
-	}
-
-	var jsonBlob interface{}
-	_ = yaml.Unmarshal(xKongObjectBytes, &jsonBlob)
-	jsonObject, err := jsonbasics.ToObject(jsonBlob)
-	if err != nil {
-		return nil, fmt.Errorf("expected '%s' to be a JSON/YAML object", key)
-	}
-
-	object, err := dereferenceJSONObject(jsonObject, components)
-	if err != nil {
-		return nil, err
-	}
-	return json.Marshal(object)
-}
-
-// dereferenceJSONObject resolves $ref pointers within x-kong extensions
-func dereferenceJSONObject(
-	value map[string]interface{},
-	components *map[string]interface{},
-) (map[string]interface{}, error) {
-	var pointer string
-
-	switch value["$ref"].(type) {
-	case nil:
-		return value, nil
-	case string:
-		pointer = value["$ref"].(string)
-		if !strings.HasPrefix(pointer, "#/components/x-kong/") {
-			return nil, fmt.Errorf("all 'x-kong-...' references must be at '#/components/x-kong/...'")
-		}
-	default:
-		return nil, fmt.Errorf("expected '$ref' pointer to be a string")
-	}
-
-	segments := strings.Split(pointer, "/")
-	path := "#/components/x-kong"
-	result := components
-
-	for i := 3; i < len(segments); i++ {
-		segment := segments[i]
-		path = path + "/" + segment
-
-		switch (*result)[segment].(type) {
-		case nil:
-			return nil, fmt.Errorf("reference '%s' not found", pointer)
-		case map[string]interface{}:
-			target := (*result)[segment].(map[string]interface{})
-			result = &target
-		default:
-			return nil, fmt.Errorf("expected '%s' to be a JSON object", path)
-		}
-	}
-
-	return *result, nil
-}
-
-// getRouteDefaults returns a JSON string containing the route defaults
-func getRouteDefaults(
-	extensions *orderedmap.Map[string, *yaml.Node],
-	components *map[string]interface{},
-) ([]byte, error) {
-	return getXKongObject(extensions, "x-kong-route-defaults", components)
-}
-
 // getMCPProxyConfig returns the x-kong-mcp-proxy override config
 func getMCPProxyConfig(
 	extensions *orderedmap.Map[string, *yaml.Node],
 	components *map[string]interface{},
 ) ([]byte, error) {
-	return getXKongObject(extensions, "x-kong-mcp-proxy", components)
+	return openapitools.GetXKongObject(extensions, "x-kong-mcp-proxy", components)
 }
 
 // getMCPACLConfig reads the x-kong-mcp-acl extension from a security scheme and returns the
@@ -226,7 +79,7 @@ func getMCPACLConfig(scheme *v3.SecurityScheme) (map[string]interface{}, error) 
 		return nil, nil
 	}
 
-	nodeBytes, err := convertYamlNodeToBytes(node)
+	nodeBytes, err := openapitools.ConvertYamlNodeToBytes(node)
 	if err != nil {
 		return nil, fmt.Errorf("expected 'x-kong-mcp-acl' to be a YAML object: %w", err)
 	}
@@ -252,7 +105,7 @@ func getMCPDefaultACL(extensions *orderedmap.Map[string, *yaml.Node]) ([]interfa
 		return nil, nil
 	}
 
-	nodeBytes, err := convertYamlNodeToBytes(node)
+	nodeBytes, err := openapitools.ConvertYamlNodeToBytes(node)
 	if err != nil {
 		return nil, fmt.Errorf("expected 'x-kong-mcp-default-acl' to be a YAML array: %w", err)
 	}
@@ -549,11 +402,11 @@ func buildMCPTool(
 		return nil, err
 	}
 	if toolName == "" {
-		toolName = toKebabCase(operation.OperationId)
+		toolName = openapitools.ToKebabCase(operation.OperationId)
 	}
 	if toolName == "" {
 		// Fallback: generate from method + path
-		toolName = toKebabCase(strings.ToLower(method) + "-" + strings.ReplaceAll(path, "/", "-"))
+		toolName = openapitools.ToKebabCase(strings.ToLower(method) + "-" + strings.ReplaceAll(path, "/", "-"))
 	}
 
 	// Get tool description: x-kong-mcp-tool-description > description > summary
@@ -687,11 +540,11 @@ func Convert(content []byte, opts O2MOptions) (map[string]interface{}, error) {
 	routes := docService["routes"].([]interface{})
 
 	// get kong components and defaults
-	kongComponents, err := getXKongComponents(doc)
+	kongComponents, err := openapitools.GetXKongComponents(doc)
 	if err != nil {
 		return nil, err
 	}
-	docRouteDefaults, err := getRouteDefaults(doc.Extensions, kongComponents)
+	docRouteDefaults, err := openapitools.GetRouteDefaults(doc.Extensions, kongComponents)
 	if err != nil {
 		return nil, err
 	}

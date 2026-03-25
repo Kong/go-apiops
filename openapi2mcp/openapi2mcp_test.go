@@ -2,7 +2,6 @@ package openapi2mcp
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -261,28 +260,6 @@ paths:
 	plugins := route["plugins"].([]interface{})
 	plugin := plugins[0].(map[string]interface{})
 	assert.Nil(t, plugin["id"], "plugin should not have id when SkipID=true")
-}
-
-func Test_Openapi2mcp_ToolNameNormalization(t *testing.T) {
-	// Test tool name kebab-case normalization
-	testCases := []struct {
-		input    string
-		expected string
-	}{
-		{"getFlights", "get-flights"},
-		{"get_flights", "get-flights"},
-		{"GetFlights", "get-flights"},
-		{"get-flights", "get-flights"},
-		{"listAllUsers", "list-all-users"},
-		{"CreateNewItem", "create-new-item"},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.input, func(t *testing.T) {
-			result := toKebabCase(tc.input)
-			assert.Equal(t, tc.expected, result, fmt.Sprintf("toKebabCase(%s)", tc.input))
-		})
-	}
 }
 
 func Test_Openapi2mcp_SimplifySchema(t *testing.T) {

@@ -122,78 +122,12 @@ func getKongName(extensions *orderedmap.Map[string, *yaml.Node]) (string, error)
 	return name, nil
 }
 
-// getXKongObject returns specified 'key' from the extension properties if available.
-// returns nil if it wasn't found, an error if it wasn't an object or couldn't be
-// dereferenced. The returned object will be json encoded again.
-func getXKongObject(
-	extensions *orderedmap.Map[string, *yaml.Node],
-	key string, components *map[string]interface{},
-) ([]byte, error) {
-	if extensions == nil {
-		return nil, nil
-	}
-
-	xKongObject, ok := extensions.Get(key)
-	if !ok || xKongObject == nil {
-		return nil, nil
-	}
-
-	xKongObjectBytes, err := openapitools.ConvertYamlNodeToBytes(xKongObject)
-	if err != nil {
-		return nil, fmt.Errorf("expected '%s' to be a YAML object", key)
-	}
-
-	var jsonBlob interface{}
-	_ = yaml.Unmarshal(xKongObjectBytes, &jsonBlob)
-	jsonObject, err := jsonbasics.ToObject(jsonBlob)
-	if err != nil {
-		return nil, fmt.Errorf("expected '%s' to be a JSON/YAML object", key)
-	}
-
-	object, err := openapitools.DereferenceJSONObject(jsonObject, components)
-	if err != nil {
-		return nil, err
-	}
-	return json.Marshal(object)
-}
-
-// getXKongComponents will return a map of the '/components/x-kong/' object. If
-// the extension is not there it will return an empty map. If the entry is not a
-// yaml object, it will return an error.
-func getXKongComponents(doc v3.Document) (*map[string]interface{}, error) {
-	var components map[string]interface{}
-
-	if doc.Components == nil || doc.Components.Extensions == nil {
-		return &map[string]interface{}{}, nil
-	}
-
-	xKongComponents, ok := doc.Components.Extensions.Get("x-kong")
-
-	if !ok || xKongComponents == nil {
-		return &components, nil
-	}
-
-	xKongComponentsBytes, err := openapitools.ConvertYamlNodeToBytes(xKongComponents)
-	if err != nil {
-		return nil, fmt.Errorf("expected '/components/x-kong' to be a YAML object")
-	}
-
-	var xKong interface{}
-	_ = yaml.Unmarshal(xKongComponentsBytes, &xKong)
-	components, err = jsonbasics.ToObject(xKong)
-	if err != nil {
-		return nil, fmt.Errorf("expected '/components/x-kong' to be a JSON/YAML object")
-	}
-
-	return &components, nil
-}
-
 // getServiceDefaults returns a JSON string containing the defaults
 func getServiceDefaults(
 	extensions *orderedmap.Map[string, *yaml.Node],
 	components *map[string]interface{},
 ) ([]byte, error) {
-	return getXKongObject(extensions, "x-kong-service-defaults", components)
+	return openapitools.GetXKongObject(extensions, "x-kong-service-defaults", components)
 }
 
 // getUpstreamDefaults returns a JSON string containing the defaults
@@ -201,15 +135,7 @@ func getUpstreamDefaults(
 	extensions *orderedmap.Map[string, *yaml.Node],
 	components *map[string]interface{},
 ) ([]byte, error) {
-	return getXKongObject(extensions, "x-kong-upstream-defaults", components)
-}
-
-// getRouteDefaults returns a JSON string containing the defaults
-func getRouteDefaults(
-	extensions *orderedmap.Map[string, *yaml.Node],
-	components *map[string]interface{},
-) ([]byte, error) {
-	return getXKongObject(extensions, "x-kong-route-defaults", components)
+	return openapitools.GetXKongObject(extensions, "x-kong-upstream-defaults", components)
 }
 
 // getOIDCdefaults returns a JSON string containing the defaults from the SecurityRequirements. The type must
@@ -283,13 +209,13 @@ func getOIDCdefaults(
 		pluginConfig map[string]interface{} // the plugin.config object
 	)
 	{
-		kongComponents, err := getXKongComponents(doc)
+		kongComponents, err := openapitools.GetXKongComponents(doc)
 		if err != nil {
 			return nil, err
 		}
 
 		// grab the base plugin config from the x-kong-... directive
-		pluginBaseData, err := getXKongObject(scheme.Extensions, "x-kong-security-openid-connect", kongComponents)
+		pluginBaseData, err := openapitools.GetXKongObject(scheme.Extensions, "x-kong-security-openid-connect", kongComponents)
 		if err != nil {
 			return nil, err
 		}
@@ -400,7 +326,7 @@ func getPluginsList(
 		if strings.HasPrefix(extensionName, "x-kong-plugin-") {
 			pluginName := strings.TrimPrefix(extensionName, "x-kong-plugin-")
 
-			jsonstr, err := getXKongObject(extensions, extensionName, components)
+			jsonstr, err := openapitools.GetXKongObject(extensions, extensionName, components)
 			if err != nil {
 				return nil, err
 			}
@@ -753,7 +679,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 	docBaseName = openapitools.Slugify(opts.InsoCompat, docBaseName)
 	logbasics.Info("document name (namespace for UUID generation)", "name", docBaseName)
 
-	if kongComponents, err = getXKongComponents(doc); err != nil {
+	if kongComponents, err = openapitools.GetXKongComponents(doc); err != nil {
 		return nil, err
 	}
 
@@ -764,7 +690,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 	if docUpstreamDefaults, err = getUpstreamDefaults(doc.Extensions, kongComponents); err != nil {
 		return nil, err
 	}
-	if docRouteDefaults, err = getRouteDefaults(doc.Extensions, kongComponents); err != nil {
+	if docRouteDefaults, err = openapitools.GetRouteDefaults(doc.Extensions, kongComponents); err != nil {
 		return nil, err
 	}
 
@@ -907,7 +833,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 			newPathService = true
 		}
 
-		if pathRouteDefaults, err = getRouteDefaults(pathitem.Extensions, kongComponents); err != nil {
+		if pathRouteDefaults, err = openapitools.GetRouteDefaults(pathitem.Extensions, kongComponents); err != nil {
 			return nil, err
 		}
 		if pathRouteDefaults == nil {
@@ -1063,7 +989,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 				newOperationService = true
 			}
 
-			if operationRouteDefaults, err = getRouteDefaults(operation.Extensions, kongComponents); err != nil {
+			if operationRouteDefaults, err = openapitools.GetRouteDefaults(operation.Extensions, kongComponents); err != nil {
 				return nil, err
 			}
 			if operationRouteDefaults == nil {

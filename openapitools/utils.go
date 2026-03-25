@@ -1,12 +1,42 @@
 package openapitools
 
 import (
+	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 
+	"github.com/kong/go-apiops/jsonbasics"
 	"github.com/kong/go-slugify"
+	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
+	"github.com/pb33f/libopenapi/orderedmap"
 	"go.yaml.in/yaml/v4"
 )
+
+// ToKebabCase converts a string to kebab-case
+// Handles camelCase, PascalCase, snake_case, and existing kebab-case
+func ToKebabCase(s string) string {
+	// First, replace underscores and spaces with hyphens
+	s = strings.ReplaceAll(s, "_", "-")
+	s = strings.ReplaceAll(s, " ", "-")
+
+	// Insert hyphens before uppercase letters (for camelCase/PascalCase)
+	re := regexp.MustCompile(`([a-z0-9])([A-Z])`)
+	s = re.ReplaceAllString(s, "${1}-${2}")
+
+	// Convert to lowercase
+	s = strings.ToLower(s)
+
+	// Remove any double hyphens
+	for strings.Contains(s, "--") {
+		s = strings.ReplaceAll(s, "--", "-")
+	}
+
+	// Trim leading/trailing hyphens
+	s = strings.Trim(s, "-")
+
+	return s
+}
 
 // Slugify converts a name to a valid Kong name by removing and replacing unallowed characters
 // and sanitizing non-latin characters. Multiple inputs will be concatenated using '_'.
@@ -127,4 +157,78 @@ func CrossProduct(slices ...[]any) [][]any {
 	}
 
 	return result
+}
+
+// GetXKongComponents returns a map of the '/components/x-kong/' object. If
+// the extension is not there it will return an empty map. If the entry is not a
+// yaml object, it will return an error.
+func GetXKongComponents(doc v3.Document) (*map[string]interface{}, error) {
+	var components map[string]interface{}
+
+	if doc.Components == nil || doc.Components.Extensions == nil {
+		return &map[string]interface{}{}, nil
+	}
+
+	xKongComponents, ok := doc.Components.Extensions.Get("x-kong")
+
+	if !ok || xKongComponents == nil {
+		return &components, nil
+	}
+
+	xKongComponentsBytes, err := ConvertYamlNodeToBytes(xKongComponents)
+	if err != nil {
+		return nil, fmt.Errorf("expected '/components/x-kong' to be a YAML object")
+	}
+
+	var xKong interface{}
+	_ = yaml.Unmarshal(xKongComponentsBytes, &xKong)
+	components, err = jsonbasics.ToObject(xKong)
+	if err != nil {
+		return nil, fmt.Errorf("expected '/components/x-kong' to be a JSON/YAML object")
+	}
+
+	return &components, nil
+}
+
+// GetXKongObject returns specified 'key' from the extension properties if available.
+// Returns nil if it wasn't found, an error if it wasn't an object or couldn't be
+// dereferenced. The returned object will be json encoded again.
+func GetXKongObject(
+	extensions *orderedmap.Map[string, *yaml.Node],
+	key string, components *map[string]interface{},
+) ([]byte, error) {
+	if extensions == nil {
+		return nil, nil
+	}
+
+	xKongObject, ok := extensions.Get(key)
+	if !ok || xKongObject == nil {
+		return nil, nil
+	}
+
+	xKongObjectBytes, err := ConvertYamlNodeToBytes(xKongObject)
+	if err != nil {
+		return nil, fmt.Errorf("expected '%s' to be a YAML object", key)
+	}
+
+	var jsonBlob interface{}
+	_ = yaml.Unmarshal(xKongObjectBytes, &jsonBlob)
+	jsonObject, err := jsonbasics.ToObject(jsonBlob)
+	if err != nil {
+		return nil, fmt.Errorf("expected '%s' to be a JSON/YAML object", key)
+	}
+
+	object, err := DereferenceJSONObject(jsonObject, components)
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(object)
+}
+
+// GetRouteDefaults returns a JSON string containing the route defaults
+func GetRouteDefaults(
+	extensions *orderedmap.Map[string, *yaml.Node],
+	components *map[string]interface{},
+) ([]byte, error) {
+	return GetXKongObject(extensions, "x-kong-route-defaults", components)
 }
