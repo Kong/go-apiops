@@ -215,7 +215,8 @@ func getOIDCdefaults(
 		}
 
 		// grab the base plugin config from the x-kong-... directive
-		pluginBaseData, err := openapitools.GetXKongObject(scheme.Extensions, "x-kong-security-openid-connect", kongComponents)
+		pluginBaseData, err := openapitools.GetXKongObject(
+			scheme.Extensions, "x-kong-security-openid-connect", kongComponents)
 		if err != nil {
 			return nil, err
 		}
@@ -956,9 +957,11 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 				if operationBaseName == "" {
 					// no operation ID provided, so build as "doc-path-method"
 					if opts.InsoCompat {
-						operationBaseName = pathBaseName + nameConcatChar + openapitools.Slugify(opts.InsoCompat, strings.ToLower(methodKey))
+						operationBaseName = pathBaseName +
+							nameConcatChar + openapitools.Slugify(opts.InsoCompat, strings.ToLower(methodKey))
 					} else {
-						operationBaseName = pathBaseName + nameConcatChar + openapitools.Slugify(opts.InsoCompat, methodKey)
+						operationBaseName = pathBaseName +
+							nameConcatChar + openapitools.Slugify(opts.InsoCompat, methodKey)
 					}
 				} else {
 					// operation ID is provided, so build as "doc-operationid"
