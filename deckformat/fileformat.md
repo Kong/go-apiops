@@ -56,6 +56,7 @@ This seems related to the many-to-many relations ship, since the ACL plugin has 
 | `consumer_groups.plugins` | `consumer_groups.consumer_group_plugins` | |
 | `consumers.groups` | `consumers.consumer_group_consumers` | |
 | `consumers.groups[].name` | `consumers.consumer_group_consumers[].consumer_group` | |
+| `plugins.partials` | `plugins_partials` | |
 
 
 | DBless Entity | decK |
@@ -67,6 +68,8 @@ This seems related to the many-to-many relations ship, since the ACL plugin has 
 | `consumer_group_consumers` | Does not exist, they are sub-entries in `consumers`. </br>*Note 1*: the target field is called `groups` (and hence this is inconsistent with standard entity relations, since this is a many-to-many relation which the DBLess relations are not allowed to be nested). </br>*Note 2*: the name is `groups` but by convention should have been `consumer_groups` (to match the foreign entity name) </br>*Note 3*: the foreign key entries are strings with an ID, but since this is many-to-many it is an array field</br>*Note 4*: the entries in the array should have been simple strings referencing an unique field in the `consumer_groups` table, by `id` or `name`, but are objects with a single key `name`. The reason for this object is most likely to be able to add tags to the object (which wouldn't be possible of it were only a string-value) |
 || *Conversion*: </br>* iterate over `consumer_group_consumers` </br>* for each entry find the related `consumer` </br>* create a `groups` array in the `consumer` object if it doesn't exist </br>* insert into the `groups` array a new object with a single key `name` and the value being `consumer_group_consumer.consumer` </br>* add the appropriate tags|
 || *Issues*: the consumer **must be defined in the same file** in the `decK` format (since group-membership is nested within consumer). With the Kong format one could simply only have the membership in `consumer_group_consumers` but that one does not exist in the `decK` format.|
+| `plugins_partials` | Does not exist, they are sub-entries in `plugins`. <br/>*Note 1:* the target field is called `partials`. <br/>*Note 2:* the foreign key entries are strings with an ID, but since this is many-to-many it is an array field <br/>*Note 3:* the entries in the array are objects with a single key name or id, along with an optional path.<br/> |
+|| *Conversion:* </br>* iterate over `plugins_partials` <br/>* for each entry find the related `plugin` </br>* create a `partials` array in the `plugin` object, if it doesn't exist </br>* insert into the `partials` array a new object with a single key `name` or `id` and the value being `plugin.partial`.<br/>* add an appropriate `path`, if any for the specific partial. If no path is provided, kong gateway assumes the default one provided in the schema.
 
 
 
@@ -102,6 +105,32 @@ consumer_group_consumers:
   consumer_group: A-team
 - consumer: foo
   consumer_group: A-team
+
+partials:
+- id: c4ff03ed-478a-4b86-bdcf-811c45c00737
+  name: my-redis-instance
+  type: redis-ee
+  config:
+    port: 6379
+    host: 127.0.0.1
+
+plugins:
+- id: 017320fe-ba14-4e14-8bac-3a7d1d3cd1e0
+  name: rate-limiting-advanced
+  config:
+    strategy: redis
+    sync_rate: -1
+    limit:
+    - 1000
+    retry_after_jitter_max: 0
+    window_size:
+    - 3600
+    window_type: sliding
+
+plugins_partials:
+- plugin: 017320fe-ba14-4e14-8bac-3a7d1d3cd1e0
+  partial: c4ff03ed-478a-4b86-bdcf-811c45c00737
+  path: config.redis
 ```
 
 and the same config via `decK dump`:
@@ -129,4 +158,29 @@ consumers:
   groups:
   - name: A-team
   username: tieske
+
+partials:
+- config:
+    host: 127.0.0.1
+    port: 6379
+  id: c4ff03ed-478a-4b86-bdcf-811c45c00737
+  name: my-redis-instance
+  type: redis-ee
+
+plugins:
+- id: 017320fe-ba14-4e14-8bac-3a7d1d3cd1e0
+  name: rate-limiting-advanced
+  config:
+    strategy: redis
+    sync_rate: -1
+    limit:
+    - 1000
+    retry_after_jitter_max: 0
+    window_size:
+    - 3600
+    window_type: sliding
+  partials:
+  - id: c4ff03ed-478a-4b86-bdcf-811c45c00737
+    name: my-redis-instance
+    path: config.redis
 ```
