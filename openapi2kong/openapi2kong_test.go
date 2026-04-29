@@ -203,3 +203,32 @@ paths:
 		assert.Contains(t, err.Error(), "path-parameter name exceeds 32 characters")
 	}
 }
+
+func Test_Openapi2kong_SkipHeaderRoutes(t *testing.T) {
+	suffix := ".expected_skip_header.json"
+	files := findFilesBySuffix(t, fixturePath, suffix)
+
+	for _, file := range files {
+		fileName := strings.TrimSuffix(file.Name(), suffix)
+
+		fileNameIn := fileName + ".yaml"
+		fileNameExpected := fileName + ".expected_skip_header.json"
+		fileNameOut := fileName + ".generated_skip_header.json"
+
+		dataIn, _ := os.ReadFile(fixturePath + fileNameIn)
+		dataOut, err := Convert(dataIn, O2kOptions{
+			Tags:             []string{"OAS3_import", "OAS3file_" + fileNameIn},
+			SkipHeaderRoutes: true,
+		})
+
+		if err != nil {
+			t.Error(fmt.Sprintf("'%s' didn't expect error: %%w", fixturePath+fileNameIn), err)
+		} else {
+			JSONOut, _ := json.MarshalIndent(dataOut, "", "  ")
+			os.WriteFile(fixturePath+fileNameOut, JSONOut, 0o600)
+			JSONExpected, _ := os.ReadFile(fixturePath + fileNameExpected)
+			assert.JSONEq(t, string(JSONExpected), string(JSONOut),
+				"'%s': the JSON blobs should be equal", fixturePath+fileNameIn)
+		}
+	}
+}
