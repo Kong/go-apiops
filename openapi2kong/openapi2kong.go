@@ -51,6 +51,8 @@ type O2kOptions struct {
 	IgnoreCircularRefs bool
 	// Generate separate routes for each header enum even if required: false
 	TreatAllHeadersAsRequired bool
+	// Skip generation of separate routes for header parameter enums
+	SkipRouteByHeader bool
 }
 
 // setDefaults sets the defaults for the OpenAPI2Kong operation.
@@ -1163,7 +1165,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 
 			headerParams := findHeaderParamsForRouting(operation.Parameters, pathitem.Parameters, opts.TreatAllHeadersAsRequired)
 
-			if len(headerParams) > 0 {
+			if len(headerParams) > 0 && !opts.SkipRouteByHeader {
 				// This operation has header parameters, we need to create different routes based on the header values
 				headerValueCombinations := constructHeaderCombinationsForRouting(headerParams)
 
