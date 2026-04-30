@@ -204,7 +204,7 @@ paths:
 	}
 }
 
-func Test_Openapi2kong_SkipHeaderRoutes(t *testing.T) {
+func Test_Openapi2kong_SkipRouteByHeader(t *testing.T) {
 	suffix := ".expected_skip_header.json"
 	files := findFilesBySuffix(t, fixturePath, suffix)
 
@@ -217,8 +217,8 @@ func Test_Openapi2kong_SkipHeaderRoutes(t *testing.T) {
 
 		dataIn, _ := os.ReadFile(fixturePath + fileNameIn)
 		dataOut, err := Convert(dataIn, O2kOptions{
-			Tags:             []string{"OAS3_import", "OAS3file_" + fileNameIn},
-			SkipHeaderRoutes: true,
+			Tags:              []string{"OAS3_import", "OAS3file_" + fileNameIn},
+			SkipRouteByHeader: true,
 		})
 
 		if err != nil {
