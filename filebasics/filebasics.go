@@ -41,7 +41,13 @@ func ReadFile(filename string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return body, nil
+
+	renderedContent, err := renderTemplate(string(body), false)
+	if err != nil {
+		return nil, fmt.Errorf("parsing file: %w", err)
+	}
+
+	return []byte(renderedContent), nil
 }
 
 // MustReadFile reads file contents. Will panic if reading fails.
