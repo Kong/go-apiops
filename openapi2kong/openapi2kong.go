@@ -53,6 +53,10 @@ type O2kOptions struct {
 	TreatAllHeadersAsRequired bool
 	// Skip generation of separate routes for header parameter enums
 	SkipRouteByHeader bool
+	// Enable service reuse: when multiple paths have identical server configurations
+	// and no path-level plugins, they will share a single Kong service instead of
+	// creating duplicate services. This reduces resource bloat in Kong.
+	ReuseServices bool
 }
 
 // setDefaults sets the defaults for the OpenAPI2Kong operation.
@@ -547,6 +551,75 @@ func constructHeaderCombinationsForRouting(headers []*v3.Parameter) []map[string
 	return result
 }
 
+// generateServiceKey creates a unique key for a service configuration based on
+// servers, service defaults, and upstream defaults. This is used to identify
+// identical service configurations for potential reuse.
+func generateServiceKey(servers []*v3.Server, serviceDefaults []byte, upstreamDefaults []byte) string {
+	var sb strings.Builder
+
+	// Add sorted server URLs to the key
+	serverURLs := make([]string, 0, len(servers))
+	for _, server := range servers {
+		serverURLs = append(serverURLs, server.URL)
+	}
+	sort.Strings(serverURLs)
+	for _, url := range serverURLs {
+		sb.WriteString(url)
+		sb.WriteString("|")
+	}
+
+	sb.WriteString("||")
+
+	// Add service defaults
+	if serviceDefaults != nil {
+		sb.Write(serviceDefaults)
+	}
+	sb.WriteString("||")
+
+	// Add upstream defaults
+	if upstreamDefaults != nil {
+		sb.Write(upstreamDefaults)
+	}
+
+	return sb.String()
+}
+
+// hasPathLevelPlugins checks if a path item has any x-kong-plugin-* extensions
+func hasPathLevelPlugins(extensions *orderedmap.Map[string, *yaml.Node]) bool {
+	if extensions == nil {
+		return false
+	}
+
+	pair := extensions.First()
+	for pair != nil {
+		if strings.HasPrefix(pair.Key(), "x-kong-plugin-") {
+			return true
+		}
+		pair = pair.Next()
+	}
+	return false
+}
+
+// serviceCache holds cached services for reuse when identical configurations are found
+type serviceCache struct {
+	services map[string]map[string]interface{}
+}
+
+func newServiceCache() *serviceCache {
+	return &serviceCache{
+		services: make(map[string]map[string]interface{}),
+	}
+}
+
+func (c *serviceCache) get(key string) (map[string]interface{}, bool) {
+	service, found := c.services[key]
+	return service, found
+}
+
+func (c *serviceCache) set(key string, service map[string]interface{}) {
+	c.services[key] = service
+}
+
 // MustConvert is the same as Convert, but will panic if an error is returned.
 func MustConvert(content []byte, opts O2kOptions) map[string]interface{} {
 	result, err := Convert(content, opts)
@@ -614,6 +687,9 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 	} else {
 		nameConcatChar = "_"
 	}
+
+	// Initialize service cache for reuse of identical service configurations
+	svcCache := newServiceCache()
 
 	// Load and parse the OAS file
 	openapiDoc, err := libopenapi.NewDocument(content)
@@ -852,6 +928,23 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 			newPathService = true
 		}
 
+		// Check if we can reuse an existing service.
+		// We only reuse services if:
+		// 1. ReuseServices option is enabled
+		// 2. A new path service would be created (newPathService is true)
+		// 3. The path has no path-level plugins (to avoid plugin conflicts)
+		// 4. An identical service configuration already exists in the cache
+		var reusedPathService bool
+		if opts.ReuseServices && newPathService && !hasPathLevelPlugins(pathitem.Extensions) {
+			serviceKey := generateServiceKey(pathServers, pathServiceDefaults, pathUpstreamDefaults)
+			if cachedService, found := svcCache.get(serviceKey); found {
+				logbasics.Debug("reusing existing service for path", "path", pathKey, "service", cachedService["name"])
+				pathService = cachedService
+				reusedPathService = true
+				newPathService = false // Mark as not new since we're reusing
+			}
+		}
+
 		// create a new service if we need to do so
 		if newPathService {
 			// create the path-level service and (optional) upstream
@@ -895,6 +988,23 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 					pathService["host"] = docService["host"]
 				}
 			}
+
+			// Cache the new service for potential reuse by subsequent paths (only if enabled and no plugins)
+			if opts.ReuseServices && !hasPathLevelPlugins(pathitem.Extensions) {
+				serviceKey := generateServiceKey(pathServers, pathServiceDefaults, pathUpstreamDefaults)
+				svcCache.set(serviceKey, pathService)
+			}
+		} else if reusedPathService {
+			// We're reusing an existing service, so collect path plugins separately.
+			// Path plugins will flow to routes via operationPluginList.
+			pathPluginList, err = getPluginsList(pathitem.Extensions, componentExtensions, nil,
+				opts.UUIDNamespace, pathBaseName, kongComponents, kongTags, opts.SkipID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create plugins list from path item: %w", err)
+			}
+
+			// Extract the request-validator config from the plugin list
+			pathValidatorConfig, pathPluginList = getValidatorPlugin(pathPluginList, docValidatorConfig)
 		} else {
 			// no new path-level service entity required, so stick to the doc-level one
 			pathService = docService
@@ -1043,7 +1153,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 			}
 
 			// collect operation plugins
-			if !newOperationService && !newPathService {
+			if !newOperationService && !newPathService && !reusedPathService {
 				// we're operating on the doc-level service entity, so we need the plugins
 				// from the path and operation
 				operationPluginList, err = getPluginsList(operation.Extensions, nil, pathPluginList,
@@ -1062,6 +1172,11 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 				// from the operation.
 				operationPluginList, err = getPluginsList(operation.Extensions, nil, nil, opts.UUIDNamespace,
 					operationBaseName, kongComponents, kongTags, opts.SkipID)
+			} else if reusedPathService {
+				// we're reusing an existing service, so path plugins need to flow to routes.
+				// Include path-level plugins in the operation plugin list (attached to route).
+				operationPluginList, err = getPluginsList(operation.Extensions, nil, pathPluginList,
+					opts.UUIDNamespace, operationBaseName, kongComponents, kongTags, opts.SkipID)
 			}
 			if err != nil {
 				return nil, fmt.Errorf("failed to create plugins list from operation item: %w", err)

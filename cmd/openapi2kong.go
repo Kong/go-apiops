@@ -85,6 +85,14 @@ func executeOpenapi2Kong(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
+	var reuseServices bool
+	{
+		reuseServices, err = cmd.Flags().GetBool("reuse-services")
+		if err != nil {
+			return fmt.Errorf("failed getting cli argument 'reuse-services'; %w", err)
+		}
+	}
+
 	options := openapi2kong.O2kOptions{
 		Tags:                 entityTags,
 		DocName:              docName,
@@ -92,6 +100,7 @@ func executeOpenapi2Kong(cmd *cobra.Command, _ []string) error {
 		IgnoreSecurityErrors: ignoreSecurityErrors,
 		InsoCompat:           insoCompatibility,
 		IgnoreCircularRefs:   ignoreCircularRefs,
+		ReuseServices:        reuseServices,
 	}
 
 	trackInfo := deckformat.HistoryNewEntry("openapi2kong")
@@ -147,4 +156,6 @@ directive from the file)`)
 	openapi2kongCmd.Flags().BoolP("ignore-security-errors", "", false, "ignore errors for unsupported security schemes")
 	openapi2kongCmd.Flags().BoolP("inso-compatible", "", false, "generate the config in an Inso compatible way")
 	openapi2kongCmd.Flags().BoolP("ignore-circular-refs", "", false, "ignore circular references in the spec")
+	openapi2kongCmd.Flags().BoolP("reuse-services", "", false, "reuse services when multiple paths have identical "+
+		"server configurations and no path-level plugins")
 }

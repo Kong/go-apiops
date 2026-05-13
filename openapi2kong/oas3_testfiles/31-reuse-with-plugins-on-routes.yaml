@@ -1,0 +1,43 @@
+# Test: NO service reuse when path-level plugins exist
+#
+# When a path has x-kong-plugin-* extensions, we should NOT reuse
+# services even if server configurations are identical. This prevents
+# unintended plugin propagation to other routes.
+#
+# Expected behavior:
+# - /users has a rate-limiting plugin
+# - /orders has NO plugin but same server
+# - 2 separate services should be created (not 1)
+# - This ensures rate-limiting doesn't accidentally apply to /orders
+
+openapi: 3.0.3
+info:
+  title: Multi-Service API with Plugins
+  version: 1.0.0
+
+x-test-config:
+  reuseServices: true
+
+paths:
+  /users:
+    get:
+      summary: Get users (rate limited)
+      responses:
+        "200":
+          description: A list of users
+    servers:
+      - url: https://api.example.com/v1
+    x-kong-plugin-rate-limiting:
+      config:
+        minute: 100
+        policy: local
+
+  /orders:
+    get:
+      summary: Get orders (no rate limiting)
+      responses:
+        "200":
+          description: A list of orders
+    servers:
+      - url: https://api.example.com/v1
+

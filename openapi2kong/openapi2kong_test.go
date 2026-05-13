@@ -86,6 +86,7 @@ func Test_Openapi2kong(t *testing.T) {
 
 			// Test option configuration
 			allHeadersRequired := false
+			reuseServices := false
 
 			var config map[string]any
 			yaml.Unmarshal(dataIn, &config)
@@ -93,12 +94,16 @@ func Test_Openapi2kong(t *testing.T) {
 				if val, ok := testConfig["treatAllHeadersAsRequired"]; ok {
 					allHeadersRequired = val.(bool)
 				}
+				if val, ok := testConfig["reuseServices"]; ok {
+					reuseServices = val.(bool)
+				}
 			}
 
 			dataOut, err := Convert(dataIn, O2kOptions{
 				Tags:                      []string{"OAS3_import", "OAS3file_" + fileNameIn},
 				OIDC:                      true,
 				TreatAllHeadersAsRequired: allHeadersRequired,
+				ReuseServices:             reuseServices,
 			})
 			if err != nil {
 				t.Error(fmt.Sprintf("'%s' didn't expect error: %%w", fixturePath+fileNameIn), err)
@@ -231,4 +236,147 @@ func Test_Openapi2kong_SkipRouteByHeader(t *testing.T) {
 				"'%s': the JSON blobs should be equal", fixturePath+fileNameIn)
 		}
 	}
+}
+
+func Test_Openapi2kong_ReuseServices(t *testing.T) {
+	// OAS with 3 paths having identical path-level servers and no plugins
+	testData := `
+openapi: 3.0.3
+info:
+  title: Reuse Test
+  version: v1
+
+paths:
+  /orders:
+    get:
+      operationId: getOrders
+      responses:
+        "200":
+          description: OK
+    servers:
+      - url: https://api.example.com/v1
+  /products:
+    get:
+      operationId: getProducts
+      responses:
+        "200":
+          description: OK
+    servers:
+      - url: https://api.example.com/v1
+  /users:
+    get:
+      operationId: getUsers
+      responses:
+        "200":
+          description: OK
+    servers:
+      - url: https://api.example.com/v1
+`
+
+	t.Run("flag disabled creates separate services", func(t *testing.T) {
+		result, err := Convert([]byte(testData), O2kOptions{
+			ReuseServices: false,
+			SkipID:        true,
+		})
+		assert.NoError(t, err)
+
+		services := result["services"].([]interface{})
+		assert.Equal(t, 3, len(services), "should create 3 separate services without reuse")
+
+		// Each service should have exactly 1 route
+		for _, svc := range services {
+			s := svc.(map[string]interface{})
+			routes := s["routes"].([]interface{})
+			assert.Equal(t, 1, len(routes))
+		}
+	})
+
+	t.Run("flag enabled reuses identical services", func(t *testing.T) {
+		result, err := Convert([]byte(testData), O2kOptions{
+			ReuseServices: true,
+			SkipID:        true,
+		})
+		assert.NoError(t, err)
+
+		services := result["services"].([]interface{})
+		assert.Equal(t, 1, len(services), "should create 1 shared service with reuse")
+
+		// The single service should have all 3 routes
+		svc := services[0].(map[string]interface{})
+		routes := svc["routes"].([]interface{})
+		assert.Equal(t, 3, len(routes), "shared service should have 3 routes")
+	})
+
+	t.Run("flag enabled but plugins prevent reuse", func(t *testing.T) {
+		testDataWithPlugin := `
+openapi: 3.0.3
+info:
+  title: Reuse Plugin Test
+  version: v1
+
+paths:
+  /orders:
+    get:
+      operationId: getOrders
+      responses:
+        "200":
+          description: OK
+    servers:
+      - url: https://api.example.com/v1
+  /users:
+    get:
+      operationId: getUsers
+      responses:
+        "200":
+          description: OK
+    servers:
+      - url: https://api.example.com/v1
+    x-kong-plugin-rate-limiting:
+      config:
+        minute: 100
+`
+		result, err := Convert([]byte(testDataWithPlugin), O2kOptions{
+			ReuseServices: true,
+			SkipID:        true,
+		})
+		assert.NoError(t, err)
+
+		services := result["services"].([]interface{})
+		assert.Equal(t, 2, len(services), "should create 2 services when path has plugins")
+	})
+
+	t.Run("flag enabled with different servers no reuse", func(t *testing.T) {
+		testDataDiffServers := `
+openapi: 3.0.3
+info:
+  title: Different Servers Test
+  version: v1
+
+paths:
+  /orders:
+    get:
+      operationId: getOrders
+      responses:
+        "200":
+          description: OK
+    servers:
+      - url: https://orders.example.com/v1
+  /users:
+    get:
+      operationId: getUsers
+      responses:
+        "200":
+          description: OK
+    servers:
+      - url: https://users.example.com/v1
+`
+		result, err := Convert([]byte(testDataDiffServers), O2kOptions{
+			ReuseServices: true,
+			SkipID:        true,
+		})
+		assert.NoError(t, err)
+
+		services := result["services"].([]interface{})
+		assert.Equal(t, 2, len(services), "should create 2 services for different server URLs")
+	})
 }
