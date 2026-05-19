@@ -688,8 +688,12 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 		nameConcatChar = "_"
 	}
 
-	// Initialize service cache for reuse of identical service configurations
-	svcCache := newServiceCache()
+	// Initialize separate service caches for path-level and operation-level services.
+	// We use separate caches because path-level services have plugins attached to them
+	// (doc + path plugins), while operation-level services do NOT have plugins on them
+	// (all plugins go to routes). Mixing them would cause plugin duplication.
+	pathSvcCache := newServiceCache()
+	opSvcCache := newServiceCache()
 
 	// Load and parse the OAS file
 	openapiDoc, err := libopenapi.NewDocument(content)
@@ -937,7 +941,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 		var reusedPathService bool
 		if opts.ReuseServices && newPathService && !hasPathLevelPlugins(pathitem.Extensions) {
 			serviceKey := generateServiceKey(pathServers, pathServiceDefaults, pathUpstreamDefaults)
-			if cachedService, found := svcCache.get(serviceKey); found {
+			if cachedService, found := pathSvcCache.get(serviceKey); found {
 				logbasics.Debug("reusing existing service for path", "path", pathKey, "service", cachedService["name"])
 				pathService = cachedService
 				reusedPathService = true
@@ -992,7 +996,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 			// Cache the new service for potential reuse by subsequent paths (only if enabled and no plugins)
 			if opts.ReuseServices && !hasPathLevelPlugins(pathitem.Extensions) {
 				serviceKey := generateServiceKey(pathServers, pathServiceDefaults, pathUpstreamDefaults)
-				svcCache.set(serviceKey, pathService)
+				pathSvcCache.set(serviceKey, pathService)
 			}
 		} else if reusedPathService {
 			// We're reusing an existing service, so collect path plugins separately.
@@ -1120,6 +1124,20 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 				newOperationService = true
 			}
 
+			// Check if we can reuse an existing service at the operation level.
+			var reusedOperationService bool
+			if opts.ReuseServices && newOperationService {
+				serviceKey := generateServiceKey(operationServers, operationServiceDefaults, operationUpstreamDefaults)
+				if cachedService, found := opSvcCache.get(serviceKey); found {
+					logbasics.Debug("reusing existing op-level service",
+						"path", pathKey, "method", methodKey,
+						"service", cachedService["name"])
+					operationService = cachedService
+					reusedOperationService = true
+					newOperationService = false
+				}
+			}
+
 			// create a new service if we need to do so
 			if newOperationService {
 				// create the operation-level service and (optional) upstream
@@ -1146,6 +1164,13 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 						operationService["host"] = pathService["host"]
 					}
 				}
+				// Cache the new operation service for potential reuse
+				if opts.ReuseServices {
+					serviceKey := generateServiceKey(operationServers, operationServiceDefaults, operationUpstreamDefaults)
+					opSvcCache.set(serviceKey, operationService)
+				}
+				operationRoutes = operationService["routes"].([]interface{})
+			} else if reusedOperationService {
 				operationRoutes = operationService["routes"].([]interface{})
 			} else {
 				operationService = pathService
@@ -1153,12 +1178,12 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 			}
 
 			// collect operation plugins
-			if !newOperationService && !newPathService && !reusedPathService {
+			if !newOperationService && !newPathService && !reusedPathService && !reusedOperationService {
 				// we're operating on the doc-level service entity, so we need the plugins
 				// from the path and operation
 				operationPluginList, err = getPluginsList(operation.Extensions, nil, pathPluginList,
 					opts.UUIDNamespace, operationBaseName, kongComponents, kongTags, opts.SkipID)
-			} else if newOperationService {
+			} else if newOperationService || reusedOperationService {
 				// we're operating on an operation-level service entity, so we need the plugins
 				// from the document, path, and operation.
 				operationPluginList, _ = getPluginsList(doc.Extensions, nil, nil, opts.UUIDNamespace,

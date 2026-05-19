@@ -1,0 +1,92 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "api.example.com",
+      "id": "6d69319a-2f10-5a56-8faa-fc556d510f86",
+      "name": "operation-reuse-with-plugins_listorders",
+      "path": "/orderservice/v1",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "58976488-7669-5bdd-b769-d98eab427a72",
+          "methods": [
+            "GET"
+          ],
+          "name": "operation-reuse-with-plugins_listorders",
+          "paths": [
+            "~/orders$"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "minute": 100
+              },
+              "id": "d1315668-41c8-56ab-8b19-885316e53679",
+              "name": "rate-limiting",
+              "tags": [
+                "OAS3_import",
+                "OAS3file_33-reuse-operation-services-with-plugins.yaml"
+              ]
+            }
+          ],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_33-reuse-operation-services-with-plugins.yaml"
+          ]
+        },
+        {
+          "id": "bf0d0fa7-3b8e-556d-ba4d-430320db47aa",
+          "methods": [
+            "POST"
+          ],
+          "name": "operation-reuse-with-plugins_createorder",
+          "paths": [
+            "~/orders$"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "key_names": [
+                  "apikey"
+                ]
+              },
+              "id": "73b4b44d-fc02-5871-a818-add11a7c5535",
+              "name": "key-auth",
+              "tags": [
+                "OAS3_import",
+                "OAS3file_33-reuse-operation-services-with-plugins.yaml"
+              ]
+            },
+            {
+              "config": {
+                "minute": 100
+              },
+              "id": "b95d1e10-008e-5171-af0d-367f8ecc4f61",
+              "name": "rate-limiting",
+              "tags": [
+                "OAS3_import",
+                "OAS3file_33-reuse-operation-services-with-plugins.yaml"
+              ]
+            }
+          ],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_33-reuse-operation-services-with-plugins.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_33-reuse-operation-services-with-plugins.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}

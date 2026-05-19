@@ -1,0 +1,72 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "api.example.com",
+      "id": "eaebb3a0-32b6-5782-bcfa-b3113c77974a",
+      "name": "operation-level-service-reuse_listinvoices",
+      "path": "/orderservice/v1",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "54d88be6-da43-59f5-b70a-377effe7049b",
+          "methods": [
+            "GET"
+          ],
+          "name": "operation-level-service-reuse_listinvoices",
+          "paths": [
+            "~/invoices$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_32-reuse-operation-level-services.yaml"
+          ]
+        },
+        {
+          "id": "a3302a8b-5663-541b-8e0e-ec8fa0d07f0e",
+          "methods": [
+            "GET"
+          ],
+          "name": "operation-level-service-reuse_listorders",
+          "paths": [
+            "~/orders$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_32-reuse-operation-level-services.yaml"
+          ]
+        },
+        {
+          "id": "79b2ab21-4d0d-50e7-a3ac-8a7645acb0be",
+          "methods": [
+            "POST"
+          ],
+          "name": "operation-level-service-reuse_createorder",
+          "paths": [
+            "~/orders$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_32-reuse-operation-level-services.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_32-reuse-operation-level-services.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}
