@@ -552,33 +552,15 @@ func constructHeaderCombinationsForRouting(headers []*v3.Parameter) []map[string
 }
 
 // generateServiceKey creates a unique key for a service configuration based on
-// servers, service defaults, and upstream defaults. This is used to identify
-// identical service configurations for potential reuse.
-// Server order is preserved (not sorted) because CreateKongService uses the
-// first server entry to derive protocol, path, and port for the Kong service.
-// Server URLs are rendered after variable substitution (matching parseServerUris
-// behavior) so that templates with different variable defaults produce distinct keys.
+// servers, service defaults, and upstream defaults.
+// (normalized the same way as CreateKongService) plus service/upstream defaults.
 func generateServiceKey(servers []*v3.Server, serviceDefaults []byte, upstreamDefaults []byte) string {
 	var sb strings.Builder
 
-	// Add rendered server URLs in their original order to the key.
-	// We substitute template variables using their defaults, matching
-	// how parseServerUris resolves URLs before service creation.
-	// Order matters because CreateKongService uses targets[0] to set
-	// protocol/path/port on the service entity.
-	for _, server := range servers {
-		rendered := server.URL
-		if server.Variables != nil {
-			pair := server.Variables.First()
-			for pair != nil {
-				name := pair.Key()
-				svar := pair.Value()
-				rendered = strings.ReplaceAll(
-					rendered, "{"+name+"}", svar.Default)
-				pair = pair.Next()
-			}
-		}
-		sb.WriteString(rendered)
+	// Normalized URLs (variable substitution + default ports/paths), order-preserving.
+	renderedURLs := openapitools.RenderServerURLs(servers)
+	for _, u := range renderedURLs {
+		sb.WriteString(u)
 		sb.WriteString("|")
 	}
 
@@ -1013,16 +995,11 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 				pathSvcCache.set(serviceKey, pathService)
 			}
 		} else if reusedPathService {
-			// We're reusing an existing service, so collect path plugins separately.
-			// Path plugins will flow to routes via operationPluginList.
-			pathPluginList, err = getPluginsList(pathitem.Extensions, componentExtensions, nil,
-				opts.UUIDNamespace, pathBaseName, kongComponents, kongTags, opts.SkipID)
-			if err != nil {
-				return nil, fmt.Errorf("failed to create plugins list from path item: %w", err)
-			}
-
-			// Extract the request-validator config from the plugin list
-			pathValidatorConfig, pathPluginList = getValidatorPlugin(pathPluginList, docValidatorConfig)
+			// Service reuse is gated on !hasPathLevelPlugins, so there are no
+			// path-level plugins to collect. Just reset to empty/inherited values.
+			emptyList := make([]*map[string]interface{}, 0)
+			pathPluginList = &emptyList
+			pathValidatorConfig = docValidatorConfig
 		} else {
 			// no new path-level service entity required, so stick to the doc-level one
 			pathService = docService
