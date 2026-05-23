@@ -1,0 +1,55 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "api.example.com",
+      "id": "505884ef-98c9-52b8-b113-9070a1570181",
+      "name": "server-variables-same-resolved-url_orders",
+      "path": "/v1/service",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "944bea4a-636b-51d8-8180-e3e73b5ef842",
+          "methods": [
+            "GET"
+          ],
+          "name": "server-variables-same-resolved-url_getorders",
+          "paths": [
+            "~/orders$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_37-reuse-server-variables-same-resolved.yaml"
+          ]
+        },
+        {
+          "id": "66012c4f-f8d5-568d-a1f7-1a31bf14ebc6",
+          "methods": [
+            "GET"
+          ],
+          "name": "server-variables-same-resolved-url_getusers",
+          "paths": [
+            "~/users$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_37-reuse-server-variables-same-resolved.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_37-reuse-server-variables-same-resolved.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}

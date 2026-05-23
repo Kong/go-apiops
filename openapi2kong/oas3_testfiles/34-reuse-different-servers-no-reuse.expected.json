@@ -1,0 +1,70 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "orders.example.com",
+      "id": "b7a32115-a920-516d-81d5-bf1768b323c8",
+      "name": "different-servers-test_orders",
+      "path": "/v1",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "5be34c6c-7890-558e-bb77-68e6648a7cfd",
+          "methods": [
+            "GET"
+          ],
+          "name": "different-servers-test_getorders",
+          "paths": [
+            "~/orders$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_34-reuse-different-servers-no-reuse.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_34-reuse-different-servers-no-reuse.yaml"
+      ]
+    },
+    {
+      "host": "users.example.com",
+      "id": "3659ace2-c2e6-58b0-b2ba-d153bf057c7c",
+      "name": "different-servers-test_users",
+      "path": "/v1",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "78eb5a0b-e667-54b3-b1d2-9fbd5b147868",
+          "methods": [
+            "GET"
+          ],
+          "name": "different-servers-test_getusers",
+          "paths": [
+            "~/users$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_34-reuse-different-servers-no-reuse.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_34-reuse-different-servers-no-reuse.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}

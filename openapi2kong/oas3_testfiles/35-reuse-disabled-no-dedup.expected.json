@@ -1,0 +1,70 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "api.example.com",
+      "id": "0fbc88cb-6386-574f-ac02-22f55392a905",
+      "name": "no-reuse-test_orders",
+      "path": "/v1",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "0c91c325-fc4d-511e-a878-f43931fcafba",
+          "methods": [
+            "GET"
+          ],
+          "name": "no-reuse-test_getorders",
+          "paths": [
+            "~/orders$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_35-reuse-disabled-no-dedup.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_35-reuse-disabled-no-dedup.yaml"
+      ]
+    },
+    {
+      "host": "api.example.com",
+      "id": "09ee22d6-4d42-5819-849f-2ff0f549fac9",
+      "name": "no-reuse-test_users",
+      "path": "/v1",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "3a3ddd34-0383-5889-93e0-281d0932b7f4",
+          "methods": [
+            "GET"
+          ],
+          "name": "no-reuse-test_getusers",
+          "paths": [
+            "~/users$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_35-reuse-disabled-no-dedup.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_35-reuse-disabled-no-dedup.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}

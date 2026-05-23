@@ -1,0 +1,42 @@
+# Test: Server variable substitution allows reuse when resolved URLs match
+#
+# Two paths use different URL templates but with variables that resolve to the
+# same final URL. Since the resolved URLs are identical, services CAN be reused.
+#
+# Expected behavior:
+# - /users and /orders both resolve to https://api.example.com/v1/service
+# - Only 1 service should be created (reuse since resolved URLs match)
+
+openapi: 3.0.3
+info:
+  title: Server Variables Same Resolved URL
+  version: 1.0.0
+
+x-test-config:
+  reuseServices: true
+
+paths:
+  /users:
+    get:
+      operationId: getUsers
+      responses:
+        "200":
+          description: OK
+    servers:
+      - url: https://api.example.com/{version}/service
+        variables:
+          version:
+            default: v1
+
+  /orders:
+    get:
+      operationId: getOrders
+      responses:
+        "200":
+          description: OK
+    servers:
+      - url: https://api.example.com/{version}/service
+        variables:
+          version:
+            default: v1
+

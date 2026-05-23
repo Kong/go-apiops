@@ -1,0 +1,70 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "api.example.com",
+      "id": "c4810952-f606-5cb8-a131-fd7144b5b908",
+      "name": "server-variables-test_orders",
+      "path": "/v2/userservice",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "1ad5d76f-05ab-556d-b25c-294291bc42a0",
+          "methods": [
+            "GET"
+          ],
+          "name": "server-variables-test_getorders",
+          "paths": [
+            "~/orders$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_36-reuse-server-variables-no-reuse.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_36-reuse-server-variables-no-reuse.yaml"
+      ]
+    },
+    {
+      "host": "api.example.com",
+      "id": "be27ff64-af54-50b7-b44c-53065c319df2",
+      "name": "server-variables-test_users",
+      "path": "/v1/userservice",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "38c89a6e-ec33-5812-ae5a-6df5dfa954bb",
+          "methods": [
+            "GET"
+          ],
+          "name": "server-variables-test_getusers",
+          "paths": [
+            "~/users$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_36-reuse-server-variables-no-reuse.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_36-reuse-server-variables-no-reuse.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}

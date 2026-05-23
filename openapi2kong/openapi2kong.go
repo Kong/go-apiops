@@ -554,17 +554,31 @@ func constructHeaderCombinationsForRouting(headers []*v3.Parameter) []map[string
 // generateServiceKey creates a unique key for a service configuration based on
 // servers, service defaults, and upstream defaults. This is used to identify
 // identical service configurations for potential reuse.
+// Server order is preserved (not sorted) because CreateKongService uses the
+// first server entry to derive protocol, path, and port for the Kong service.
+// Server URLs are rendered after variable substitution (matching parseServerUris
+// behavior) so that templates with different variable defaults produce distinct keys.
 func generateServiceKey(servers []*v3.Server, serviceDefaults []byte, upstreamDefaults []byte) string {
 	var sb strings.Builder
 
-	// Add sorted server URLs to the key
-	serverURLs := make([]string, 0, len(servers))
+	// Add rendered server URLs in their original order to the key.
+	// We substitute template variables using their defaults, matching
+	// how parseServerUris resolves URLs before service creation.
+	// Order matters because CreateKongService uses targets[0] to set
+	// protocol/path/port on the service entity.
 	for _, server := range servers {
-		serverURLs = append(serverURLs, server.URL)
-	}
-	sort.Strings(serverURLs)
-	for _, url := range serverURLs {
-		sb.WriteString(url)
+		rendered := server.URL
+		if server.Variables != nil {
+			pair := server.Variables.First()
+			for pair != nil {
+				name := pair.Key()
+				svar := pair.Value()
+				rendered = strings.ReplaceAll(
+					rendered, "{"+name+"}", svar.Default)
+				pair = pair.Next()
+			}
+		}
+		sb.WriteString(rendered)
 		sb.WriteString("|")
 	}
 
