@@ -1,0 +1,73 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "api.example.com",
+      "id": "e2a5410a-10a5-5983-943e-53d9907339ec",
+      "name": "test-api_user",
+      "path": "/userservice/v1",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "6f644a83-6865-5618-91a5-469612a425d3",
+          "methods": [
+            "POST"
+          ],
+          "name": "test-api_user_post",
+          "paths": [
+            "~/user$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_30-reuse-identical-services.yaml"
+          ]
+        },
+        {
+          "id": "13a57c04-8579-569a-a0ba-25219440b03d",
+          "methods": [
+            "GET"
+          ],
+          "name": "test-api_users_get",
+          "paths": [
+            "~/users$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_30-reuse-identical-services.yaml"
+          ]
+        },
+        {
+          "id": "5f4a62d1-a71f-54e8-8cf5-ff8a3fab4d32",
+          "methods": [
+            "GET"
+          ],
+          "name": "test-api_users-id_get",
+          "paths": [
+            "~/users/(?<id>[^#?/]+)$"
+          ],
+          "plugins": [],
+          "regex_priority": 100,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_30-reuse-identical-services.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_30-reuse-identical-services.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}
+

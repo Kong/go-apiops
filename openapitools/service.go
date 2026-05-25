@@ -16,6 +16,41 @@ const (
 	httpsScheme = "https"
 )
 
+// RenderServerURLs renders server URLs after variable substitution and URL
+// normalization (same as parseServerUris + setServerDefaults). This produces
+// canonical URL strings suitable for use as cache keys, ensuring that
+// equivalent server definitions (e.g., "https://api.example.com" vs
+// "https://api.example.com:443") produce the same output.
+func RenderServerURLs(servers []*v3.Server) []string {
+	targets, err := parseServerUris(servers)
+	if err != nil {
+		// On parse error, fall back to raw variable-substituted URLs
+		result := make([]string, len(servers))
+		for i, server := range servers {
+			rendered := server.URL
+			if server.Variables != nil {
+				pair := server.Variables.First()
+				for pair != nil {
+					name := pair.Key()
+					svar := pair.Value()
+					rendered = strings.ReplaceAll(rendered, "{"+name+"}", svar.Default)
+					pair = pair.Next()
+				}
+			}
+			result[i] = rendered
+		}
+		return result
+	}
+
+	setServerDefaults(targets, httpsScheme)
+
+	result := make([]string, len(targets))
+	for i, t := range targets {
+		result[i] = t.String()
+	}
+	return result
+}
+
 // parseServerUris parses the server uri's after rendering the template variables.
 // result will always have at least 1 entry, but not necessarily a hostname/port/scheme
 func parseServerUris(servers []*v3.Server) ([]*url.URL, error) {

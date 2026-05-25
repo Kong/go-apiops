@@ -1,0 +1,44 @@
+# Test: Server variable substitution produces distinct services
+#
+# Two paths use the same URL template but with different variable defaults.
+# Since CreateKongService resolves variables using their defaults, the resulting
+# services would point to different backends and must NOT be reused.
+#
+# Expected behavior:
+# - /users has server template with version default "v1"
+# - /orders has server template with version default "v2"
+# - 2 separate services should be created (different resolved URLs)
+
+openapi: 3.0.3
+info:
+  title: Server Variables Test
+  version: 1.0.0
+
+x-test-config:
+  reuseServices: true
+
+paths:
+  /users:
+    get:
+      operationId: getUsers
+      responses:
+        "200":
+          description: OK
+    servers:
+      - url: https://api.example.com/{version}/userservice
+        variables:
+          version:
+            default: v1
+
+  /orders:
+    get:
+      operationId: getOrders
+      responses:
+        "200":
+          description: OK
+    servers:
+      - url: https://api.example.com/{version}/userservice
+        variables:
+          version:
+            default: v2
+

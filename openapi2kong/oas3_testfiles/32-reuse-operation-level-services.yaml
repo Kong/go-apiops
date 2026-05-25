@@ -1,0 +1,48 @@
+# Test: Service reuse when identical operation-level servers exist
+#
+# When multiple operations define the same operation-level servers, only ONE
+# service should be created with all routes attached to it.
+#
+# Expected behavior:
+# - GET /orders and POST /orders both specify the same operation-level servers
+# - GET /invoices also specifies the same operation-level servers
+# - Only 1 operation-level service should be created (not 3)
+# - All 3 routes should be attached to the single service
+
+openapi: 3.0.3
+info:
+  title: Operation Level Service Reuse
+  version: 1.0.0
+
+x-test-config:
+  reuseServices: true
+
+paths:
+  /orders:
+    get:
+      operationId: listOrders
+      summary: List all orders
+      servers:
+        - url: https://api.example.com/orderservice/v1
+      responses:
+        "200":
+          description: A list of orders
+    post:
+      operationId: createOrder
+      summary: Create an order
+      servers:
+        - url: https://api.example.com/orderservice/v1
+      responses:
+        "201":
+          description: Order created
+
+  /invoices:
+    get:
+      operationId: listInvoices
+      summary: List all invoices
+      servers:
+        - url: https://api.example.com/orderservice/v1
+      responses:
+        "200":
+          description: A list of invoices
+

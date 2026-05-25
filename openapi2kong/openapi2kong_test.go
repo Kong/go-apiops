@@ -86,6 +86,7 @@ func Test_Openapi2kong(t *testing.T) {
 
 			// Test option configuration
 			allHeadersRequired := false
+			reuseServices := false
 
 			var config map[string]any
 			yaml.Unmarshal(dataIn, &config)
@@ -93,12 +94,16 @@ func Test_Openapi2kong(t *testing.T) {
 				if val, ok := testConfig["treatAllHeadersAsRequired"]; ok {
 					allHeadersRequired = val.(bool)
 				}
+				if val, ok := testConfig["reuseServices"]; ok {
+					reuseServices = val.(bool)
+				}
 			}
 
 			dataOut, err := Convert(dataIn, O2kOptions{
 				Tags:                      []string{"OAS3_import", "OAS3file_" + fileNameIn},
 				OIDC:                      true,
 				TreatAllHeadersAsRequired: allHeadersRequired,
+				ReuseServices:             reuseServices,
 			})
 			if err != nil {
 				t.Error(fmt.Sprintf("'%s' didn't expect error: %%w", fixturePath+fileNameIn), err)

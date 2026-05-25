@@ -1,0 +1,83 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "api.example.com",
+      "id": "3e49c123-65d4-5b46-b6a1-bf0eb2c46077",
+      "name": "multi-service-api-with-plugins_orders",
+      "path": "/v1",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "ca924a13-bcab-5886-a4f8-2387eb92a747",
+          "methods": [
+            "GET"
+          ],
+          "name": "multi-service-api-with-plugins_orders_get",
+          "paths": [
+            "~/orders$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_31-reuse-with-plugins-on-routes.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_31-reuse-with-plugins-on-routes.yaml"
+      ]
+    },
+    {
+      "host": "api.example.com",
+      "id": "0c8d6ae0-1b14-5264-8135-fc544d8b89a9",
+      "name": "multi-service-api-with-plugins_users",
+      "path": "/v1",
+      "plugins": [
+        {
+          "config": {
+            "minute": 100,
+            "policy": "local"
+          },
+          "id": "1bcd1368-3e5b-5d79-8526-5caba1cd1eb0",
+          "name": "rate-limiting",
+          "tags": [
+            "OAS3_import",
+            "OAS3file_31-reuse-with-plugins-on-routes.yaml"
+          ]
+        }
+      ],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "af8b1575-6102-56e5-9ad9-9a2220ba8c29",
+          "methods": [
+            "GET"
+          ],
+          "name": "multi-service-api-with-plugins_users_get",
+          "paths": [
+            "~/users$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_31-reuse-with-plugins-on-routes.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_31-reuse-with-plugins-on-routes.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}

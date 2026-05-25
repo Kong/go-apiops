@@ -1,0 +1,45 @@
+# Test: Operation-level service reuse with plugins on routes
+#
+# When operations reuse the same service, plugins defined at doc/path/operation
+# level should flow to routes (not the shared service).
+#
+# Expected behavior:
+# - GET /orders and POST /orders share the same operation-level service
+# - Doc-level plugin (rate-limiting) should appear on each route
+# - Operation-level plugin (key-auth on POST) should only appear on that route
+
+openapi: 3.0.3
+info:
+  title: Operation Reuse With Plugins
+  version: 1.0.0
+
+x-test-config:
+  reuseServices: true
+
+x-kong-plugin-rate-limiting:
+  config:
+    minute: 100
+
+paths:
+  /orders:
+    get:
+      operationId: listOrders
+      summary: List all orders
+      servers:
+        - url: https://api.example.com/orderservice/v1
+      responses:
+        "200":
+          description: A list of orders
+    post:
+      operationId: createOrder
+      summary: Create an order
+      servers:
+        - url: https://api.example.com/orderservice/v1
+      x-kong-plugin-key-auth:
+        config:
+          key_names:
+            - apikey
+      responses:
+        "201":
+          description: Order created
+

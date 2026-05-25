@@ -1,0 +1,37 @@
+# Test: Different server URLs prevent service reuse
+#
+# When paths define different path-level servers, they should NOT be reused
+# even when ReuseServices is enabled.
+#
+# Expected behavior:
+# - /orders has server https://orders.example.com/v1
+# - /users has server https://users.example.com/v1
+# - 2 separate services should be created (no reuse due to different URLs)
+
+openapi: 3.0.3
+info:
+  title: Different Servers Test
+  version: v1
+
+x-test-config:
+  reuseServices: true
+
+paths:
+  /orders:
+    get:
+      operationId: getOrders
+      responses:
+        "200":
+          description: OK
+    servers:
+      - url: https://orders.example.com/v1
+
+  /users:
+    get:
+      operationId: getUsers
+      responses:
+        "200":
+          description: OK
+    servers:
+      - url: https://users.example.com/v1
+

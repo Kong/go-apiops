@@ -1,0 +1,34 @@
+# Test: No service deduplication when ReuseServices flag is disabled
+#
+# When the ReuseServices option is NOT enabled, identical path-level servers
+# should still produce separate services (default behavior).
+#
+# Expected behavior:
+# - /users and /orders have identical path-level servers
+# - ReuseServices is NOT set (defaults to false)
+# - 2 separate services should be created (no deduplication)
+
+openapi: 3.0.3
+info:
+  title: No Reuse Test
+  version: v1
+
+paths:
+  /users:
+    get:
+      operationId: getUsers
+      responses:
+        "200":
+          description: OK
+    servers:
+      - url: https://api.example.com/v1
+
+  /orders:
+    get:
+      operationId: getOrders
+      responses:
+        "200":
+          description: OK
+    servers:
+      - url: https://api.example.com/v1
+
