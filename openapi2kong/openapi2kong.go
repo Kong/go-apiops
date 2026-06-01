@@ -162,28 +162,30 @@ func getOIDCdefaults(
 		scheme     *v3.SecurityScheme // the security-scheme object
 	)
 	{
-		if len(requirements) == 0 || ignoreSecurityErrors {
-			// no security requirements or nothing is defined
-			// so return inherited (can be nil)
+		if len(requirements) == 0 {
 			return inherited, nil
 		}
 
-		if len(requirements) > 1 && !ignoreSecurityErrors {
+		if len(requirements) > 1 {
+			if ignoreSecurityErrors {
+				return inherited, nil
+			}
 			return nil, fmt.Errorf("only a single security-requirement is supported")
 		}
 
 		requirement := requirements[0].Requirements
-		if requirement.Len() == 0 || ignoreSecurityErrors {
-			return inherited, nil // there is nothing defined, so return inherited (can be nil)
+
+		if requirement.Len() == 0 {
+			return inherited, nil
 		}
 
-		if requirement.Len() > 1 && !ignoreSecurityErrors {
-			// multiple schemes are a logical AND, which is not supported
+		if requirement.Len() > 1 {
+			if ignoreSecurityErrors {
+				return inherited, nil
+			}
 			return nil, fmt.Errorf("within a security-requirement only a single security-scheme is supported")
 		}
 
-		// requirement has only 1 entry
-		// So, we won't iterate
 		reqPair := requirement.First()
 		schemeName = reqPair.Key()
 		scopes = reqPair.Value()
@@ -192,20 +194,18 @@ func getOIDCdefaults(
 		scheme, _ = schemes.Get(schemeName)
 
 		if scheme == nil {
-			if !ignoreSecurityErrors {
-				return nil, fmt.Errorf("no security-schemes with name '%s' found in components", schemeName)
+			if ignoreSecurityErrors {
+				return inherited, nil
 			}
-			return inherited, nil
+			return nil, fmt.Errorf("no security-schemes with name '%s' found in components", schemeName)
 		}
 
-		// Check if scheme type is openIdConnect (case-insensitive, accepting camelCase, kebab-case and snake_case)
 		normalizedType := strings.ToLower(strings.ReplaceAll(strings.ReplaceAll(scheme.Type, "_", ""), "-", ""))
 		if normalizedType != "openidconnect" {
-			// non-OIDC security directives are not supported
-			if !ignoreSecurityErrors {
-				return nil, fmt.Errorf("only security-schemes of type 'openIdConnect' are supported")
+			if ignoreSecurityErrors {
+				return inherited, nil
 			}
-			return inherited, nil
+			return nil, fmt.Errorf("only security-schemes of type 'openIdConnect' are supported")
 		}
 	}
 
