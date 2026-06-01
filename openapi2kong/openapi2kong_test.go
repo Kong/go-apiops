@@ -178,6 +178,116 @@ func Test_Openapi2kong_IgnoreCircularRefs(t *testing.T) {
 	}
 }
 
+func Test_Openapi2kong_IgnoreSecurityErrors(t *testing.T) {
+	t.Run("still generates valid openid-connect plugin", func(t *testing.T) {
+		testDataString := `
+openapi: 3.0.0
+info:
+  title: OIDC Test API
+  version: "1.0"
+servers:
+  - url: https://api.example.com
+security:
+  - OpenIDConnect:
+      - profile
+      - email
+paths:
+  /widgets:
+    get:
+      operationId: listWidgets
+      responses:
+        "200":
+          description: OK
+components:
+  securitySchemes:
+    OpenIDConnect:
+      type: openIdConnect
+      openIdConnectUrl: https://issuer.example.com/.well-known/openid-configuration
+`
+
+		dataOut, err := Convert([]byte(testDataString), O2kOptions{
+			OIDC:                 true,
+			IgnoreSecurityErrors: true,
+			SkipID:               true,
+		})
+
+		assert.NoError(t, err)
+
+		plugins, ok := dataOut["plugins"].([]*map[string]interface{})
+		assert.True(t, ok, "expected top-level plugins array")
+
+		var oidcPlugin *map[string]interface{}
+		for _, plugin := range plugins {
+			if (*plugin)["name"] == "openid-connect" {
+				oidcPlugin = plugin
+				break
+			}
+		}
+
+		if assert.NotNil(t, oidcPlugin, "expected openid-connect plugin to be generated") {
+			config, ok := (*oidcPlugin)["config"].(map[string]interface{})
+			assert.True(t, ok, "expected openid-connect plugin config")
+
+			assert.Equal(t,
+				"https://issuer.example.com/.well-known/openid-configuration",
+				config["issuer"],
+			)
+
+			assert.Equal(t,
+				[]string{"email", "profile"},
+				config["scopes_required"],
+			)
+		}
+	})
+
+	t.Run("suppresses unsupported non-openid-connect security scheme", func(t *testing.T) {
+		testDataString := `
+openapi: 3.0.0
+info:
+  title: API Key Test API
+  version: "1.0"
+servers:
+  - url: https://api.example.com
+security:
+  - ApiKeyAuth: []
+paths:
+  /widgets:
+    get:
+      operationId: listWidgets
+      responses:
+        "200":
+          description: OK
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+`
+
+		_, err := Convert([]byte(testDataString), O2kOptions{
+			OIDC: true,
+		})
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "only security-schemes of type 'openIdConnect' are supported")
+
+		dataOut, err := Convert([]byte(testDataString), O2kOptions{
+			OIDC:                 true,
+			IgnoreSecurityErrors: true,
+			SkipID:               true,
+		})
+
+		assert.NoError(t, err)
+
+		plugins, ok := dataOut["plugins"].([]*map[string]interface{})
+		if ok {
+			for _, plugin := range plugins {
+				assert.NotEqual(t, "openid-connect", (*plugin)["name"])
+			}
+		}
+	})
+}
+
 func Test_Openapi2kong_pathParamLength(t *testing.T) {
 	testDataString := `
 openapi: 3.0.3
