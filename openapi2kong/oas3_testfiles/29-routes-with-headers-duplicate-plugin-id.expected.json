@@ -12,7 +12,7 @@
       "routes": [
         {
           "headers": {
-            "Content-Type": [
+            "content-type": [
               "application/xml"
             ]
           },
@@ -32,7 +32,7 @@
                 ]
               },
               "enabled": true,
-              "id": "bddcead7-86ba-5276-ad3b-04847c81ccee",
+              "id": "dd20c578-53af-56d0-a952-849c40b78908",
               "name": "rate-limiting-advanced",
               "tags": [
                 "OAS3_import",
@@ -49,7 +49,7 @@
         },
         {
           "headers": {
-            "Content-Type": [
+            "content-type": [
               "text/xml"
             ]
           },
@@ -69,7 +69,7 @@
                 ]
               },
               "enabled": true,
-              "id": "339689c4-0aab-591e-bd21-88d949cfc124",
+              "id": "c10ddc9a-b0ac-516c-89cf-1dbeee937afb",
               "name": "rate-limiting-advanced",
               "tags": [
                 "OAS3_import",

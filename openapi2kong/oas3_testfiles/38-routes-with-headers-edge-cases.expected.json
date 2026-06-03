@@ -2,9 +2,9 @@
   "_format_version": "3.0",
   "services": [
     {
-      "host": "server1.com",
-      "id": "0907c4ab-d9e4-5d21-813b-c57a97eeaad9",
-      "name": "simple-api-overview",
+      "host": "example.com",
+      "id": "f06bd65b-7137-5456-82de-9c5723868d7a",
+      "name": "header-edge-cases",
       "path": "/",
       "plugins": [],
       "port": 443,
@@ -12,68 +12,76 @@
       "routes": [
         {
           "headers": {
-            "x-method-level-int-header": [
-              "1"
-            ],
-            "x-path-level-api-version": [
+            "x-api-version": [
               "v1"
             ]
           },
-          "id": "7d086c23-ab4b-567d-969b-356acd50e716",
+          "id": "e1cd82b7-22b4-5fb9-9ae2-7cd9915ee73c",
           "methods": [
             "GET"
           ],
-          "name": "simple-api-overview_get-path2-service_0",
+          "name": "header-edge-cases_get-path1_0",
           "paths": [
-            "~/path2$"
+            "~/path1$"
           ],
           "plugins": [],
           "regex_priority": 200,
           "strip_path": false,
           "tags": [
             "OAS3_import",
-            "OAS3file_28-routes-with-optional-headers-force.yaml"
+            "OAS3file_38-routes-with-headers-edge-cases.yaml"
           ]
         },
         {
           "headers": {
-            "x-method-level-int-header": [
-              "1"
-            ],
-            "x-path-level-api-version": [
+            "x-api-version": [
               "v2"
             ]
           },
-          "id": "433a9a6b-712c-5b47-8c70-64ce872aabea",
+          "id": "7264b94d-1b79-58bf-abd7-3baea1ee4710",
           "methods": [
             "GET"
           ],
-          "name": "simple-api-overview_get-path2-service_1",
+          "name": "header-edge-cases_get-path1_1",
           "paths": [
-            "~/path2$"
+            "~/path1$"
           ],
           "plugins": [],
           "regex_priority": 200,
           "strip_path": false,
           "tags": [
             "OAS3_import",
-            "OAS3file_28-routes-with-optional-headers-force.yaml"
+            "OAS3file_38-routes-with-headers-edge-cases.yaml"
+          ]
+        },
+        {
+          "id": "b4ae458f-c472-5219-9f6c-c1f036e610e4",
+          "methods": [
+            "GET"
+          ],
+          "name": "header-edge-cases_get-path1",
+          "paths": [
+            "~/path1$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_38-routes-with-headers-edge-cases.yaml"
           ]
         },
         {
           "headers": {
-            "x-method-level-int-header": [
-              "2"
-            ],
-            "x-path-level-api-version": [
-              "v1"
+            "x-request-type": [
+              "typeA"
             ]
           },
-          "id": "f8027c37-0b74-5e33-aeba-173407cdc809",
+          "id": "d3b79302-f950-5a6e-8414-3ad4ad0da2db",
           "methods": [
             "GET"
           ],
-          "name": "simple-api-overview_get-path2-service_2",
+          "name": "header-edge-cases_get-path2_0",
           "paths": [
             "~/path2$"
           ],
@@ -82,23 +90,20 @@
           "strip_path": false,
           "tags": [
             "OAS3_import",
-            "OAS3file_28-routes-with-optional-headers-force.yaml"
+            "OAS3file_38-routes-with-headers-edge-cases.yaml"
           ]
         },
         {
           "headers": {
-            "x-method-level-int-header": [
-              "2"
-            ],
-            "x-path-level-api-version": [
-              "v2"
+            "x-request-type": [
+              "typeB"
             ]
           },
-          "id": "66217d2a-5a98-5803-b917-deec54e2c11e",
+          "id": "bbbb6127-da88-525b-94eb-b8d3a67699d6",
           "methods": [
             "GET"
           ],
-          "name": "simple-api-overview_get-path2-service_3",
+          "name": "header-edge-cases_get-path2_1",
           "paths": [
             "~/path2$"
           ],
@@ -107,80 +112,69 @@
           "strip_path": false,
           "tags": [
             "OAS3_import",
-            "OAS3file_28-routes-with-optional-headers-force.yaml"
+            "OAS3file_38-routes-with-headers-edge-cases.yaml"
+          ]
+        },
+        {
+          "id": "a4973e59-f8b8-5682-9998-35f02b361553",
+          "methods": [
+            "GET"
+          ],
+          "name": "header-edge-cases_get-path2",
+          "paths": [
+            "~/path2$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_38-routes-with-headers-edge-cases.yaml"
           ]
         },
         {
           "headers": {
-            "x-method-level-int-header": [
-              "3"
-            ],
-            "x-path-level-api-version": [
-              "v1"
+            "x-region": [
+              "eu"
             ]
           },
-          "id": "df2fd6f0-3aaa-5888-80fa-30a218fe26a5",
+          "id": "8c0d6910-1ba8-5f66-999d-bd380eba5bc5",
           "methods": [
             "GET"
           ],
-          "name": "simple-api-overview_get-path2-service_4",
+          "name": "header-edge-cases_get-path3_0",
           "paths": [
-            "~/path2$"
+            "~/path3$"
           ],
           "plugins": [],
           "regex_priority": 200,
           "strip_path": false,
           "tags": [
             "OAS3_import",
-            "OAS3file_28-routes-with-optional-headers-force.yaml"
+            "OAS3file_38-routes-with-headers-edge-cases.yaml"
           ]
         },
         {
-          "headers": {
-            "x-method-level-int-header": [
-              "3"
-            ],
-            "x-path-level-api-version": [
-              "v2"
-            ]
-          },
-          "id": "168aa36e-da1e-5b6f-9c8e-5242ee9516a5",
+          "id": "035dc953-d2c3-5af3-8527-197c6ccd7c92",
           "methods": [
             "GET"
           ],
-          "name": "simple-api-overview_get-path2-service_5",
+          "name": "header-edge-cases_get-path3",
           "paths": [
-            "~/path2$"
+            "~/path3$"
           ],
           "plugins": [],
           "regex_priority": 200,
           "strip_path": false,
           "tags": [
             "OAS3_import",
-            "OAS3file_28-routes-with-optional-headers-force.yaml"
-          ]
-        },
-        {
-          "id": "27ea9a0a-216e-5c92-ae0b-8c9aa8493750",
-          "methods": [
-            "GET"
-          ],
-          "name": "simple-api-overview_get-path2-service",
-          "paths": [
-            "~/path2$"
-          ],
-          "plugins": [],
-          "regex_priority": 200,
-          "strip_path": false,
-          "tags": [
-            "OAS3_import",
-            "OAS3file_28-routes-with-optional-headers-force.yaml"
+            "OAS3file_38-routes-with-headers-edge-cases.yaml"
           ]
         }
       ],
       "tags": [
         "OAS3_import",
-        "OAS3file_28-routes-with-optional-headers-force.yaml"
+        "OAS3file_38-routes-with-headers-edge-cases.yaml"
       ]
     }
   ],

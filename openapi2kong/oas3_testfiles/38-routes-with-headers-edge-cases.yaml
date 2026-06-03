@@ -1,0 +1,56 @@
+openapi: '3.0.0'
+info:
+  title: Header Edge Cases
+  version: v1
+servers:
+  - url: https://example.com/
+paths:
+  /path1:
+    get:
+      operationId: get-path1
+      summary: Mixed-case header name should be normalised to lowercase
+      parameters:
+        - in: header
+          name: X-Api-Version
+          required: true
+          schema:
+            type: string
+            enum:
+              - v1
+              - v2
+      responses:
+        '200':
+          description: OK
+  /path2:
+    get:
+      operationId: get-path2
+      summary: Empty string enum value should be skipped
+      parameters:
+        - in: header
+          name: X-Request-Type
+          required: true
+          schema:
+            type: string
+            enum:
+              - ""
+              - typeA
+              - typeB
+      responses:
+        '200':
+          description: OK
+  /path3:
+    parameters:
+      - in: header
+        name: X-Region
+        required: true
+        schema:
+          type: string
+          enum:
+            - ""
+            - eu
+    get:
+      operationId: get-path3
+      summary: Empty string at path level should be skipped, only real values produce routes
+      responses:
+        '200':
+          description: OK

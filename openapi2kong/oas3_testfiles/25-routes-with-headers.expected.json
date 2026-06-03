@@ -29,10 +29,10 @@
         },
         {
           "headers": {
-            "X-Method-Level-Int-Header": [
+            "x-method-level-int-header": [
               "1"
             ],
-            "X-Path-Level-API-Version": [
+            "x-path-level-api-version": [
               "v1"
             ]
           },
@@ -54,10 +54,10 @@
         },
         {
           "headers": {
-            "X-Method-Level-Int-Header": [
+            "x-method-level-int-header": [
               "1"
             ],
-            "X-Path-Level-API-Version": [
+            "x-path-level-api-version": [
               "v2"
             ]
           },
@@ -79,10 +79,10 @@
         },
         {
           "headers": {
-            "X-Method-Level-Int-Header": [
+            "x-method-level-int-header": [
               "2"
             ],
-            "X-Path-Level-API-Version": [
+            "x-path-level-api-version": [
               "v1"
             ]
           },
@@ -104,10 +104,10 @@
         },
         {
           "headers": {
-            "X-Method-Level-Int-Header": [
+            "x-method-level-int-header": [
               "2"
             ],
-            "X-Path-Level-API-Version": [
+            "x-path-level-api-version": [
               "v2"
             ]
           },
@@ -129,10 +129,10 @@
         },
         {
           "headers": {
-            "X-Method-Level-Int-Header": [
+            "x-method-level-int-header": [
               "3"
             ],
-            "X-Path-Level-API-Version": [
+            "x-path-level-api-version": [
               "v1"
             ]
           },
@@ -154,10 +154,10 @@
         },
         {
           "headers": {
-            "X-Method-Level-Int-Header": [
+            "x-method-level-int-header": [
               "3"
             ],
-            "X-Path-Level-API-Version": [
+            "x-path-level-api-version": [
               "v2"
             ]
           },

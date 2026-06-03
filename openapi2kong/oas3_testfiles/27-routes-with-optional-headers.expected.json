@@ -12,7 +12,7 @@
       "routes": [
         {
           "headers": {
-            "X-Path-Level-API-Version": [
+            "x-path-level-api-version": [
               "v1"
             ]
           },
@@ -34,7 +34,7 @@
         },
         {
           "headers": {
-            "X-Path-Level-API-Version": [
+            "x-path-level-api-version": [
               "v2"
             ]
           },

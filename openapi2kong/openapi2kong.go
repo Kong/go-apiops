@@ -502,15 +502,17 @@ func findHeaderParamsForRouting(
 
 	for _, param := range operationLevelParameters {
 		if shouldAddHeaderParameter(param, treatAllHeadersAsRequired) {
-			headerParamProcessed[param.Name] = true
+			// Use lowercase key so that duplicate detection is case-insensitive
+			// (HTTP header names are case-insensitive).
+			headerParamProcessed[strings.ToLower(param.Name)] = true
 			result = append(result, param)
 		}
 	}
 
 	for _, param := range pathLevelParameters {
 		// Operation level params override path level params, so ignore if already present.
-		if shouldAddHeaderParameter(param, treatAllHeadersAsRequired) && !headerParamProcessed[param.Name] {
-			headerParamProcessed[param.Name] = true
+		if shouldAddHeaderParameter(param, treatAllHeadersAsRequired) && !headerParamProcessed[strings.ToLower(param.Name)] {
+			headerParamProcessed[strings.ToLower(param.Name)] = true
 			result = append(result, param)
 		}
 	}
@@ -519,11 +521,19 @@ func findHeaderParamsForRouting(
 }
 
 func shouldAddHeaderParameter(param *v3.Parameter, treatAllHeadersAsRequired bool) bool {
-	hasEnum := param.Schema != nil && param.Schema.Schema() != nil && len(param.Schema.Schema().Enum) > 0
+	hasNonEmptyEnum := false
+	if param.Schema != nil && param.Schema.Schema() != nil {
+		for _, e := range param.Schema.Schema().Enum {
+			if e.Value != "" {
+				hasNonEmptyEnum = true
+				break
+			}
+		}
+	}
 
 	isParamRequired := param.Required != nil && *param.Required
 	isRequired := isParamRequired || treatAllHeadersAsRequired
-	return param.In == "header" && hasEnum && isRequired
+	return param.In == "header" && hasNonEmptyEnum && isRequired
 }
 
 // Based on given headers and their possible values, create all possible combinations
@@ -531,8 +541,13 @@ func constructHeaderCombinationsForRouting(headers []*v3.Parameter) []map[string
 	headerValues := make([][]any, len(headers))
 	headerNames := make([]string, len(headers))
 	for i := 0; i < len(headers); i++ {
-		headerNames[i] = headers[i].Name
+		// HTTP header names are case-insensitive; normalize to lowercase for Kong routes.
+		headerNames[i] = strings.ToLower(headers[i].Name)
 		for _, enumMember := range headers[i].Schema.Schema().Enum {
+			// Skip empty string enum values — they are not meaningful for routing.
+			if enumMember.Value == "" {
+				continue
+			}
 			headerValues[i] = append(headerValues[i], enumMember.Value)
 		}
 	}
