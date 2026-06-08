@@ -162,24 +162,31 @@ func getOIDCdefaults(
 		scheme     *v3.SecurityScheme // the security-scheme object
 	)
 	{
-		if len(requirements) == 0 || ignoreSecurityErrors {
-			// no security requirements or nothing is defined
+		if len(requirements) == 0 {
+			// no security requirements defined
 			// so return inherited (can be nil)
 			return inherited, nil
 		}
 
-		if len(requirements) > 1 && !ignoreSecurityErrors {
-			return nil, fmt.Errorf("only a single security-requirement is supported")
+		if len(requirements) > 1 {
+			// multiple requirements represent OR logic, which is not supported
+			if !ignoreSecurityErrors {
+				return nil, fmt.Errorf("only a single security-requirement is supported")
+			}
+			return inherited, nil
 		}
 
 		requirement := requirements[0].Requirements
-		if requirement.Len() == 0 || ignoreSecurityErrors {
+		if requirement.Len() == 0 {
 			return inherited, nil // there is nothing defined, so return inherited (can be nil)
 		}
 
-		if requirement.Len() > 1 && !ignoreSecurityErrors {
+		if requirement.Len() > 1 {
 			// multiple schemes are a logical AND, which is not supported
-			return nil, fmt.Errorf("within a security-requirement only a single security-scheme is supported")
+			if !ignoreSecurityErrors {
+				return nil, fmt.Errorf("within a security-requirement only a single security-scheme is supported")
+			}
+			return inherited, nil
 		}
 
 		// requirement has only 1 entry

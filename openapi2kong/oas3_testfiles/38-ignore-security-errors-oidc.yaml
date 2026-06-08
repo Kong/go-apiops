@@ -1,0 +1,33 @@
+# Regression test for https://github.com/Kong/deck/issues/1829
+# When --ignore-security-errors is used with a valid single openIdConnect scheme,
+# the openid-connect plugin should still be generated.
+
+openapi: 3.0.4
+info:
+  title: example
+  version: 1.2.0
+servers:
+  - url: https://example.com
+paths:
+  /oidc:
+    get:
+      operationId: getOidc
+      security:
+        - OpenIDConnect: []
+      responses:
+        '204':
+          description: No content
+  /oidc-with-scopes:
+    get:
+      operationId: getOidcScopes
+      security:
+        - OpenIDConnect: ["read", "write"]
+      responses:
+        '200':
+          description: OK
+components:
+  securitySchemes:
+    OpenIDConnect:
+      type: openIdConnect
+      openIdConnectUrl: https://example.com/.well-known/openid-configuration
+
