@@ -73,3 +73,74 @@ func Test_ToKebabCase(t *testing.T) {
 		})
 	}
 }
+
+func Test_DeduplicateHeaderEnumValues(t *testing.T) {
+	testCases := []struct {
+		name     string
+		input    []any
+		expected []any
+	}{
+		{
+			name:     "No duplicates - already lowercase",
+			input:    []any{"us-east", "us-west", "eu-central"},
+			expected: []any{"us-east", "us-west", "eu-central"},
+		},
+		{
+			name:     "Case-insensitive duplicates - normalized to lowercase",
+			input:    []any{"us-east", "US-EAST", "Us-East"},
+			expected: []any{"us-east"},
+		},
+		{
+			name:     "Mixed case duplicates and unique - all normalized to lowercase",
+			input:    []any{"us-east", "US-EAST", "us-west", "US-WEST", "eu-central"},
+			expected: []any{"us-east", "us-west", "eu-central"},
+		},
+		{
+			name:     "Non-string values preserved",
+			input:    []any{1, 2, 3, "test", "TEST"},
+			expected: []any{1, 2, 3, "test"},
+		},
+		{
+			name:     "Mixed types with duplicates",
+			input:    []any{"v1", "V1", 1, "v2", 2},
+			expected: []any{"v1", 1, "v2", 2},
+		},
+		{
+			name:     "Uppercase values normalized to lowercase",
+			input:    []any{"US-EAST", "us-east", "Us-East"},
+			expected: []any{"us-east"},
+		},
+		{
+			name:     "All uppercase converted to lowercase",
+			input:    []any{"US-EAST", "US-WEST"},
+			expected: []any{"us-east", "us-west"},
+		},
+		{
+			name:     "Empty string filtered out",
+			input:    []any{"", "prod", "staging"},
+			expected: []any{"prod", "staging"},
+		},
+		{
+			name:     "Only empty string returns empty slice",
+			input:    []any{""},
+			expected: []any{},
+		},
+		{
+			name:     "Multiple empty strings filtered out",
+			input:    []any{"", "prod", "", "staging", ""},
+			expected: []any{"prod", "staging"},
+		},
+		{
+			name:     "Empty string with duplicates",
+			input:    []any{"", "PROD", "prod", ""},
+			expected: []any{"prod"},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := DeduplicateHeaderEnumValues(tc.input)
+			assert.Equal(t, tc.expected, result)
+		})
+	}
+}

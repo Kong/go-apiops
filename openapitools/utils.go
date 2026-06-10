@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/kong/go-apiops/jsonbasics"
+	"github.com/kong/go-apiops/logbasics"
 	"github.com/kong/go-slugify"
 	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
 	"github.com/pb33f/libopenapi/orderedmap"
@@ -231,4 +232,45 @@ func GetRouteDefaults(
 	components *map[string]interface{},
 ) ([]byte, error) {
 	return GetXKongObject(extensions, "x-kong-route-defaults", components)
+}
+
+// DeduplicateHeaderEnumValues normalizes and deduplicates header enum values.
+// String values are converted to lowercase and deduplicated since HTTP header
+// values are often treated as case-insensitive for routing purposes by Kong Gateway.
+// Empty strings are filtered out with a warning as they are not practical for routing.
+// Non-string values (e.g., integers) are preserved as-is.
+// Returns the normalized and deduplicated slice.
+func DeduplicateHeaderEnumValues(values []any) []any {
+	seen := make(map[string]bool)
+	result := make([]any, 0, len(values))
+	emptyStringFound := false
+
+	for _, v := range values {
+		strVal, ok := v.(string)
+		if !ok {
+			// For non-string values, include as-is (e.g., integers in enum)
+			result = append(result, v)
+			continue
+		}
+
+		// Filter out empty strings - they are not practical for header routing
+		if strVal == "" {
+			emptyStringFound = true
+			continue
+		}
+
+		// Normalize to lowercase for consistent routing
+		lowerVal := strings.ToLower(strVal)
+		if !seen[lowerVal] {
+			seen[lowerVal] = true
+			result = append(result, lowerVal)
+		}
+	}
+
+	if emptyStringFound {
+		logbasics.Info("empty string enum value filtered out from header parameter" +
+			" - empty strings are not practical for header-based routing")
+	}
+
+	return result
 }

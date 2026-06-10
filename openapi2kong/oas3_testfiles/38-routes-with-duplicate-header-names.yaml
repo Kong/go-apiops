@@ -1,0 +1,34 @@
+openapi: '3.0.0'
+info:
+  title: Duplicate Header Name Test
+  version: v1
+servers:
+  - url: https://api.example.com/
+paths:
+  /test:
+    get:
+      operationId: get-test
+      summary: Test duplicate header names with different case
+      parameters:
+        # First header: X-Env with enum [prod, staging]
+        - in: header
+          name: X-Env
+          required: true
+          schema:
+            type: string
+            enum:
+              - prod
+              - staging
+        # Second header: x-env (same header, different case) with enum [dev, qa]
+        - in: header
+          name: x-env
+          required: true
+          schema:
+            type: string
+            enum:
+              - dev
+              - qa
+      responses:
+        '200':
+          description: Success
+

@@ -491,27 +491,89 @@ func findParameterSchema(
 	return nil
 }
 
-// Returns header parameters which can be used for routing for an operation
+// headerParamData holds normalized header parameter data for routing.
+// This is used to merge headers with the same name (case-insensitively).
+type headerParamData struct {
+	Name       string
+	EnumValues []any
+}
+
+// Returns header parameters which can be used for routing for an operation.
+// Headers with the same name (case-insensitively) at the SAME level are merged.
+// Operation-level parameters OVERRIDE path-level parameters per OpenAPI spec.
+// This handles cases like "X-Env" and "x-env" being defined separately.
 func findHeaderParamsForRouting(
 	operationLevelParameters []*v3.Parameter,
 	pathLevelParameters []*v3.Parameter,
 	treatAllHeadersAsRequired bool,
-) []*v3.Parameter {
-	headerParamProcessed := make(map[string]bool)
-	var result []*v3.Parameter // Store in array so output is deterministic - iterating over map is not.
+) []headerParamData {
+	// Map to collect enum values by normalized (lowercase) header name
+	headerEnumMap := make(map[string][]any)
+	// Map to preserve the original header name (first occurrence)
+	headerOriginalName := make(map[string]string)
+	// Track order of first occurrence for deterministic output
+	headerOrder := make([]string, 0)
+	// Track which headers were defined at operation level (these override path level)
+	operationLevelHeaders := make(map[string]bool)
 
+	// Process operation level parameters first
 	for _, param := range operationLevelParameters {
-		if shouldAddHeaderParameter(param, treatAllHeadersAsRequired) {
-			headerParamProcessed[param.Name] = true
-			result = append(result, param)
+		if !shouldAddHeaderParameter(param, treatAllHeadersAsRequired) {
+			continue
+		}
+
+		normalizedName := strings.ToLower(param.Name)
+
+		var enumValues []any
+		for _, enumMember := range param.Schema.Schema().Enum {
+			enumValues = append(enumValues, enumMember.Value)
+		}
+
+		if _, exists := headerEnumMap[normalizedName]; !exists {
+			headerOrder = append(headerOrder, normalizedName)
+			headerEnumMap[normalizedName] = enumValues
+			headerOriginalName[normalizedName] = param.Name
+		} else {
+			headerEnumMap[normalizedName] = append(headerEnumMap[normalizedName], enumValues...)
+		}
+		operationLevelHeaders[normalizedName] = true
+	}
+
+	// Process path level parameters (only if not already defined at operation level)
+	for _, param := range pathLevelParameters {
+		if !shouldAddHeaderParameter(param, treatAllHeadersAsRequired) {
+			continue
+		}
+
+		normalizedName := strings.ToLower(param.Name)
+
+		if operationLevelHeaders[normalizedName] {
+			continue
+		}
+
+		var enumValues []any
+		for _, enumMember := range param.Schema.Schema().Enum {
+			enumValues = append(enumValues, enumMember.Value)
+		}
+
+		if _, exists := headerEnumMap[normalizedName]; !exists {
+			headerOrder = append(headerOrder, normalizedName)
+			headerEnumMap[normalizedName] = enumValues
+			headerOriginalName[normalizedName] = param.Name
+		} else {
+			headerEnumMap[normalizedName] = append(headerEnumMap[normalizedName], enumValues...)
 		}
 	}
 
-	for _, param := range pathLevelParameters {
-		// Operation level params override path level params, so ignore if already present.
-		if shouldAddHeaderParameter(param, treatAllHeadersAsRequired) && !headerParamProcessed[param.Name] {
-			headerParamProcessed[param.Name] = true
-			result = append(result, param)
+	// Build result with deduplicated and normalized enum values
+	result := make([]headerParamData, 0, len(headerOrder))
+	for _, normalizedName := range headerOrder {
+		enumValues := openapitools.DeduplicateHeaderEnumValues(headerEnumMap[normalizedName])
+		if len(enumValues) > 0 {
+			result = append(result, headerParamData{
+				Name:       headerOriginalName[normalizedName], // Use original name
+				EnumValues: enumValues,
+			})
 		}
 	}
 
@@ -526,15 +588,18 @@ func shouldAddHeaderParameter(param *v3.Parameter, treatAllHeadersAsRequired boo
 	return param.In == "header" && hasEnum && isRequired
 }
 
-// Based on given headers and their possible values, create all possible combinations
-func constructHeaderCombinationsForRouting(headers []*v3.Parameter) []map[string]any {
+// Based on given headers and their possible values, create all possible combinations.
+// Header names preserve their original case, enum values are normalized to lowercase.
+func constructHeaderCombinationsForRouting(headers []headerParamData) []map[string]any {
+	if len(headers) == 0 {
+		return nil
+	}
+
 	headerValues := make([][]any, len(headers))
 	headerNames := make([]string, len(headers))
 	for i := 0; i < len(headers); i++ {
 		headerNames[i] = headers[i].Name
-		for _, enumMember := range headers[i].Schema.Schema().Enum {
-			headerValues[i] = append(headerValues[i], enumMember.Value)
-		}
+		headerValues[i] = headers[i].EnumValues
 	}
 	headerValueCombinations := openapitools.CrossProduct(headerValues...)
 
