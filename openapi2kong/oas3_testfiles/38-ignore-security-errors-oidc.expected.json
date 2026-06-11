@@ -1,0 +1,75 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "example.com",
+      "id": "730d612d-914b-5fe8-8ead-e6aa654318ef",
+      "name": "example",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "52dbb730-8d56-578c-bc69-0543a34bff4a",
+          "methods": [
+            "GET"
+          ],
+          "name": "example_getoidc",
+          "paths": [
+            "~/oidc$"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "issuer": "https://example.com/.well-known/openid-configuration",
+                "scopes_required": []
+              },
+              "name": "openid-connect"
+            }
+          ],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_38-ignore-security-errors-oidc.yaml"
+          ]
+        },
+        {
+          "id": "9e0937d1-93db-53ba-8ec8-4034f983557e",
+          "methods": [
+            "GET"
+          ],
+          "name": "example_getoidcscopes",
+          "paths": [
+            "~/oidc-with-scopes$"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "issuer": "https://example.com/.well-known/openid-configuration",
+                "scopes_required": [
+                  "read",
+                  "write"
+                ]
+              },
+              "name": "openid-connect"
+            }
+          ],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_38-ignore-security-errors-oidc.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_38-ignore-security-errors-oidc.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}
+

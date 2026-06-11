@@ -237,3 +237,189 @@ func Test_Openapi2kong_SkipRouteByHeader(t *testing.T) {
 		}
 	}
 }
+
+// Test_Openapi2kong_IgnoreSecurityErrors verifies that --ignore-security-errors
+// does not suppress OIDC plugin generation for valid single openIdConnect schemes.
+// Regression test for https://github.com/Kong/deck/issues/1829
+func Test_Openapi2kong_IgnoreSecurityErrors(t *testing.T) {
+	suffix := ".expected.json"
+	testFiles := []string{
+		"38-ignore-security-errors-oidc",
+	}
+
+	for _, fileNameBase := range testFiles {
+		t.Run(fileNameBase, func(t *testing.T) {
+			fileNameIn := fileNameBase + ".yaml"
+			fileNameExpected := fileNameBase + suffix
+			fileNameOut := fileNameBase + ".generated.json"
+
+			dataIn, _ := os.ReadFile(fixturePath + fileNameIn)
+			dataOut, err := Convert(dataIn, O2kOptions{
+				Tags:                 []string{"OAS3_import", "OAS3file_" + fileNameIn},
+				OIDC:                 true,
+				IgnoreSecurityErrors: true,
+			})
+
+			if err != nil {
+				t.Errorf("'%s' didn't expect error: %v", fixturePath+fileNameIn, err)
+			} else {
+				JSONOut, _ := json.MarshalIndent(dataOut, "", "  ")
+				os.WriteFile(fixturePath+fileNameOut, JSONOut, 0o600)
+				JSONExpected, _ := os.ReadFile(fixturePath + fileNameExpected)
+				assert.JSONEq(t, string(JSONExpected), string(JSONOut),
+					"'%s': the JSON blobs should be equal", fixturePath+fileNameIn)
+			}
+		})
+	}
+}
+
+// Test_Openapi2kong_IgnoreSecurityErrors_SkipsInvalid verifies that --ignore-security-errors
+// suppresses errors for unsupported security configurations (multiple requirements, multiple schemes,
+// non-OIDC types) but still processes valid ones in the same document.
+func Test_Openapi2kong_IgnoreSecurityErrors_SkipsInvalid(t *testing.T) {
+	tests := []struct {
+		name     string
+		spec     string
+		wantOIDC bool
+	}{
+		{
+			name: "multiple requirements at doc level are ignored",
+			spec: `
+openapi: "3.0.0"
+info:
+  title: test
+  version: v1
+servers:
+  - url: https://example.com
+security:
+  - oidc1: []
+  - oidc2: []
+paths:
+  /test:
+    get:
+      operationId: getTest
+      responses:
+        "200":
+          description: OK
+components:
+  securitySchemes:
+    oidc1:
+      type: openIdConnect
+      openIdConnectUrl: https://example.com/.well-known/openid-configuration
+    oidc2:
+      type: openIdConnect
+      openIdConnectUrl: https://example.com/.well-known/openid-configuration
+`,
+			wantOIDC: false,
+		},
+		{
+			name: "non-OIDC type at operation level is ignored, no plugin generated",
+			spec: `
+openapi: "3.0.0"
+info:
+  title: test
+  version: v1
+servers:
+  - url: https://example.com
+paths:
+  /test:
+    get:
+      operationId: getTest
+      security:
+        - apiKey: []
+      responses:
+        "200":
+          description: OK
+components:
+  securitySchemes:
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+`,
+			wantOIDC: false,
+		},
+		{
+			name: "valid single OIDC at operation level generates plugin",
+			spec: `
+openapi: "3.0.0"
+info:
+  title: test
+  version: v1
+servers:
+  - url: https://example.com
+paths:
+  /test:
+    get:
+      operationId: getTest
+      security:
+        - oidc: []
+      responses:
+        "200":
+          description: OK
+components:
+  securitySchemes:
+    oidc:
+      type: openIdConnect
+      openIdConnectUrl: https://example.com/.well-known/openid-configuration
+`,
+			wantOIDC: true,
+		},
+		{
+			name: "mixed supported OIDC and unsupported apiKey in one spec",
+			spec: `
+openapi: "3.0.4"
+info:
+  title: mixed-security
+  version: "1.0.0"
+servers:
+  - url: https://example.com
+components:
+  securitySchemes:
+    OpenIDConnect:
+      type: openIdConnect
+      openIdConnectUrl: https://auth.example.com/.well-known/openid-configuration
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+paths:
+  /secure-endpoint:
+    get:
+      operationId: secureEndpoint
+      security:
+        - OpenIDConnect: []
+      responses:
+        "204":
+          description: No content
+  /legacy-endpoint:
+    get:
+      operationId: legacyEndpoint
+      security:
+        - ApiKeyAuth: []
+      responses:
+        "204":
+          description: No content
+`,
+			wantOIDC: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := Convert([]byte(tc.spec), O2kOptions{
+				OIDC:                 true,
+				IgnoreSecurityErrors: true,
+			})
+			assert.NoError(t, err)
+
+			jsonData, _ := json.Marshal(result)
+			hasOIDC := strings.Contains(string(jsonData), `"name":"openid-connect"`)
+			if tc.wantOIDC {
+				assert.True(t, hasOIDC, "expected openid-connect plugin to be generated")
+			} else {
+				assert.False(t, hasOIDC, "expected no openid-connect plugin to be generated")
+			}
+		})
+	}
+}
