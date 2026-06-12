@@ -179,7 +179,10 @@ func Test_Openapi2kong_IgnoreCircularRefs(t *testing.T) {
 }
 
 func Test_Openapi2kong_pathParamLength(t *testing.T) {
-	testDataString := `
+	// 129 characters, exceeding the 128-character limit
+	longParamName := "something-very-long-that-is-way-beyond-the-previous-32-character-" +
+		"limit-and-now-valid-with-the-updated-128-character-limit-123456"
+	testDataString := fmt.Sprintf(`
 openapi: 3.0.3
 info:
   title: Path parameter test
@@ -188,24 +191,24 @@ servers:
   - url: "https://example.com"
 
 paths:
-  /demo/{something-very-long-that-is-way-beyond-the-32-limit}/:
+  /demo/{%s}/:
     get:
       operationId: opsid
       parameters:
         - in: path
-          name: something-very-long-that-is-way-beyond-the-32-limit
+          name: %s
           required: true
           schema:
             type: string
       responses:
         "200":
           description: OK
-`
+`, longParamName, longParamName)
 	_, err := Convert([]byte(testDataString), O2kOptions{})
 	if err == nil {
 		t.Error("Expected error, but got none")
 	} else {
-		assert.Contains(t, err.Error(), "path-parameter name exceeds 32 characters")
+		assert.Contains(t, err.Error(), "path-parameter name exceeds 128 characters")
 	}
 }
 
