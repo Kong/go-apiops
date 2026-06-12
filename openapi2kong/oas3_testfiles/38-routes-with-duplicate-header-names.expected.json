@@ -1,0 +1,126 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "api.example.com",
+      "id": "2cded145-1222-5f52-8432-399da883ddf7",
+      "name": "duplicate-header-name-test",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "headers": {
+            "X-Env": [
+              "prod"
+            ]
+          },
+          "id": "bf4543a7-b775-55cf-bf25-8f87e31e37d0",
+          "methods": [
+            "GET"
+          ],
+          "name": "duplicate-header-name-test_get-test_0",
+          "paths": [
+            "~/test$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_38-routes-with-duplicate-header-names.yaml"
+          ]
+        },
+        {
+          "headers": {
+            "X-Env": [
+              "staging"
+            ]
+          },
+          "id": "a750ed92-977d-5c68-a885-79c110a16fd4",
+          "methods": [
+            "GET"
+          ],
+          "name": "duplicate-header-name-test_get-test_1",
+          "paths": [
+            "~/test$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_38-routes-with-duplicate-header-names.yaml"
+          ]
+        },
+        {
+          "headers": {
+            "X-Env": [
+              "dev"
+            ]
+          },
+          "id": "2af97532-3406-5aac-b76d-e23f33126bad",
+          "methods": [
+            "GET"
+          ],
+          "name": "duplicate-header-name-test_get-test_2",
+          "paths": [
+            "~/test$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_38-routes-with-duplicate-header-names.yaml"
+          ]
+        },
+        {
+          "headers": {
+            "X-Env": [
+              "qa"
+            ]
+          },
+          "id": "95b8e3f9-ceba-518e-9553-4453065fc55a",
+          "methods": [
+            "GET"
+          ],
+          "name": "duplicate-header-name-test_get-test_3",
+          "paths": [
+            "~/test$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_38-routes-with-duplicate-header-names.yaml"
+          ]
+        },
+        {
+          "id": "59f4e76e-67d9-5a0c-bd92-2c2413b23fd3",
+          "methods": [
+            "GET"
+          ],
+          "name": "duplicate-header-name-test_get-test",
+          "paths": [
+            "~/test$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_38-routes-with-duplicate-header-names.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_38-routes-with-duplicate-header-names.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}

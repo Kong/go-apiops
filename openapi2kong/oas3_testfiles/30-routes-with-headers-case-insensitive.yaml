@@ -1,0 +1,27 @@
+openapi: '3.0.0'
+info:
+  title: Case Insensitive Header Test
+  version: v1
+servers:
+  - url: https://api.example.com/
+paths:
+  /regions:
+    get:
+      operationId: get-regions
+      summary: Get regions
+      parameters:
+        - in: header
+          name: X-Region
+          required: true
+          schema:
+            type: string
+            enum:
+              - us-east
+              - US-EAST
+              - Us-East
+              - us-west
+              - US-WEST
+      responses:
+        '200':
+          description: Success
+

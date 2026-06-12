@@ -1,0 +1,82 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "api.example.com",
+      "id": "62aa9ceb-0ca2-5c75-a775-e85bf8135fcb",
+      "name": "case-insensitive-header-test",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "headers": {
+            "X-Region": [
+              "us-east"
+            ]
+          },
+          "id": "b6e83bfa-aa2c-5196-82a9-a23d2e28764c",
+          "methods": [
+            "GET"
+          ],
+          "name": "case-insensitive-header-test_get-regions_0",
+          "paths": [
+            "~/regions$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_30-routes-with-headers-case-insensitive.yaml"
+          ]
+        },
+        {
+          "headers": {
+            "X-Region": [
+              "us-west"
+            ]
+          },
+          "id": "885d905b-49cd-5d2a-a729-e092a3c1a499",
+          "methods": [
+            "GET"
+          ],
+          "name": "case-insensitive-header-test_get-regions_1",
+          "paths": [
+            "~/regions$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_30-routes-with-headers-case-insensitive.yaml"
+          ]
+        },
+        {
+          "id": "cf479876-5229-5791-91e6-05cb13284856",
+          "methods": [
+            "GET"
+          ],
+          "name": "case-insensitive-header-test_get-regions",
+          "paths": [
+            "~/regions$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_30-routes-with-headers-case-insensitive.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_30-routes-with-headers-case-insensitive.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}
