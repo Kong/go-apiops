@@ -648,7 +648,10 @@ func Convert(content []byte, opts O2MOptions) (map[string]interface{}, error) {
 		"tools": tools,
 	}
 
-	if aclConfig != nil {
+	// acl_attribute_type and access_token_claim_field are only valid for the
+	// conversion-listener mode; in conversion-only mode the listener plugin
+	// upstream is responsible for token validation and these fields must be omitted.
+	if aclConfig != nil && opts.Mode == ModeConversionListener {
 		if v, ok := aclConfig["acl_attribute_type"]; ok {
 			mcpPluginConfig["acl_attribute_type"] = v
 		}

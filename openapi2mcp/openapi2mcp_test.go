@@ -596,6 +596,124 @@ paths:
 	assert.Nil(t, tool["acl"], "tool should not have acl")
 }
 
+// When mode=conversion is used with x-kong-mcp-acl present in the spec, the output:
+//   - MUST NOT contain acl_attribute_type at the plugin level
+//     (Kong Gateway rejects this field in conversion-only mode)
+//   - MUST NOT contain access_token_claim_field at the plugin level
+//     (same reason — these are only valid for conversion-listener)
+//   - MUST still contain acl.allow on every tool
+//     (the upstream listener needs these scopes to enforce per-tool ACL)
+func Test_Openapi2mcp_SecurityACL_ConversionMode(t *testing.T) {
+	fileNameIn := "09-security-acl-conversion-mode.yaml"
+	fileNameExpected := "09-security-acl-conversion-mode.expected.json"
+	fileNameOut := "09-security-acl-conversion-mode.generated.json"
+
+	dataIn, err := os.ReadFile(fixturePath + fileNameIn)
+	if err != nil {
+		t.Fatalf("Failed to read input file: %v", err)
+	}
+
+	dataOut, err := Convert(dataIn, O2MOptions{
+		Tags: []string{"OAS3_import", "OAS3file_" + fileNameIn},
+		Mode: ModeConversion,
+	})
+	assert.NoError(t, err, "should not error for mode=conversion with ACL")
+
+	JSONOut, _ := json.MarshalIndent(dataOut, "", "  ")
+	os.WriteFile(fixturePath+fileNameOut, JSONOut, 0o600)
+	JSONExpected, err := os.ReadFile(fixturePath + fileNameExpected)
+	if err != nil {
+		t.Fatalf("Failed to read expected file: %v", err)
+	}
+
+	assert.JSONEq(t, string(JSONExpected), string(JSONOut),
+		"the JSON blobs should be equal for mode=conversion with ACL")
+
+	// --- Programmatic assertions for the fix ---
+	services := dataOut["services"].([]interface{})
+	service := services[0].(map[string]interface{})
+	routes := service["routes"].([]interface{})
+	route := routes[0].(map[string]interface{})
+	plugins := route["plugins"].([]interface{})
+	plugin := plugins[0].(map[string]interface{})
+	config := plugin["config"].(map[string]interface{})
+
+	// Core fix: these two fields MUST be absent in conversion mode.
+	// If either is present, Kong Gateway will reject the config with HTTP 400.
+	assert.Nil(t, config["acl_attribute_type"],
+		"acl_attribute_type must NOT be present in conversion mode — Gateway rejects it")
+	assert.Nil(t, config["access_token_claim_field"],
+		"access_token_claim_field must NOT be present in conversion mode — Gateway rejects it")
+
+	// Mode must be set correctly
+	assert.Equal(t, ModeConversion, config["mode"])
+
+	// Per-tool acl.allow MUST still be present — the upstream listener uses these scopes
+	tools := config["tools"].([]interface{})
+	assert.Len(t, tools, 3, "should have 3 tools")
+
+	tool0 := tools[0].(map[string]interface{})
+	assert.Equal(t, "get-cool-flights", tool0["name"])
+	acl0 := tool0["acl"].(map[string]interface{})
+	assert.Equal(t, []string{"flights:read"}, acl0["allow"],
+		"tool must still have acl.allow even in conversion mode")
+
+	tool1 := tools[1].(map[string]interface{})
+	assert.Equal(t, "create-flight", tool1["name"])
+	acl1 := tool1["acl"].(map[string]interface{})
+	assert.Equal(t, []string{"flights:write"}, acl1["allow"],
+		"tool must still have acl.allow even in conversion mode")
+
+	tool2 := tools[2].(map[string]interface{})
+	assert.Equal(t, "get-flight-by-number", tool2["name"])
+	acl2 := tool2["acl"].(map[string]interface{})
+	assert.Equal(t, []string{"flights:read"}, acl2["allow"],
+		"tool must still have acl.allow even in conversion mode")
+}
+
+// Test_Openapi2mcp_SecurityACL_ConversionListenerMode confirms that
+// conversion-listener mode (the default) still emits acl_attribute_type and
+// access_token_claim_field — i.e. the fix is backward-compatible.
+func Test_Openapi2mcp_SecurityACL_ConversionListenerMode(t *testing.T) {
+	// Re-use the existing 08 fixture which was designed for conversion-listener
+	fileNameIn := "08-security-acl.yaml"
+	dataIn, err := os.ReadFile(fixturePath + fileNameIn)
+	if err != nil {
+		t.Fatalf("Failed to read input file: %v", err)
+	}
+
+	// Explicitly pass ModeConversionListener (same as the default)
+	dataOut, err := Convert(dataIn, O2MOptions{
+		Tags: []string{"OAS3_import", "OAS3file_" + fileNameIn},
+		Mode: ModeConversionListener,
+	})
+	if err != nil {
+		t.Errorf("didn't expect error: %v", err)
+		return
+	}
+
+	services := dataOut["services"].([]interface{})
+	service := services[0].(map[string]interface{})
+	routes := service["routes"].([]interface{})
+	route := routes[0].(map[string]interface{})
+	plugins := route["plugins"].([]interface{})
+	plugin := plugins[0].(map[string]interface{})
+	config := plugin["config"].(map[string]interface{})
+
+	// These MUST still be present in conversion-listener mode (backward compat)
+	assert.Equal(t, "oauth_access_token", config["acl_attribute_type"],
+		"acl_attribute_type must still be emitted for conversion-listener mode")
+	assert.Equal(t, "scp", config["access_token_claim_field"],
+		"access_token_claim_field must still be emitted for conversion-listener mode")
+
+	// Per-tool acl.allow must also still be present
+	tools := config["tools"].([]interface{})
+	for i, t2 := range tools {
+		tool := t2.(map[string]interface{})
+		assert.NotNil(t, tool["acl"], "tool[%d] must have acl.allow in conversion-listener mode", i)
+	}
+}
+
 func Test_Openapi2mcp_SecurityACL_DocLevelInheritance(t *testing.T) {
 	// Test that operations without security inherit from document-level security
 	dataIn := []byte(`
