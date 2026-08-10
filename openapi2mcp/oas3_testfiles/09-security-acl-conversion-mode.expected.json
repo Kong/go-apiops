@@ -27,7 +27,7 @@
                     "scope": "tools"
                   }
                 ],
-                "mode": "conversion",
+                "mode": "conversion-only",
                 "tools": [
                   {
                     "acl": {

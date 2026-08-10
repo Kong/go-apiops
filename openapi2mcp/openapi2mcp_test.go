@@ -596,11 +596,12 @@ paths:
 	assert.Nil(t, tool["acl"], "tool should not have acl")
 }
 
-// When mode=conversion is used with x-kong-mcp-acl present in the spec, the output:
+// When the deprecated mode=conversion alias (normalized to conversion-only) is
+// used with x-kong-mcp-acl present in the spec, the output:
 //   - MUST NOT contain acl_attribute_type at the plugin level
 //     (Kong Gateway rejects this field in conversion-only mode)
 //   - MUST NOT contain access_token_claim_field at the plugin level
-//     (same reason — these are only valid for conversion-listener)
+//     (same reason — these are valid on every listener mode, but not conversion-only)
 //   - MUST still contain acl.allow on every tool
 //     (the upstream listener needs these scopes to enforce per-tool ACL)
 func Test_Openapi2mcp_SecurityACL_ConversionMode(t *testing.T) {
@@ -645,8 +646,8 @@ func Test_Openapi2mcp_SecurityACL_ConversionMode(t *testing.T) {
 	assert.Nil(t, config["access_token_claim_field"],
 		"access_token_claim_field must NOT be present in conversion mode — Gateway rejects it")
 
-	// Mode must be set correctly
-	assert.Equal(t, ModeConversion, config["mode"])
+	// Mode must be normalized from the deprecated alias to the real mode name
+	assert.Equal(t, ModeConversionOnly, config["mode"])
 
 	// Per-tool acl.allow MUST still be present — the upstream listener uses these scopes
 	tools := config["tools"].([]interface{})
@@ -712,6 +713,73 @@ func Test_Openapi2mcp_SecurityACL_ConversionListenerMode(t *testing.T) {
 		tool := t2.(map[string]interface{})
 		assert.NotNil(t, tool["acl"], "tool[%d] must have acl.allow in conversion-listener mode", i)
 	}
+}
+
+// Test_Openapi2mcp_SecurityACL_ListenerMode confirms that listener mode emits
+// acl_attribute_type and access_token_claim_field, matching the ai-mcp-proxy
+// plugin schema (these fields are valid on every listener mode, not just
+// conversion-listener).
+func Test_Openapi2mcp_SecurityACL_ListenerMode(t *testing.T) {
+	fileNameIn := "08-security-acl.yaml"
+	dataIn, err := os.ReadFile(fixturePath + fileNameIn)
+	if err != nil {
+		t.Fatalf("Failed to read input file: %v", err)
+	}
+
+	dataOut, err := Convert(dataIn, O2MOptions{
+		Tags: []string{"OAS3_import", "OAS3file_" + fileNameIn},
+		Mode: ModeListener,
+	})
+	if err != nil {
+		t.Errorf("didn't expect error: %v", err)
+		return
+	}
+
+	services := dataOut["services"].([]interface{})
+	service := services[0].(map[string]interface{})
+	routes := service["routes"].([]interface{})
+	route := routes[0].(map[string]interface{})
+	plugins := route["plugins"].([]interface{})
+	plugin := plugins[0].(map[string]interface{})
+	config := plugin["config"].(map[string]interface{})
+
+	assert.Equal(t, "oauth_access_token", config["acl_attribute_type"],
+		"acl_attribute_type must be emitted for listener mode")
+	assert.Equal(t, "scp", config["access_token_claim_field"],
+		"access_token_claim_field must be emitted for listener mode")
+}
+
+// Test_Openapi2mcp_SecurityACL_PassthroughListenerMode confirms that
+// passthrough-listener mode emits acl_attribute_type and
+// access_token_claim_field, matching the ai-mcp-proxy plugin schema.
+func Test_Openapi2mcp_SecurityACL_PassthroughListenerMode(t *testing.T) {
+	fileNameIn := "08-security-acl.yaml"
+	dataIn, err := os.ReadFile(fixturePath + fileNameIn)
+	if err != nil {
+		t.Fatalf("Failed to read input file: %v", err)
+	}
+
+	dataOut, err := Convert(dataIn, O2MOptions{
+		Tags: []string{"OAS3_import", "OAS3file_" + fileNameIn},
+		Mode: ModePassthroughListener,
+	})
+	if err != nil {
+		t.Errorf("didn't expect error: %v", err)
+		return
+	}
+
+	services := dataOut["services"].([]interface{})
+	service := services[0].(map[string]interface{})
+	routes := service["routes"].([]interface{})
+	route := routes[0].(map[string]interface{})
+	plugins := route["plugins"].([]interface{})
+	plugin := plugins[0].(map[string]interface{})
+	config := plugin["config"].(map[string]interface{})
+
+	assert.Equal(t, "oauth_access_token", config["acl_attribute_type"],
+		"acl_attribute_type must be emitted for passthrough-listener mode")
+	assert.Equal(t, "scp", config["access_token_claim_field"],
+		"access_token_claim_field must be emitted for passthrough-listener mode")
 }
 
 func Test_Openapi2mcp_SecurityACL_DocLevelInheritance(t *testing.T) {
