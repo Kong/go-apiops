@@ -59,10 +59,8 @@ func executeOpenapi2Mcp(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return fmt.Errorf("failed getting cli argument 'mode'; %w", err)
 		}
-		// Validate mode
-		if mode != "" && mode != openapi2mcp.ModeConversion && mode != openapi2mcp.ModeConversionListener {
-			return fmt.Errorf("invalid mode '%s': must be '%s' or '%s'",
-				mode, openapi2mcp.ModeConversion, openapi2mcp.ModeConversionListener)
+		if err := validateMode(mode); err != nil {
+			return err
 		}
 	}
 
@@ -127,6 +125,28 @@ func executeOpenapi2Mcp(cmd *cobra.Command, _ []string) error {
 	return filebasics.WriteSerializedFile(outputFilename, result, filebasics.OutputFormat(outputFormat))
 }
 
+// validateMode checks that the given --mode value is either empty (use the
+// library default), one of the ai-mcp-proxy plugin's real modes, or the
+// deprecated "conversion" alias. The alias is intentionally left out of the
+// error message since it should not be advertised as a real choice.
+func validateMode(mode string) error {
+	validModes := map[string]bool{
+		"":                                  true,
+		openapi2mcp.ModePassthroughListener: true,
+		openapi2mcp.ModeConversionListener:  true,
+		openapi2mcp.ModeConversionOnly:      true,
+		openapi2mcp.ModeListener:            true,
+		openapi2mcp.ModeConversion:          true,
+	}
+	if !validModes[mode] {
+		return fmt.Errorf("invalid mode '%s': must be one of '%s', '%s', '%s', '%s'",
+			mode,
+			openapi2mcp.ModePassthroughListener, openapi2mcp.ModeConversionListener,
+			openapi2mcp.ModeConversionOnly, openapi2mcp.ModeListener)
+	}
+	return nil
+}
+
 //
 //
 // Define the CLI data for the openapi2mcp command
@@ -189,7 +209,7 @@ will use the root-level "x-kong-name" directive, or fall back to 'info.title')`)
 		`select tags to apply to all entities (if omitted will use the "x-kong-tags"
 directive from the file)`)
 	openapi2mcpCmd.Flags().StringP("mode", "m", openapi2mcp.ModeConversionListener,
-		`ai-mcp-proxy mode: "conversion" (client mode) or "conversion-listener" (server mode)`)
+		`ai-mcp-proxy mode: "passthrough-listener", "conversion-listener", "conversion-only", or "listener"`)
 	openapi2mcpCmd.Flags().StringP("path-prefix", "p", "",
 		`custom path prefix for the MCP route (default: /{service-name}-mcp)`)
 	openapi2mcpCmd.Flags().BoolP("include-direct-route", "", false,

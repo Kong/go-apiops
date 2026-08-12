@@ -21,9 +21,15 @@ import (
 )
 
 const (
-	// MCP proxy modes
-	ModeConversionListener = "conversion-listener"
-	ModeConversion         = "conversion"
+	// MCP proxy modes, matching the ai-mcp-proxy plugin's PLUGIN_MODES (kong-ee).
+	ModePassthroughListener = "passthrough-listener"
+	ModeConversionListener  = "conversion-listener"
+	ModeConversionOnly      = "conversion-only"
+	ModeListener            = "listener"
+
+	// ModeConversion is a deprecated alias for ModeConversionOnly. It was never
+	// a real ai-mcp-proxy mode - callers should use ModeConversionOnly instead.
+	ModeConversion = "conversion"
 )
 
 // O2MOptions defines the options for an OpenAPI to MCP conversion operation
@@ -36,7 +42,9 @@ type O2MOptions struct {
 	UUIDNamespace uuid.UUID
 	// Skip ID generation (UUIDs)
 	SkipID bool
-	// MCP proxy mode: "conversion" or "conversion-listener"
+	// MCP proxy mode: one of "passthrough-listener", "conversion-listener",
+	// "conversion-only", or "listener". "conversion" is accepted as a
+	// deprecated alias for "conversion-only".
 	Mode string
 	// Custom path prefix for the MCP route (default: /{service-name}-mcp)
 	PathPrefix string
@@ -56,6 +64,9 @@ func (opts *O2MOptions) setDefaults() {
 
 	if opts.Mode == "" {
 		opts.Mode = ModeConversionListener
+	}
+	if opts.Mode == ModeConversion {
+		opts.Mode = ModeConversionOnly
 	}
 }
 
@@ -648,10 +659,11 @@ func Convert(content []byte, opts O2MOptions) (map[string]interface{}, error) {
 		"tools": tools,
 	}
 
-	// acl_attribute_type and access_token_claim_field are only valid for the
-	// conversion-listener mode; in conversion-only mode the listener plugin
-	// upstream is responsible for token validation and these fields must be omitted.
-	if aclConfig != nil && opts.Mode == ModeConversionListener {
+	// acl_attribute_type and access_token_claim_field are valid on every listener
+	// mode (conversion-listener, listener, passthrough-listener); in conversion-only
+	// mode a separate listener plugin is responsible for token validation and
+	// these fields must be omitted there.
+	if aclConfig != nil && opts.Mode != ModeConversionOnly {
 		if v, ok := aclConfig["acl_attribute_type"]; ok {
 			mcpPluginConfig["acl_attribute_type"] = v
 		}

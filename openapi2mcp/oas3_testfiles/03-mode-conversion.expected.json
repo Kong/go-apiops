@@ -19,7 +19,7 @@
           "plugins": [
             {
               "config": {
-                "mode": "conversion",
+                "mode": "conversion-only",
                 "tools": [
                   {
                     "annotations": {
