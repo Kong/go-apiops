@@ -203,7 +203,7 @@ func init() {
 	openapi2mcpCmd.Flags().StringP("format", "", string(filebasics.OutputFormatYaml), "output format: "+
 		string(filebasics.OutputFormatJSON)+" or "+string(filebasics.OutputFormatYaml))
 	openapi2mcpCmd.Flags().StringP("uuid-base", "", "",
-		`the unique base-string for uuid-v5 generation of entity id's (if omitted
+		`the unique base-string for uuid-v5 generation of entity IDs (if omitted
 will use the root-level "x-kong-name" directive, or fall back to 'info.title')`)
 	openapi2mcpCmd.Flags().StringSlice("select-tag", nil,
 		`select tags to apply to all entities (if omitted will use the "x-kong-tags"

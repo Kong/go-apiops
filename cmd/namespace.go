@@ -117,11 +117,11 @@ func executeNamespace(cmd *cobra.Command, _ []string) error {
 
 var namespaceCmd = &cobra.Command{
 	Use:   "namespace [flags]",
-	Short: "Namespaces API paths by prefixing it",
-	Long: `Namespaces API paths by prefixing it.
+	Short: "Namespaces API paths by prefixing them",
+	Long: `Namespaces API paths by prefixing them.
 
 By prefixing paths with a specific segment, colliding paths to services can be
-namespaced to prevent the collisions. Eg. 2 API definitions that both expose a
+namespaced to prevent the collisions. E.g. 2 API definitions that both expose a
 '/list' path. By prefixing one with '/addressbook' and the other with '/cookbook'
 the resulting paths '/addressbook/list' and '/cookbook/list' can be exposed without
 colliding.
@@ -168,7 +168,7 @@ func init() {
 		string(filebasics.OutputFormatJSON)+" or "+string(filebasics.OutputFormatYaml))
 	namespaceCmd.Flags().StringArrayP("selector", "", []string{},
 		"json-pointer identifying routes to update (can be specified more than once)")
-	namespaceCmd.Flags().StringP("path-prefix", "p", "", "the path based namespace to apply")
+	namespaceCmd.Flags().StringP("path-prefix", "p", "", "the path-based namespace to apply")
 	namespaceCmd.Flags().BoolP("allow-empty-selectors", "", false, "do not error out if the selectors return empty")
 	namespaceCmd.Flags().StringArrayP("host", "h", []string{},
 		"hostname to add to the route.hosts property (can be specified more than once)")
