@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -66,13 +67,10 @@ func Test_Openapi2mcp_InvalidPaths(t *testing.T) {
 	}
 }
 
-func Test_Openapi2mcp_Basic(t *testing.T) {
-	// Test basic conversion with default options
-	files := []string{
-		"01-basic-conversion.yaml",
-		"02-mcp-extensions.yaml",
-		"07-multiple-servers.yaml",
-	}
+// assertFixtureConversions converts each fixture with the options returned by
+// optionsFor, writes the .generated.json output, and compares it to .expected.json.
+func assertFixtureConversions(t *testing.T, files []string, optionsFor func(fileNameIn string) O2MOptions) {
+	t.Helper()
 
 	for _, fileNameIn := range files {
 		t.Run(fileNameIn, func(t *testing.T) {
@@ -83,9 +81,7 @@ func Test_Openapi2mcp_Basic(t *testing.T) {
 				t.Fatalf("Failed to read input file: %v", err)
 			}
 
-			dataOut, err := Convert(dataIn, O2MOptions{
-				Tags: []string{"OAS3_import", "OAS3file_" + fileNameIn},
-			})
+			dataOut, err := Convert(dataIn, optionsFor(fileNameIn))
 			if err != nil {
 				t.Errorf("'%s' didn't expect error: %v", fixturePath+fileNameIn, err)
 				return
@@ -100,6 +96,68 @@ func Test_Openapi2mcp_Basic(t *testing.T) {
 
 			assert.JSONEq(t, string(JSONExpected), string(JSONOut),
 				"'%s': the JSON blobs should be equal", fixturePath+fileNameIn)
+		})
+	}
+}
+
+func Test_Openapi2mcp_Basic(t *testing.T) {
+	// Test basic conversion with default options
+	files := []string{
+		"01-basic-conversion.yaml",
+		"02-mcp-extensions.yaml",
+		"07-multiple-servers.yaml",
+	}
+
+	assertFixtureConversions(t, files, func(fileNameIn string) O2MOptions {
+		return O2MOptions{Tags: []string{"OAS3_import", "OAS3file_" + fileNameIn}}
+	})
+}
+
+// assertNoSchemaPointers enforces that generated tool schemas are
+// self-contained: the ai-mcp-proxy plugin has no OpenAPI document behind it, so
+// any $ref, $defs or #/components pointer in the output points at nothing.
+func assertNoSchemaPointers(t *testing.T, dataOut map[string]interface{}) {
+	t.Helper()
+
+	encoded, err := json.Marshal(dataOut)
+	assert.NoError(t, err)
+
+	for _, token := range []string{`"$ref"`, `"$defs"`, "#/components/"} {
+		assert.NotContains(t, string(encoded), token,
+			"generated config must not contain schema pointers (%s)", token)
+	}
+}
+
+func Test_Openapi2mcp_SchemaComposition(t *testing.T) {
+	// Fixtures covering allOf/anyOf/oneOf and circular references
+	files := []string{
+		"10-schema-allof.yaml",
+		"11-schema-oneof-anyof.yaml",
+		"12-schema-circular.yaml",
+		"13-schema-params.yaml",
+	}
+
+	assertFixtureConversions(t, files, func(string) O2MOptions {
+		return O2MOptions{SkipID: true}
+	})
+}
+
+// Test_Openapi2mcp_NoSchemaPointers converts every fixture and checks that no
+// generated schema leaks a $ref, $defs or #/components pointer, regardless of
+// the schema shapes the fixture exercises.
+func Test_Openapi2mcp_NoSchemaPointers(t *testing.T) {
+	files := findFilesBySuffix(t, fixturePath, ".yaml")
+
+	for _, file := range files {
+		fileNameIn := file.Name()
+		t.Run(fileNameIn, func(t *testing.T) {
+			dataIn, err := os.ReadFile(fixturePath + fileNameIn)
+			assert.NoError(t, err)
+
+			dataOut, err := Convert(dataIn, O2MOptions{SkipID: true})
+			assert.NoError(t, err, "'%s' should convert without error", fileNameIn)
+
+			assertNoSchemaPointers(t, dataOut)
 		})
 	}
 }
@@ -314,6 +372,190 @@ paths:
 	assert.Nil(t, schema["pattern"], "schema should not have pattern (simplified)")
 	assert.Nil(t, schema["minLength"], "schema should not have minLength (simplified)")
 	assert.Nil(t, schema["maxLength"], "schema should not have maxLength (simplified)")
+}
+
+// schemaOfType returns a simplified schema carrying only a type.
+func schemaOfType(name string) map[string]interface{} {
+	return withType(name, map[string]interface{}{})
+}
+
+// anyOfSchema returns a simplified schema carrying only anyOf branches.
+func anyOfSchema(branches ...interface{}) map[string]interface{} {
+	return map[string]interface{}{"anyOf": branches}
+}
+
+// enumOf returns a simplified schema carrying only an enum.
+func enumOf(values ...interface{}) map[string]interface{} {
+	return map[string]interface{}{"enum": values}
+}
+
+// withType sets the type of a simplified schema and returns it.
+func withType(name string, schema map[string]interface{}) map[string]interface{} {
+	schema["type"] = name
+	return schema
+}
+
+func Test_mergeAllOfMember(t *testing.T) {
+	objectOf := func(properties map[string]interface{}) map[string]interface{} {
+		return withType("object", map[string]interface{}{"properties": properties})
+	}
+	stringType := schemaOfType("string")
+	integerType := schemaOfType("integer")
+
+	tests := []struct {
+		name     string
+		dst      map[string]interface{}
+		src      map[string]interface{}
+		expected map[string]interface{}
+	}{
+		{
+			name:     "conflicting types are marked unsatisfiable",
+			dst:      schemaOfType("object"),
+			src:      schemaOfType("array"),
+			expected: withType("object", map[string]interface{}{"not": map[string]interface{}{}}),
+		},
+		{
+			name:     "number and integer intersect to integer",
+			dst:      schemaOfType("number"),
+			src:      schemaOfType("integer"),
+			expected: schemaOfType("integer"),
+		},
+		{
+			name:     "type lists are intersected",
+			dst:      map[string]interface{}{"type": []string{"string", "integer"}},
+			src:      map[string]interface{}{"type": []string{"number", "boolean"}},
+			expected: schemaOfType("integer"),
+		},
+		{
+			name:     "type is taken when the destination has none",
+			dst:      map[string]interface{}{},
+			src:      schemaOfType("object"),
+			expected: schemaOfType("object"),
+		},
+		{
+			name:     "required union deduplicates and keeps first-seen order",
+			dst:      map[string]interface{}{"required": []string{"a", "b"}},
+			src:      map[string]interface{}{"required": []string{"b", "c"}},
+			expected: map[string]interface{}{"required": []string{"a", "b", "c"}},
+		},
+		{
+			name: "properties are unioned",
+			dst:  objectOf(map[string]interface{}{"a": stringType}),
+			src:  objectOf(map[string]interface{}{"b": integerType}),
+			expected: objectOf(map[string]interface{}{
+				"a": stringType,
+				"b": integerType,
+			}),
+		},
+		{
+			name: "overlapping object properties merge recursively",
+			dst: objectOf(map[string]interface{}{
+				"config": objectOf(map[string]interface{}{"a": stringType}),
+			}),
+			src: objectOf(map[string]interface{}{
+				"config": objectOf(map[string]interface{}{"b": stringType}),
+			}),
+			expected: objectOf(map[string]interface{}{
+				"config": objectOf(map[string]interface{}{
+					"a": stringType,
+					"b": stringType,
+				}),
+			}),
+		},
+		{
+			name: "conflicting property types mark the property unsatisfiable",
+			dst:  objectOf(map[string]interface{}{"value": schemaOfType("string")}),
+			src:  objectOf(map[string]interface{}{"value": schemaOfType("integer")}),
+			expected: objectOf(map[string]interface{}{
+				"value": withType("string", map[string]interface{}{"not": map[string]interface{}{}}),
+			}),
+		},
+		{
+			name:     "enum is taken when the destination has none",
+			dst:      schemaOfType("string"),
+			src:      withType("string", enumOf("a", "b")),
+			expected: withType("string", enumOf("a", "b")),
+		},
+		{
+			name:     "enums are intersected",
+			dst:      enumOf("a", "b", "c"),
+			src:      enumOf("c", "b", "d"),
+			expected: enumOf("b", "c"),
+		},
+		{
+			name: "disjoint enums are marked unsatisfiable, not emptied",
+			dst:  enumOf("a", "b"),
+			src:  enumOf("c"),
+			expected: map[string]interface{}{
+				"enum": []interface{}{"a", "b"},
+				"not":  map[string]interface{}{},
+			},
+		},
+		{
+			name: "object keywords are dropped when the type rules out objects",
+			dst:  schemaOfType("string"),
+			src: withType("string", map[string]interface{}{
+				"properties": map[string]interface{}{"p": stringType},
+				"required":   []string{"p"},
+			}),
+			expected: schemaOfType("string"),
+		},
+		{
+			name:     "items are dropped when the type rules out arrays",
+			dst:      schemaOfType("string"),
+			src:      map[string]interface{}{"items": stringType},
+			expected: schemaOfType("string"),
+		},
+		{
+			name:     "items are taken when the destination has none",
+			dst:      schemaOfType("array"),
+			src:      map[string]interface{}{"items": stringType},
+			expected: withType("array", map[string]interface{}{"items": stringType}),
+		},
+		{
+			name: "items on both sides merge recursively",
+			dst: withType("array", map[string]interface{}{
+				"items": objectOf(map[string]interface{}{"a": schemaOfType("string")}),
+			}),
+			src: map[string]interface{}{
+				"items": objectOf(map[string]interface{}{"b": schemaOfType("string")}),
+			},
+			expected: withType("array", map[string]interface{}{
+				"items": objectOf(map[string]interface{}{
+					"a": stringType,
+					"b": stringType,
+				}),
+			}),
+		},
+		{
+			name:     "anyOf is taken when the destination has none",
+			dst:      map[string]interface{}{},
+			src:      anyOfSchema(stringType),
+			expected: anyOfSchema(stringType),
+		},
+		{
+			name: "a second anyOf is kept as an allOf entry, not concatenated",
+			dst:  anyOfSchema(stringType),
+			src:  anyOfSchema(integerType),
+			expected: map[string]interface{}{
+				"anyOf": []interface{}{stringType},
+				"allOf": []interface{}{anyOfSchema(integerType)},
+			},
+		},
+		{
+			name:     "properties imply an object type",
+			dst:      map[string]interface{}{},
+			src:      objectOf(map[string]interface{}{"a": stringType}),
+			expected: objectOf(map[string]interface{}{"a": stringType}),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mergeAllOfMember(tc.dst, tc.src)
+			assert.Equal(t, tc.expected, tc.dst)
+		})
+	}
 }
 
 func Test_Openapi2mcp_SecurityACL(t *testing.T) {
@@ -853,4 +1095,425 @@ components:
 	acl1 := tool1["acl"].(map[string]interface{})
 	assert.Equal(t, []string{"items:read"}, acl1["allow"],
 		"second tool should inherit doc-level security scopes")
+}
+
+// convertBodySchema converts a spec whose single operation takes a
+// `#/components/schemas/Root` request body, and returns that body's generated
+// schema decoded from JSON.
+func convertBodySchema(t *testing.T, schemas string) (map[string]interface{}, int) {
+	t.Helper()
+
+	dataIn := []byte(`
+openapi: 3.0.0
+info:
+  title: Test API
+  version: "1"
+servers:
+  - url: https://api.example.com
+paths:
+  /items:
+    post:
+      operationId: create-item
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Root'
+components:
+  schemas:
+` + schemas)
+
+	dataOut, err := Convert(dataIn, O2MOptions{SkipID: true})
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	assertNoSchemaPointers(t, dataOut)
+
+	encoded, err := json.Marshal(dataOut)
+	assert.NoError(t, err)
+
+	var decoded struct {
+		Services []struct {
+			Routes []struct {
+				Plugins []struct {
+					Config struct {
+						Tools []struct {
+							RequestBody struct {
+								Content map[string]struct {
+									Schema map[string]interface{} `json:"schema"`
+								} `json:"content"`
+							} `json:"request_body"`
+						} `json:"tools"`
+					} `json:"config"`
+				} `json:"plugins"`
+			} `json:"routes"`
+		} `json:"services"`
+	}
+	assert.NoError(t, json.Unmarshal(encoded, &decoded))
+
+	tool := decoded.Services[0].Routes[0].Plugins[0].Config.Tools[0]
+	return tool.RequestBody.Content["application/json"].Schema, len(encoded)
+}
+
+func Test_Openapi2mcp_SchemaCompositionEdgeCases(t *testing.T) {
+	t.Run("allOf wrapper keeps the referenced enum", func(t *testing.T) {
+		schema, _ := convertBodySchema(t, `
+    Status:
+      type: string
+      enum: [active, inactive]
+    Root:
+      type: object
+      properties:
+        status:
+          allOf:
+            - $ref: '#/components/schemas/Status'
+`)
+		assert.Equal(t, withType("string", map[string]interface{}{
+			"enum": []interface{}{"active", "inactive"},
+		}), schema["properties"].(map[string]interface{})["status"])
+	})
+
+	t.Run("own oneOf does not replace oneOf from allOf", func(t *testing.T) {
+		schema, _ := convertBodySchema(t, `
+    Root:
+      allOf:
+        - oneOf:
+            - type: string
+            - type: integer
+      oneOf:
+        - type: boolean
+        - type: number
+`)
+		assert.Equal(t, map[string]interface{}{
+			"anyOf": []interface{}{schemaOfType("string"), schemaOfType("integer")},
+			"allOf": []interface{}{anyOfSchema(schemaOfType("boolean"), schemaOfType("number"))},
+		}, schema)
+	})
+
+	t.Run("oneOf lists from two allOf members are not concatenated", func(t *testing.T) {
+		schema, _ := convertBodySchema(t, `
+    Root:
+      allOf:
+        - oneOf:
+            - type: string
+            - type: integer
+        - oneOf:
+            - type: boolean
+            - type: number
+`)
+		assert.Len(t, schema["anyOf"], 2)
+		assert.Len(t, schema["allOf"], 1)
+	})
+
+	t.Run("allOf members' items are merged", func(t *testing.T) {
+		schema, _ := convertBodySchema(t, `
+    Base:
+      type: object
+      properties:
+        id:
+          type: string
+    Root:
+      allOf:
+        - type: array
+          items:
+            $ref: '#/components/schemas/Base'
+        - items:
+            properties:
+              extra:
+                type: integer
+`)
+		items := schema["items"].(map[string]interface{})
+		assert.Equal(t, map[string]interface{}{
+			"id":    schemaOfType("string"),
+			"extra": schemaOfType("integer"),
+		}, items["properties"])
+	})
+
+	t.Run("recursive schema defined through allOf keeps its type", func(t *testing.T) {
+		schema, _ := convertBodySchema(t, `
+    Base:
+      type: object
+      properties:
+        id:
+          type: string
+    Root:
+      allOf:
+        - $ref: '#/components/schemas/Base'
+        - type: object
+          properties:
+            children:
+              type: array
+              items:
+                $ref: '#/components/schemas/Root'
+`)
+		children := schema["properties"].(map[string]interface{})["children"].(map[string]interface{})
+		assert.Equal(t, schemaOfType("object"), children["items"])
+	})
+
+	t.Run("densely linked schemas are bounded", func(t *testing.T) {
+		const count = 10
+		var schemas strings.Builder
+		for i := 0; i < count; i++ {
+			if i == 0 {
+				schemas.WriteString("    Root:\n")
+			} else {
+				schemas.WriteString("    S" + strconv.Itoa(i) + ":\n")
+			}
+			schemas.WriteString("      type: object\n      properties:\n")
+			for j := 1; j < count; j++ {
+				if j != i {
+					schemas.WriteString("        p" + strconv.Itoa(j) +
+						":\n          $ref: '#/components/schemas/S" + strconv.Itoa(j) + "'\n")
+				}
+			}
+		}
+
+		schema, size := convertBodySchema(t, schemas.String())
+		assert.Equal(t, "object", schema["type"])
+		assert.Less(t, size, 10*1024*1024, "generated config should stay bounded")
+		// Past the budget, only the schemas still being expanded add type-only leaves.
+		assert.LessOrEqual(t, countSchemaNodes(schema), maxSchemaNodes+count*count,
+			"truncated leaves should count toward the budget")
+	})
+
+	t.Run("oneOf with overlapping branches is emitted as anyOf", func(t *testing.T) {
+		schema, _ := convertBodySchema(t, `
+    Pet:
+      type: object
+      properties:
+        petType:
+          type: string
+      required: [petType]
+    Cat:
+      allOf:
+        - $ref: '#/components/schemas/Pet'
+        - properties:
+            meow:
+              type: string
+    Dog:
+      allOf:
+        - $ref: '#/components/schemas/Pet'
+        - properties:
+            bark:
+              type: string
+    Root:
+      oneOf:
+        - $ref: '#/components/schemas/Cat'
+        - $ref: '#/components/schemas/Dog'
+      discriminator:
+        propertyName: petType
+`)
+		assert.NotContains(t, schema, "oneOf")
+		assert.Len(t, schema["anyOf"], 2)
+	})
+
+	t.Run("oneOf whose branches differ only in dropped keywords is emitted as anyOf", func(t *testing.T) {
+		schema, _ := convertBodySchema(t, `
+    Root:
+      oneOf:
+        - type: string
+          format: date
+        - type: string
+          format: date-time
+`)
+		assert.Equal(t, anyOfSchema(schemaOfType("string"), schemaOfType("string")), schema)
+	})
+
+	t.Run("allOf enums intersect numerically equal values", func(t *testing.T) {
+		schema, _ := convertBodySchema(t, `
+    Root:
+      allOf:
+        - type: number
+          enum: [1, 2, 3]
+        - enum: [1.0, 2.0]
+`)
+		assert.Equal(t, []interface{}{1.0, 2.0}, schema["enum"])
+	})
+
+	t.Run("type list keeps the object shape", func(t *testing.T) {
+		schema, _ := convertBodySchema(t, `
+    Root:
+      type: object
+      properties:
+        config:
+          type: ["null", "object"]
+          properties:
+            a:
+              type: string
+          required: [a]
+`)
+		config := schema["properties"].(map[string]interface{})["config"]
+		assert.Equal(t, map[string]interface{}{
+			"type":       []interface{}{"null", "object"},
+			"properties": map[string]interface{}{"a": schemaOfType("string")},
+			"required":   []interface{}{"a"},
+		}, config)
+	})
+
+	t.Run("type list keeps the array shape", func(t *testing.T) {
+		schema, _ := convertBodySchema(t, `
+    Root:
+      type: [array, "null"]
+      items:
+        type: string
+`)
+		assert.Equal(t, map[string]interface{}{
+			"type":  []interface{}{"array", "null"},
+			"items": schemaOfType("string"),
+		}, schema)
+	})
+
+	t.Run("typeless recursive array keeps its type at the cycle", func(t *testing.T) {
+		schema, _ := convertBodySchema(t, `
+    Arr:
+      items:
+        $ref: '#/components/schemas/Arr'
+    Root:
+      type: object
+      properties:
+        rec:
+          $ref: '#/components/schemas/Arr'
+`)
+		rec := schema["properties"].(map[string]interface{})["rec"]
+		assert.Equal(t, withType("array", map[string]interface{}{"items": schemaOfType("array")}), rec)
+	})
+
+	t.Run("type implied by allOf member properties, also at the cycle point", func(t *testing.T) {
+		schema, _ := convertBodySchema(t, `
+    Root:
+      required: [a]
+      allOf:
+        - properties:
+            next:
+              $ref: '#/components/schemas/Root'
+`)
+		next := schema["properties"].(map[string]interface{})["next"].(map[string]interface{})
+		assert.Equal(t, "object", schema["type"], "properties from allOf imply an object")
+		assert.Equal(t, schemaOfType("object"), next, "the truncated cycle point infers the same type")
+	})
+
+	t.Run("mutually including typeless allOf members do not hang", func(t *testing.T) {
+		schema, _ := convertBodySchema(t, `
+    A:
+      allOf:
+        - $ref: '#/components/schemas/B'
+        - $ref: '#/components/schemas/C'
+    B:
+      allOf:
+        - $ref: '#/components/schemas/A'
+        - $ref: '#/components/schemas/C'
+    C:
+      allOf:
+        - $ref: '#/components/schemas/A'
+        - $ref: '#/components/schemas/B'
+    Root:
+      type: object
+      properties:
+        a:
+          $ref: '#/components/schemas/A'
+`)
+		assert.Equal(t, map[string]interface{}{}, schema["properties"].(map[string]interface{})["a"])
+	})
+
+	t.Run("type list keeps all its types, null included", func(t *testing.T) {
+		schema, _ := convertBodySchema(t, `
+    Root:
+      type: [string, integer, "null"]
+      enum: [1, "a"]
+`)
+		assert.Equal(t, map[string]interface{}{
+			"type": []interface{}{"string", "integer", "null"},
+			"enum": []interface{}{1.0, "a"},
+		}, schema)
+	})
+
+	t.Run("allOf object members do not add properties to a non-object schema", func(t *testing.T) {
+		schema, _ := convertBodySchema(t, `
+    Root:
+      type: string
+      allOf:
+        - type: [object, string]
+          properties:
+            p:
+              type: string
+          required: [p]
+`)
+		assert.Equal(t, schemaOfType("string"), schema)
+	})
+
+	t.Run("allOf members with no common type accept nothing", func(t *testing.T) {
+		schema, _ := convertBodySchema(t, `
+    Root:
+      allOf:
+        - type: string
+        - type: integer
+`)
+		assert.Equal(t, withType("string", map[string]interface{}{"not": map[string]interface{}{}}), schema)
+	})
+
+	t.Run("allOf members with disjoint enums accept nothing", func(t *testing.T) {
+		schema, _ := convertBodySchema(t, `
+    Root:
+      allOf:
+        - type: string
+          enum: [a, b]
+        - enum: [c]
+`)
+		assert.Equal(t, withType("string", map[string]interface{}{
+			"enum": []interface{}{"a", "b"},
+			"not":  map[string]interface{}{},
+		}), schema)
+	})
+
+	t.Run("implied object type does not conflict with a declared type", func(t *testing.T) {
+		schema, _ := convertBodySchema(t, `
+    Root:
+      allOf:
+        - properties:
+            a:
+              type: string
+        - type: string
+`)
+		assert.Equal(t, schemaOfType("string"), schema)
+	})
+
+	t.Run("null in both allOf members is not a conflict", func(t *testing.T) {
+		schema, _ := convertBodySchema(t, `
+    Root:
+      allOf:
+        - type: "null"
+        - type: [string, "null"]
+`)
+		assert.Equal(t, schemaOfType("null"), schema)
+	})
+
+	t.Run("unquoted date enum values keep their text", func(t *testing.T) {
+		schema, _ := convertBodySchema(t, `
+    Root:
+      type: string
+      enum: [2024-01-01, "2024-01-01T00:00:00Z"]
+`)
+		assert.Equal(t, []interface{}{"2024-01-01", "2024-01-01T00:00:00Z"}, schema["enum"])
+	})
+}
+
+// countSchemaNodes counts the schemas in a simplified schema, itself included.
+func countSchemaNodes(schema map[string]interface{}) int {
+	count := 1
+	if properties, ok := schema["properties"].(map[string]interface{}); ok {
+		for _, property := range properties {
+			count += countSchemaNodes(property.(map[string]interface{}))
+		}
+	}
+	if items, ok := schema["items"].(map[string]interface{}); ok {
+		count += countSchemaNodes(items)
+	}
+	for _, keyword := range []string{"allOf", "anyOf"} {
+		if branches, ok := schema[keyword].([]interface{}); ok {
+			for _, branch := range branches {
+				count += countSchemaNodes(branch.(map[string]interface{}))
+			}
+		}
+	}
+	return count
 }

@@ -1,0 +1,143 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "api.example.com",
+      "name": "schema-composition-api",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "name": "schema-composition-api-mcp",
+          "paths": [
+            "/schema-composition-api-mcp"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "mode": "conversion-listener",
+                "tools": [
+                  {
+                    "annotations": {
+                      "title": "Create a batch"
+                    },
+                    "description": "Create a batch",
+                    "method": "POST",
+                    "name": "create-batch",
+                    "path": "/batch",
+                    "request_body": {
+                      "content": {
+                        "application/json": {
+                          "schema": {
+                            "properties": {
+                              "browser": {
+                                "type": "string"
+                              },
+                              "config": {
+                                "properties": {
+                                  "a": {
+                                    "type": "string"
+                                  },
+                                  "b": {
+                                    "type": "string"
+                                  }
+                                },
+                                "type": "object"
+                              },
+                              "count": {
+                                "type": "integer"
+                              },
+                              "note": {
+                                "type": "string"
+                              },
+                              "proxies": {
+                                "items": {
+                                  "type": "string"
+                                },
+                                "type": "array"
+                              },
+                              "url": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "url",
+                              "count",
+                              "proxies",
+                              "browser"
+                            ],
+                            "type": "object"
+                          }
+                        }
+                      },
+                      "required": true
+                    }
+                  },
+                  {
+                    "annotations": {
+                      "title": "Conflicting types"
+                    },
+                    "description": "Conflicting types",
+                    "method": "POST",
+                    "name": "conflicting-types",
+                    "path": "/conflict",
+                    "request_body": {
+                      "content": {
+                        "application/json": {
+                          "schema": {
+                            "not": {},
+                            "properties": {
+                              "left": {
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "annotations": {
+                      "title": "Register interest"
+                    },
+                    "description": "Register interest",
+                    "method": "POST",
+                    "name": "register-interest",
+                    "path": "/interest",
+                    "request_body": {
+                      "content": {
+                        "application/json": {
+                          "schema": {
+                            "properties": {
+                              "email": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "email"
+                            ],
+                            "type": "object"
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              "name": "ai-mcp-proxy",
+              "tags": []
+            }
+          ],
+          "tags": []
+        }
+      ],
+      "tags": []
+    }
+  ]
+}

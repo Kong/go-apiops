@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"slices"
 	"sort"
 	"strings"
 
@@ -296,43 +297,377 @@ func getExtensionString(extensions *orderedmap.Map[string, *yaml.Node], key stri
 	return value, nil
 }
 
-// simplifySchema simplifies an OpenAPI schema to essential properties
-func simplifySchema(schema *openapibase.Schema) map[string]interface{} {
+// maxSchemaNodes bounds the schema nodes emitted per parameter/request body, to prevent
+// exponential expansion through dense references.
+const maxSchemaNodes = 10000
+
+// schemaSimplifier converts OpenAPI schema to self-contained JSON Schema: inlines all $refs
+// since ai-mcp-proxy has no OpenAPI doc. Refs keyed by unique text (no file/remote refs).
+type schemaSimplifier struct {
+	inProgress map[string]bool // refs being expanded, to cut cycles
+	nodes      int             // schema nodes emitted so far, truncated ones included
+}
+
+// inlineSchema returns the self-contained schema of a parameter or request body.
+// logContext holds key/value pairs naming the schema in the truncation log.
+func inlineSchema(proxy *openapibase.SchemaProxy, logContext ...interface{}) map[string]interface{} {
+	s := &schemaSimplifier{inProgress: make(map[string]bool)}
+	result := s.simplify(proxy)
+	if s.nodes > maxSchemaNodes {
+		logbasics.Info("schema is too large to inline fully, truncated",
+			append(logContext, "maxSchemaNodes", maxSchemaNodes)...)
+	}
+	fillImpliedTypes(result)
+	return result
+}
+
+// simplify simplifies one schema keeping type, properties, required, items, enum, allOf
+// (merged), anyOf/oneOf (as anyOf branches). Types declared only; fillImpliedTypes infers rest.
+func (s *schemaSimplifier) simplify(proxy *openapibase.SchemaProxy) map[string]interface{} {
+	if proxy == nil {
+		return map[string]interface{}{}
+	}
+
+	schema := proxy.Schema()
 	if schema == nil {
-		return nil
+		return map[string]interface{}{}
 	}
+	s.nodes++
 
-	result := make(map[string]interface{})
-
-	// Handle type
-	if len(schema.Type) > 0 {
-		result["type"] = schema.Type[0]
-	}
-
-	// For objects, include properties and required
-	if result["type"] == "object" && schema.Properties != nil {
-		props := make(map[string]interface{})
-		for pair := schema.Properties.First(); pair != nil; pair = pair.Next() {
-			propSchema := pair.Value().Schema()
-			props[pair.Key()] = simplifySchema(propSchema)
+	if proxy.IsReference() {
+		ref := proxy.GetReference()
+		if s.inProgress[ref] {
+			// A recursive type cannot be represented without a reference.
+			logbasics.Debug("schema reference cycle detected, truncating", "ref", ref)
+			return truncatedSchema(schema)
 		}
-		result["properties"] = props
+		s.inProgress[ref] = true
+		defer delete(s.inProgress, ref)
+	}
 
+	if s.nodes > maxSchemaNodes {
+		return truncatedSchema(schema)
+	}
+
+	result := map[string]interface{}{}
+	setTypes(result, schema.Type)
+
+	if allowsType(schema.Type, "object") {
+		if schema.Properties != nil {
+			props := make(map[string]interface{})
+			for pair := schema.Properties.First(); pair != nil; pair = pair.Next() {
+				props[pair.Key()] = s.simplify(pair.Value())
+			}
+			result["properties"] = props
+		}
 		if len(schema.Required) > 0 {
 			result["required"] = schema.Required
 		}
 	}
 
-	// For arrays, include items
-	if result["type"] == "array" && schema.Items != nil && schema.Items.A != nil {
-		result["items"] = simplifySchema(schema.Items.A.Schema())
+	if allowsType(schema.Type, "array") && schema.Items != nil && schema.Items.A != nil {
+		result["items"] = s.simplify(schema.Items.A)
+	}
+
+	if len(schema.Enum) > 0 {
+		result["enum"] = decodeEnum(schema.Enum)
+	}
+
+	for _, member := range schema.AllOf {
+		mergeAllOfMember(result, s.simplify(member))
+	}
+
+	// oneOf is emitted as anyOf. Simplification drops the keywords that keep oneOf
+	// branches apart (const, format, pattern, discriminator, ...), so the simplified
+	// branches can overlap, and a valid value matching more than one would fail oneOf.
+	if len(schema.OneOf) > 0 {
+		addAnyOf(result, s.simplifyAll(schema.OneOf))
+	}
+	if len(schema.AnyOf) > 0 {
+		addAnyOf(result, s.simplifyAll(schema.AnyOf))
 	}
 
 	return result
 }
 
+// simplifyAll simplifies a list of schemas.
+func (s *schemaSimplifier) simplifyAll(proxies []*openapibase.SchemaProxy) []interface{} {
+	result := make([]interface{}, 0, len(proxies))
+	for _, proxy := range proxies {
+		result = append(result, s.simplify(proxy))
+	}
+	return result
+}
+
+// truncatedSchema returns a schema with type only (for cycles/size limits). Type: declared
+// types intersected, else object if properties, else array if items (includes allOf members).
+func truncatedSchema(schema *openapibase.Schema) map[string]interface{} {
+	members := []*openapibase.Schema{schema}
+	for _, member := range schema.AllOf {
+		if memberSchema := member.Schema(); memberSchema != nil {
+			members = append(members, memberSchema)
+		}
+	}
+
+	var types []string
+	hasProperties, hasItems := false, false
+	for _, member := range members {
+		if len(types) == 0 {
+			types = member.Type
+		} else if common := intersectTypes(types, member.Type); len(common) > 0 {
+			types = common
+		}
+		hasProperties = hasProperties || member.Properties != nil
+		hasItems = hasItems || (member.Items != nil && member.Items.A != nil)
+	}
+
+	result := map[string]interface{}{}
+	setTypes(result, types)
+	if len(types) == 0 {
+		switch {
+		case hasProperties:
+			result["type"] = "object"
+		case hasItems:
+			result["type"] = "array"
+		}
+	}
+	return result
+}
+
+// fillImpliedTypes sets type object for properties or array for items when no type declared.
+// Runs post-merge, so implied types never conflict (e.g., allOf with both properties and {type: string}).
+func fillImpliedTypes(schema map[string]interface{}) {
+	if _, hasType := schema["type"]; !hasType {
+		if _, hasProps := schema["properties"]; hasProps {
+			schema["type"] = "object"
+		} else if _, hasItems := schema["items"]; hasItems {
+			schema["type"] = "array"
+		}
+	}
+
+	if props, ok := schema["properties"].(map[string]interface{}); ok {
+		for _, prop := range props {
+			if propSchema, ok := prop.(map[string]interface{}); ok {
+				fillImpliedTypes(propSchema)
+			}
+		}
+	}
+	if items, ok := schema["items"].(map[string]interface{}); ok {
+		fillImpliedTypes(items)
+	}
+	for _, keyword := range []string{"allOf", "anyOf"} {
+		branches, _ := schema[keyword].([]interface{})
+		for _, branch := range branches {
+			if branchSchema, ok := branch.(map[string]interface{}); ok {
+				fillImpliedTypes(branchSchema)
+			}
+		}
+	}
+}
+
+// typesOf returns the types of a simplified schema, nil when its type is unconstrained.
+func typesOf(schema map[string]interface{}) []string {
+	switch schemaType := schema["type"].(type) {
+	case string:
+		return []string{schemaType}
+	case []string:
+		return schemaType
+	}
+	return nil
+}
+
+// setTypes sets the type of a simplified schema: a string for one type, a list for several.
+// "null" is kept, so OAS 3.1 nullable types such as ["string", "null"] still accept null.
+func setTypes(schema map[string]interface{}, types []string) {
+	switch len(types) {
+	case 0:
+		delete(schema, "type")
+	case 1:
+		schema["type"] = types[0]
+	default:
+		schema["type"] = types
+	}
+}
+
+// allowsType reports whether types admit the given type; no types admit any.
+func allowsType(types []string, schemaType string) bool {
+	return len(types) == 0 || slices.Contains(types, schemaType)
+}
+
+// intersectTypes returns the types allowed by both lists, in first-list order.
+// integer is a subset of number, so number and integer intersect to integer.
+func intersectTypes(first, second []string) []string {
+	result := make([]string, 0, len(first))
+	for _, schemaType := range first {
+		common := ""
+		switch {
+		case slices.Contains(second, schemaType):
+			common = schemaType
+		case schemaType == "number" && slices.Contains(second, "integer"),
+			schemaType == "integer" && slices.Contains(second, "number"):
+			common = "integer"
+		}
+		if common != "" && !slices.Contains(result, common) {
+			result = append(result, common)
+		}
+	}
+	return result
+}
+
+// markUnsatisfiable records allOf member contradictions via "not": {} so no values are accepted.
+func markUnsatisfiable(schema map[string]interface{}, reason string, keysAndValues ...interface{}) {
+	logbasics.Debug("allOf members contradict each other, no value satisfies the schema: "+reason,
+		keysAndValues...)
+	schema["not"] = map[string]interface{}{}
+}
+
+// mergeAllOfMember merges src into dst per allOf: types/enums intersected (contradictions unsatisfiable),
+// properties/required unioned, nested schemas merged recursively. Drops keywords ruled out by merged type.
+func mergeAllOfMember(dst, src map[string]interface{}) {
+	if srcTypes := typesOf(src); len(srcTypes) > 0 {
+		if dstTypes := typesOf(dst); len(dstTypes) == 0 {
+			setTypes(dst, srcTypes)
+		} else if common := intersectTypes(dstTypes, srcTypes); len(common) > 0 {
+			setTypes(dst, common)
+		} else {
+			markUnsatisfiable(dst, "conflicting types", "types", dstTypes, "conflicting", srcTypes)
+		}
+	}
+
+	if srcProps, ok := src["properties"].(map[string]interface{}); ok {
+		dstProps, ok := dst["properties"].(map[string]interface{})
+		if !ok {
+			dstProps = make(map[string]interface{})
+			dst["properties"] = dstProps
+		}
+		for key, srcProp := range srcProps {
+			if dstProp, exists := dstProps[key]; exists {
+				mergeSubschema(dstProp, srcProp)
+			} else {
+				dstProps[key] = srcProp
+			}
+		}
+	}
+
+	if srcRequired, ok := src["required"].([]string); ok {
+		dstRequired, _ := dst["required"].([]string)
+		dst["required"] = unionRequired(dstRequired, srcRequired)
+	}
+
+	if srcItems, ok := src["items"]; ok {
+		if dstItems, hasItems := dst["items"]; hasItems {
+			mergeSubschema(dstItems, srcItems)
+		} else {
+			dst["items"] = srcItems
+		}
+	}
+
+	if srcEnum, ok := src["enum"].([]interface{}); ok {
+		if dstEnum, hasEnum := dst["enum"].([]interface{}); hasEnum {
+			// An empty enum is invalid in draft 4, so the enum is kept and marked instead.
+			if common := intersectEnum(dstEnum, srcEnum); len(common) > 0 {
+				dst["enum"] = common
+			} else {
+				markUnsatisfiable(dst, "enums with no common value", "enum", dstEnum, "conflicting", srcEnum)
+			}
+		} else {
+			dst["enum"] = srcEnum
+		}
+	}
+
+	if srcAnyOf, ok := src["anyOf"].([]interface{}); ok {
+		addAnyOf(dst, srcAnyOf)
+	}
+
+	if srcAllOf, ok := src["allOf"].([]interface{}); ok {
+		dstAllOf, _ := dst["allOf"].([]interface{})
+		dst["allOf"] = append(dstAllOf, srcAllOf...)
+	}
+
+	if srcNot, ok := src["not"]; ok {
+		dst["not"] = srcNot
+	}
+
+	types := typesOf(dst)
+	if !allowsType(types, "object") {
+		delete(dst, "properties")
+		delete(dst, "required")
+	}
+	if !allowsType(types, "array") {
+		delete(dst, "items")
+	}
+}
+
+// mergeSubschema recursively merges src into dst if both are schema objects.
+func mergeSubschema(dst, src interface{}) {
+	dstObj, dstIsObj := dst.(map[string]interface{})
+	srcObj, srcIsObj := src.(map[string]interface{})
+	if dstIsObj && srcIsObj {
+		mergeAllOfMember(dstObj, srcObj)
+	}
+}
+
+// addAnyOf adds anyOf branches. A second anyOf is kept as an allOf entry to preserve
+// the (A|B) AND (C|D) constraint instead of loosening to (A|B|C|D).
+func addAnyOf(dst map[string]interface{}, branches []interface{}) {
+	if _, exists := dst["anyOf"]; !exists {
+		dst["anyOf"] = branches
+		return
+	}
+	allOf, _ := dst["allOf"].([]interface{})
+	dst["allOf"] = append(allOf, map[string]interface{}{"anyOf": branches})
+}
+
+// unionRequired merges required lists, keeping order and removing duplicates.
+func unionRequired(first, second []string) []string {
+	merged := make([]string, 0, len(first)+len(second))
+	for _, list := range [][]string{first, second} {
+		for _, name := range list {
+			if !slices.Contains(merged, name) {
+				merged = append(merged, name)
+			}
+		}
+	}
+	return merged
+}
+
+// intersectEnum filters to values in both sets by JSON encoding, handling YAML type variance (1 vs 1.0).
+func intersectEnum(first, second []interface{}) []interface{} {
+	secondJSON := make(map[string]bool, len(second))
+	for _, value := range second {
+		encoded, _ := json.Marshal(value)
+		secondJSON[string(encoded)] = true
+	}
+
+	result := make([]interface{}, 0, len(first))
+	for _, value := range first {
+		if encoded, _ := json.Marshal(value); secondJSON[string(encoded)] {
+			result = append(result, value)
+		}
+	}
+	return result
+}
+
+// decodeEnum converts YAML enum nodes to plain Go values for marshaling. Timestamps keep
+// their text: decoding would turn an unquoted 2024-01-01 into 2024-01-01T00:00:00Z.
+func decodeEnum(nodes []*yaml.Node) []interface{} {
+	values := make([]interface{}, 0, len(nodes))
+	for _, node := range nodes {
+		if node.ShortTag() == "!!timestamp" {
+			values = append(values, node.Value)
+			continue
+		}
+		var value interface{}
+		if err := node.Decode(&value); err != nil {
+			continue // unreachable: openapi2kong.Convert already decoded the document
+		}
+		values = append(values, value)
+	}
+	return values
+}
+
 // buildParameters builds the parameters array for an MCP tool
-func buildParameters(params []*v3.Parameter) []map[string]interface{} {
+func buildParameters(toolName string, params []*v3.Parameter) []map[string]interface{} {
 	if len(params) == 0 {
 		return nil
 	}
@@ -354,10 +689,7 @@ func buildParameters(params []*v3.Parameter) []map[string]interface{} {
 		}
 
 		if param.Schema != nil {
-			schema := param.Schema.Schema()
-			if schema != nil {
-				p["schema"] = simplifySchema(schema)
-			}
+			p["schema"] = inlineSchema(param.Schema, "tool", toolName, "parameter", param.Name)
 		}
 
 		result = append(result, p)
@@ -367,7 +699,7 @@ func buildParameters(params []*v3.Parameter) []map[string]interface{} {
 }
 
 // buildRequestBody builds the request_body object for an MCP tool
-func buildRequestBody(rb *v3.RequestBody) map[string]interface{} {
+func buildRequestBody(toolName string, rb *v3.RequestBody) map[string]interface{} {
 	if rb == nil {
 		return nil
 	}
@@ -386,10 +718,7 @@ func buildRequestBody(rb *v3.RequestBody) map[string]interface{} {
 
 			mediaContent := make(map[string]interface{})
 			if mediaTypeObj.Schema != nil {
-				schema := mediaTypeObj.Schema.Schema()
-				if schema != nil {
-					mediaContent["schema"] = simplifySchema(schema)
-				}
+				mediaContent["schema"] = inlineSchema(mediaTypeObj.Schema, "tool", toolName, "requestBody", mediaType)
 			}
 			content[mediaType] = mediaContent
 		}
@@ -470,12 +799,12 @@ func buildMCPTool(
 	}
 
 	if len(allParams) > 0 {
-		tool["parameters"] = buildParameters(allParams)
+		tool["parameters"] = buildParameters(toolName, allParams)
 	}
 
 	// Add request body
 	if operation.RequestBody != nil {
-		tool["request_body"] = buildRequestBody(operation.RequestBody)
+		tool["request_body"] = buildRequestBody(toolName, operation.RequestBody)
 	}
 
 	// Add ACL if provided
