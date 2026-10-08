@@ -1,0 +1,86 @@
+openapi: 3.0.0
+info:
+  title: Polymorphic API
+servers:
+  - url: https://api.example.com
+paths:
+  /fetch:
+    post:
+      operationId: fetch-url
+      summary: Fetch a URL
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/URLRequestDiscriminated'
+  /search:
+    post:
+      operationId: search
+      summary: Search
+      parameters:
+        - name: mode
+          in: query
+          schema:
+            anyOf:
+              - type: string
+              - type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filter:
+                  anyOf:
+                    - type: string
+                    - type: array
+                      items:
+                        type: string
+components:
+  schemas:
+    URLRequestDiscriminated:
+      oneOf:
+        - $ref: '#/components/schemas/BrowserRequest'
+        - $ref: '#/components/schemas/BrowserlessRequest'
+      discriminator:
+        propertyName: fetch_type
+        mapping:
+          browser: '#/components/schemas/BrowserRequest'
+          browserless: '#/components/schemas/BrowserlessRequest'
+    BrowserRequest:
+      allOf:
+        - $ref: '#/components/schemas/URLRequestCore'
+        - type: object
+          properties:
+            fetch_type:
+              type: string
+              enum:
+                - browser
+            browser:
+              type: string
+          required:
+            - fetch_type
+    BrowserlessRequest:
+      allOf:
+        - $ref: '#/components/schemas/URLRequestCore'
+        - type: object
+          properties:
+            fetch_type:
+              type: string
+              enum:
+                - browserless
+          required:
+            - fetch_type
+    URLRequestCore:
+      type: object
+      properties:
+        url:
+          type: string
+        method:
+          type: string
+          enum:
+            - GET
+            - POST
+      required:
+        - url

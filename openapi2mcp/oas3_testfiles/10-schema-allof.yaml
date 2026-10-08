@@ -1,0 +1,98 @@
+openapi: 3.0.0
+info:
+  title: Schema Composition API
+servers:
+  - url: https://api.example.com
+paths:
+  /batch:
+    post:
+      operationId: create-batch
+      summary: Create a batch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/BatchCore'
+                - type: object
+                  properties:
+                    browser:
+                      type: string
+                  required:
+                    - browser
+  /interest:
+    post:
+      operationId: register-interest
+      summary: Register interest
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/InterestFields'
+              required:
+                - email
+  /conflict:
+    post:
+      operationId: conflicting-types
+      summary: Conflicting types
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+                - type: object
+                  properties:
+                    left:
+                      type: string
+                - type: string
+components:
+  schemas:
+    BatchLeaf:
+      type: object
+      properties:
+        url:
+          type: string
+        note:
+          type: string
+        config:
+          type: object
+          properties:
+            a:
+              type: string
+      required:
+        - url
+    BatchBase:
+      allOf:
+        - $ref: '#/components/schemas/BatchLeaf'
+        - type: object
+          properties:
+            count:
+              type: integer
+            config:
+              type: object
+              properties:
+                b:
+                  type: string
+          required:
+            - count
+    BatchCore:
+      allOf:
+        - $ref: '#/components/schemas/BatchBase'
+        - type: object
+          properties:
+            proxies:
+              type: array
+              items:
+                type: string
+          required:
+            - proxies
+    InterestFields:
+      type: object
+      properties:
+        email:
+          type: string
+        name:
+          type: string

@@ -1,0 +1,157 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "api.example.com",
+      "name": "polymorphic-api",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "name": "polymorphic-api-mcp",
+          "paths": [
+            "/polymorphic-api-mcp"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "mode": "conversion-listener",
+                "tools": [
+                  {
+                    "annotations": {
+                      "title": "Fetch a URL"
+                    },
+                    "description": "Fetch a URL",
+                    "method": "POST",
+                    "name": "fetch-url",
+                    "path": "/fetch",
+                    "request_body": {
+                      "content": {
+                        "application/json": {
+                          "schema": {
+                            "anyOf": [
+                              {
+                                "properties": {
+                                  "browser": {
+                                    "type": "string"
+                                  },
+                                  "fetch_type": {
+                                    "enum": [
+                                      "browser"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  "method": {
+                                    "enum": [
+                                      "GET",
+                                      "POST"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  "url": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "url",
+                                  "fetch_type"
+                                ],
+                                "type": "object"
+                              },
+                              {
+                                "properties": {
+                                  "fetch_type": {
+                                    "enum": [
+                                      "browserless"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  "method": {
+                                    "enum": [
+                                      "GET",
+                                      "POST"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  "url": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "url",
+                                  "fetch_type"
+                                ],
+                                "type": "object"
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "required": true
+                    }
+                  },
+                  {
+                    "annotations": {
+                      "title": "Search"
+                    },
+                    "description": "Search",
+                    "method": "POST",
+                    "name": "search",
+                    "parameters": [
+                      {
+                        "in": "query",
+                        "name": "mode",
+                        "required": false,
+                        "schema": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "integer"
+                            }
+                          ]
+                        }
+                      }
+                    ],
+                    "path": "/search",
+                    "request_body": {
+                      "content": {
+                        "application/json": {
+                          "schema": {
+                            "properties": {
+                              "filter": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "items": {
+                                      "type": "string"
+                                    },
+                                    "type": "array"
+                                  }
+                                ]
+                              }
+                            },
+                            "type": "object"
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              "name": "ai-mcp-proxy",
+              "tags": []
+            }
+          ],
+          "tags": []
+        }
+      ],
+      "tags": []
+    }
+  ]
+}

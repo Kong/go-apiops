@@ -1,0 +1,120 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "api.example.com",
+      "name": "circular-api",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "name": "circular-api-mcp",
+          "paths": [
+            "/circular-api-mcp"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "mode": "conversion-listener",
+                "tools": [
+                  {
+                    "annotations": {
+                      "title": "allOf cycle"
+                    },
+                    "description": "allOf cycle",
+                    "method": "POST",
+                    "name": "allof-cycle",
+                    "path": "/chain",
+                    "request_body": {
+                      "content": {
+                        "application/json": {
+                          "schema": {
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "parent": {
+                                "type": "object"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "annotations": {
+                      "title": "Ping pong"
+                    },
+                    "description": "Ping pong",
+                    "method": "POST",
+                    "name": "ping-pong",
+                    "path": "/pingpong",
+                    "request_body": {
+                      "content": {
+                        "application/json": {
+                          "schema": {
+                            "properties": {
+                              "b": {
+                                "properties": {
+                                  "a": {
+                                    "type": "object"
+                                  }
+                                },
+                                "type": "object"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "annotations": {
+                      "title": "Build a tree"
+                    },
+                    "description": "Build a tree",
+                    "method": "POST",
+                    "name": "build-tree",
+                    "path": "/tree",
+                    "request_body": {
+                      "content": {
+                        "application/json": {
+                          "schema": {
+                            "properties": {
+                              "children": {
+                                "items": {
+                                  "type": "object"
+                                },
+                                "type": "array"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "name"
+                            ],
+                            "type": "object"
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              "name": "ai-mcp-proxy",
+              "tags": []
+            }
+          ],
+          "tags": []
+        }
+      ],
+      "tags": []
+    }
+  ]
+}
