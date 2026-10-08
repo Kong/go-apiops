@@ -873,9 +873,15 @@ func Convert(content []byte, opts O2MOptions) (map[string]interface{}, error) {
 	}
 	docBaseName := docService["name"].(string)
 
-	// handle routes
+	// handle routes: without direct routes, strip routes from every generated
+	// service, not just the first. Path- or operation-level `servers` can make
+	// openapi2kong emit extra services (one per server URL).
 	if !opts.IncludeDirectRoute {
-		docService["routes"] = make([]interface{}, 0)
+		for _, service := range services {
+			if svc, ok := service.(map[string]interface{}); ok {
+				svc["routes"] = make([]interface{}, 0)
+			}
+		}
 	}
 	routes := docService["routes"].([]interface{})
 

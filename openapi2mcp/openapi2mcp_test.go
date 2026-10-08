@@ -320,6 +320,78 @@ paths:
 	assert.Nil(t, plugin["id"], "plugin should not have id when SkipID=true")
 }
 
+// Test_Openapi2mcp_MultiServerNoDirectRoutes verifies that path-level
+// `servers` overrides, which make openapi2kong generate additional services,
+// do not leak direct routes into the output when IncludeDirectRoute is false.
+// Only the single MCP route on the main service must remain.
+func Test_Openapi2mcp_MultiServerNoDirectRoutes(t *testing.T) {
+	dataIn := []byte(`
+openapi: 3.0.0
+info:
+  title: Test API
+servers:
+  - url: https://api.example.com
+paths:
+  /items:
+    get:
+      operationId: list-items
+      summary: List items
+  /regions:
+    servers:
+      - url: https://regions.example.com
+    get:
+      operationId: list-regions
+      summary: List regions
+`)
+
+	countRoutes := func(dataOut map[string]interface{}) (total int, servicesWithRoutes int) {
+		for _, s := range dataOut["services"].([]interface{}) {
+			svc := s.(map[string]interface{})
+			rts, ok := svc["routes"].([]interface{})
+			if !ok {
+				continue
+			}
+			total += len(rts)
+			if len(rts) > 0 {
+				servicesWithRoutes++
+			}
+		}
+		return total, servicesWithRoutes
+	}
+
+	// Default: only the MCP route on the main service, nothing on the
+	// per-server service created for /regions.
+	dataOut, err := Convert(dataIn, O2MOptions{SkipID: true})
+	assert.NoError(t, err, "should convert without error")
+
+	total, servicesWithRoutes := countRoutes(dataOut)
+	assert.Equal(t, 1, total,
+		"only the MCP route should exist, direct routes must be stripped from all services")
+	assert.Equal(t, 1, servicesWithRoutes,
+		"only the main service should carry the MCP route")
+
+	// The single remaining route must be the MCP route.
+	svc := dataOut["services"].([]interface{})[0].(map[string]interface{})
+	route := svc["routes"].([]interface{})[0].(map[string]interface{})
+	plugins := route["plugins"].([]interface{})
+	assert.Equal(t, "ai-mcp-proxy",
+		plugins[0].(map[string]interface{})["name"],
+		"the remaining route must be the MCP route")
+	tools := plugins[0].(map[string]interface{})["config"].(map[string]interface{})["tools"]
+	assert.Len(t, tools, 2, "both operations must still become MCP tools")
+
+	// With IncludeDirectRoute=true the direct routes are kept, including on
+	// the extra per-server service.
+	dataOut, err = Convert(dataIn, O2MOptions{SkipID: true, IncludeDirectRoute: true})
+	assert.NoError(t, err, "should convert without error with direct routes")
+
+	total, servicesWithRoutes = countRoutes(dataOut)
+	assert.Equal(t, 3, total,
+		"MCP route plus both direct routes should exist")
+	assert.Equal(t, 2, servicesWithRoutes,
+		"the main service and the per-server service should both carry routes")
+}
+
 func Test_Openapi2mcp_SimplifySchema(t *testing.T) {
 	// Test that schemas are simplified properly
 	dataIn := []byte(`
