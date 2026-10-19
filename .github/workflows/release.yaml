@@ -17,10 +17,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Configure git to use a PAT when cloning
-        run: |
-          git config --global url."https://api:${{ secrets.PAT }}@github.com/".insteadOf "https://github.com/"
-
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
