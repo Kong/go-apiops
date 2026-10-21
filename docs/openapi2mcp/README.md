@@ -60,8 +60,49 @@ Schemas are simplified to include only essential properties for MCP tool definit
 - `properties`
 - `required`
 - `items` (for arrays)
+- `enum`
 
-Other schema properties like `format`, `pattern`, `minLength`, `maxLength`, etc. are filtered out.
+A missing `type` is filled in when the schema implies it, after `allOf` members are
+merged: `object` when it has `properties`, `array` when it has `items`. OAS 3.1 type
+lists are kept as lists, `null` included, so `["string", "null"]` still accepts `null`.
+`properties` and `required` are kept only when the type admits an object, and `items`
+only when it admits an array.
+
+Unquoted dates in an `enum` keep their text: `enum: [2024-01-01]` stays `"2024-01-01"`.
+
+Other schema properties like `format`, `pattern`, `minLength`, `maxLength`, `default`, etc. are filtered out.
+
+All `$ref` references are inlined. The generated tool schemas are self-contained: the
+`ai-mcp-proxy` plugin has no OpenAPI document behind it, so the output never contains
+`$ref`, `$defs` or `#/components/...` pointers.
+
+#### Composition keywords
+
+- **`allOf`**: members are merged into a single flat schema. Types are intersected
+  (`number` and `integer` give `integer`), object `properties` are unioned, property and
+  `items` schemas present in more than one member are merged recursively by these same
+  rules, `required` lists are unioned in first-seen order, and `enum` lists are
+  intersected (numbers are compared by value, so `1` and `1.0` match). When members have
+  no type or no `enum` value in common, no value can satisfy the schema, so `"not": {}`
+  is added to keep the generated schema from accepting values, and the contradiction is
+  logged at debug level.
+- **`anyOf` / `oneOf`**: preserved as JSON Schema `anyOf` arrays of simplified
+  subschemas. They are not flattened, because flattening would mark every branch's
+  properties as satisfying the schema. `oneOf` is emitted as `anyOf`: simplification
+  drops the keywords that keep `oneOf` branches apart (`const`, `format`, `pattern`,
+  `discriminator`, ...), so the simplified branches can overlap, and a valid value
+  matching more than one of them would fail `oneOf`. When more than one `anyOf` applies
+  to the same schema, for example one from an `allOf` member and one on the schema
+  itself, every one of them must hold, so the first is kept in place and each further
+  one is emitted as an entry of an `allOf` array rather than concatenated.
+
+Recursive schemas are truncated at the cycle: the recursive point becomes a schema with
+only a `type` (for example `{"type": "object"}`, also when the type comes from an `allOf`
+member), because a recursive type cannot be represented without a reference. Everything
+beyond the first 10,000 schema nodes of a single parameter or request body, truncated
+ones included, is truncated the same way, which bounds the output for schemas that
+reference each other densely. Hitting that limit is logged with the tool and the parameter
+or request body media type it applies to; cycles are logged at debug level.
 
 ## MCP-Specific Extensions
 

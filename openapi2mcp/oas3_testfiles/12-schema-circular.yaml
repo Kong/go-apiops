@@ -1,0 +1,68 @@
+openapi: 3.0.0
+info:
+  title: Circular API
+servers:
+  - url: https://api.example.com
+paths:
+  /tree:
+    post:
+      operationId: build-tree
+      summary: Build a tree
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TreeNode'
+  /pingpong:
+    post:
+      operationId: ping-pong
+      summary: Ping pong
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/A'
+  /chain:
+    post:
+      operationId: allof-cycle
+      summary: allOf cycle
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Chain'
+components:
+  schemas:
+    TreeNode:
+      type: object
+      properties:
+        name:
+          type: string
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/TreeNode'
+      required:
+        - name
+    A:
+      type: object
+      properties:
+        b:
+          $ref: '#/components/schemas/B'
+    B:
+      type: object
+      properties:
+        a:
+          $ref: '#/components/schemas/A'
+    Chain:
+      allOf:
+        - $ref: '#/components/schemas/ChainPart'
+        - type: object
+          properties:
+            parent:
+              $ref: '#/components/schemas/Chain'
+    ChainPart:
+      type: object
+      properties:
+        id:
+          type: string
