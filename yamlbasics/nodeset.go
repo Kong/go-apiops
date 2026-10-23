@@ -2,7 +2,7 @@ package yamlbasics
 
 import (
 	"github.com/kong/go-apiops/logbasics"
-	"go.yaml.in/yaml/v4"
+	"github.com/pb33f/go-yaml"
 )
 
 //

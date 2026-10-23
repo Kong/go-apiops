@@ -8,8 +8,8 @@ import (
 	"github.com/kong/go-apiops/jsonbasics"
 	"github.com/kong/go-apiops/logbasics"
 	"github.com/kong/go-apiops/yamlbasics"
+	"github.com/pb33f/go-yaml"
 	"github.com/pb33f/jsonpath/pkg/jsonpath"
-	"go.yaml.in/yaml/v4"
 )
 
 const tagArrayName = "tags"
