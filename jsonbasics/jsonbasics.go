@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"go.yaml.in/yaml/v4"
+	"github.com/pb33f/go-yaml"
 )
 
 // ToObject returns the object, if it was one, or nil+err.

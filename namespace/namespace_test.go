@@ -8,8 +8,8 @@ import (
 	"github.com/kong/go-apiops/yamlbasics"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/pb33f/go-yaml"
 	lua "github.com/yuin/gopher-lua"
-	"go.yaml.in/yaml/v4"
 )
 
 func toYaml(data string) *yaml.Node {
