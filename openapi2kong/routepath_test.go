@@ -246,6 +246,38 @@ func Test_normalizeRoutePath(t *testing.T) {
 	}
 }
 
+func Test_removeDotSegments(t *testing.T) {
+	tests := map[string]string{
+		// examples from RFC 3986 section 5.2.4
+		"/a/b/c/./../../g":   "/a/g",
+		"mid/content=5/../6": "mid/6",
+		// absolute paths
+		"/":          "/",
+		"/a/b":       "/a/b",
+		"/a/./b/":    "/a/b/",
+		"/a/../../b": "/b",
+		"/a/b/.":     "/a/b/",
+		"/a/b/..":    "/a/",
+		"/.":         "/",
+		"/..":        "/",
+		// relative paths (rule A and D of the algorithm)
+		"../a":     "a",
+		"./a":      "a",
+		"../../a":  "a",
+		".././a/b": "a/b",
+		".":        "",
+		"..":       "",
+		"a/./b":    "a/b",
+		"a/../b":   "/b",
+		"":         "",
+	}
+	for input, expected := range tests {
+		t.Run(input, func(t *testing.T) {
+			assert.Equal(t, expected, removeDotSegments(input))
+		})
+	}
+}
+
 // Test_RoutePath_Matching documents the matching behaviour of some common
 // x-kong-route-path regexes. Kong matches a regex path anchored at the start of
 // the request path (but not at the end), which is emulated here with Go's regexp
