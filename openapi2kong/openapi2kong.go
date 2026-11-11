@@ -128,54 +128,6 @@ func getKongName(extensions *orderedmap.Map[string, *yaml.Node]) (string, error)
 	return name, nil
 }
 
-// getRoutePaths returns the `x-kong-route-path` property, validated and normalized
-// into a list of Kong route paths. The extension can be either a single string,
-// or an array of strings. Each entry must be a valid Kong route path, so either a
-// plain (prefix) path starting with "/", or a regex path starting with "~/".
-// Returns nil (and no error) if the extension is not present.
-func getRoutePaths(extensions *orderedmap.Map[string, *yaml.Node]) ([]string, error) {
-	if extensions == nil {
-		return nil, nil
-	}
-
-	xKongRoutePath, ok := extensions.Get("x-kong-route-path")
-	if !ok || xKongRoutePath == nil {
-		return nil, nil
-	}
-
-	const typeError = "expected 'x-kong-route-path' to be a string or a non-empty array of strings"
-
-	var paths []string
-	switch xKongRoutePath.Kind {
-	case yaml.ScalarNode:
-		if xKongRoutePath.ShortTag() != "!!str" {
-			return nil, fmt.Errorf("%s, got '%s'", typeError, xKongRoutePath.Value)
-		}
-		paths = []string{xKongRoutePath.Value}
-	case yaml.SequenceNode:
-		if len(xKongRoutePath.Content) == 0 {
-			return nil, fmt.Errorf("%s, got an empty array", typeError)
-		}
-		for _, entry := range xKongRoutePath.Content {
-			if entry.Kind != yaml.ScalarNode || entry.ShortTag() != "!!str" {
-				return nil, fmt.Errorf("%s, got a non-string array entry", typeError)
-			}
-			paths = append(paths, entry.Value)
-		}
-	default:
-		return nil, fmt.Errorf("%s", typeError)
-	}
-
-	for _, p := range paths {
-		if !strings.HasPrefix(p, "/") && !strings.HasPrefix(p, "~/") {
-			return nil, fmt.Errorf("invalid 'x-kong-route-path' value '%s'; a route path must start with "+
-				"'/' (plain path) or '~/' (regex path)", p)
-		}
-	}
-
-	return paths, nil
-}
-
 // getServiceDefaults returns a JSON string containing the defaults
 func getServiceDefaults(
 	extensions *orderedmap.Map[string, *yaml.Node],

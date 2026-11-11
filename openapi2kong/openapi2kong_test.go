@@ -54,6 +54,11 @@ func Test_Openapi2kong_InvalidPaths(t *testing.T) {
 			"or a non-empty array of strings",
 		"route-path-empty-array.yaml":      "got an empty array",
 		"route-path-array-non-string.yaml": "got a non-string array entry",
+		"route-path-invalid-regex.yaml": "path '/path1': invalid 'x-kong-route-path' value " +
+			"'~/users/(foo/profile'; invalid regex '/users/(foo/profile': missing closing )",
+		"route-path-empty-segment.yaml":        "must not have empty segments",
+		"route-path-not-normalized.yaml":       "must be normalized, consider using '/path2' instead",
+		"route-path-bad-percent-encoding.yaml": "invalid url-encoded value: '%2G'",
 	}
 
 	for _, file := range files {

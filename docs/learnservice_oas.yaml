@@ -266,6 +266,10 @@ paths:
     # - it can be a single string, or an array of strings (multiple paths for a route)
     # - every entry must start with "/" (plain prefix path) or "~/" (regex path), any
     #   regex supported by Kong can be used, eg. "~/videos/(?<videoId>[0-9]+)/?$"
+    # - values are validated like Kong does: no empty segments ("//"), plain paths must be
+    #   normalized and properly percent-encoded, and regexes must be valid
+    # - in double-quoted YAML strings, regex backslashes must be escaped ("\\d+"), plain or
+    #   single-quoted strings are easier to read (~/videos/\d+)
     # - it can be specified on the "path" and "operation" objects, where the operation
     #   level value overrides the path level value
     # - all other route properties (name, methods, regex_priority, x-kong-route-defaults, etc)
