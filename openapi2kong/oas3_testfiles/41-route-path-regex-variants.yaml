@@ -1,0 +1,108 @@
+# x-kong-route-path supports any regex that Kong supports. The values are passed
+# through as-is. This file covers the most common regex constructs, and the YAML
+# quoting styles (plain, single-quoted, double-quoted with escaped backslashes).
+
+openapi: '3.0.0'
+info:
+  title: Regex variants
+  version: v1
+servers:
+  - url: https://server1.com/
+paths:
+  /optional-trailing-slash:
+    x-kong-route-path: ~/optional-trailing-slash/?$
+    get:
+      responses:
+        '200':
+          description: OK
+  /subtree:
+    # the path itself and everything below it
+    x-kong-route-path: ~/subtree(/.*)?$
+    get:
+      responses:
+        '200':
+          description: OK
+  /regex-prefix/{id}:
+    # no '$' anchor, so a regex prefix match
+    x-kong-route-path: ~/regex-prefix/\d+
+    get:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+  /alternation:
+    x-kong-route-path: ~/(v1|v2|v3)/alternation$
+    get:
+      responses:
+        '200':
+          description: OK
+  /non-capturing:
+    x-kong-route-path: ~/api/(?:v1|v2)/non-capturing(/[0-9]+)?$
+    get:
+      responses:
+        '200':
+          description: OK
+  /named-captures/{version}/{id}:
+    # named captures in both supported syntaxes
+    x-kong-route-path: ~/named-captures/(?<version>v[0-9]+)/(?P<id>[0-9a-f-]{36})$
+    get:
+      parameters:
+        - in: path
+          name: version
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /case-insensitive:
+    x-kong-route-path: ~/(?i)case-insensitive/?$
+    get:
+      responses:
+        '200':
+          description: OK
+  /quantifiers:
+    x-kong-route-path: '~/quantifiers/a{2}/b{2,}/c{2,5}/d*/e+/f?$'
+    get:
+      responses:
+        '200':
+          description: OK
+  /character-classes:
+    x-kong-route-path: '~/character-classes/[a-zA-Z0-9_-]+/[^/]+/[[:digit:]]+/\w+\.json$'
+    get:
+      responses:
+        '200':
+          description: OK
+  /double-quoted:
+    # in double-quoted YAML strings backslashes must be escaped
+    x-kong-route-path: "~/double-quoted/\\d+/\\.json$"
+    get:
+      responses:
+        '200':
+          description: OK
+  /pcre-lookahead:
+    # PCRE features not supported by Go regexp are passed through as well
+    x-kong-route-path: ~/pcre-lookahead/(?!admin)\w+$
+    get:
+      responses:
+        '200':
+          description: OK
+  /percent-encoded:
+    # percent-encoded characters can be used in regex and plain paths
+    x-kong-route-path:
+      - /percent-encoded/a%2Fb
+      - ~/percent-encoded/reg%65x/\d+$
+    get:
+      responses:
+        '200':
+          description: OK

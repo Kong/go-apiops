@@ -736,6 +736,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 		pathUpstreamDefaults []byte                     // JSON string representation of upstream-defaults on path level
 		pathUpstream         map[string]interface{}     // upstream entity in use on path level
 		pathRouteDefaults    []byte                     // JSON string representation of route-defaults on path level
+		pathRoutePaths       []string                   // x-kong-route-path on path level
 		pathPluginList       *[]*map[string]interface{} // array of plugin configs, sorted by plugin name
 		pathValidatorConfig  []byte                     // JSON string representation of validator config to generate
 
@@ -746,6 +747,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 		operationUpstreamDefaults []byte                     // JSON string representation of upstream-defaults on ops level
 		operationUpstream         map[string]interface{}     // upstream entity in use on operation level
 		operationRouteDefaults    []byte                     // JSON string representation of route-defaults on ops level
+		operationRoutePaths       []string                   // x-kong-route-path on ops level
 		operationPluginList       *[]*map[string]interface{} // array of plugin configs, sorted by plugin name
 		operationValidatorConfig  []byte                     // JSON string representation of validator config to generate
 	)
@@ -991,6 +993,10 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 			pathRouteDefaults = docRouteDefaults
 		}
 
+		if pathRoutePaths, err = getRoutePaths(pathitem.Extensions); err != nil {
+			return nil, fmt.Errorf("path '%s': %w", pathKey, err)
+		}
+
 		// if there is no path level servers block, use the document one
 		pathServers = pathitem.Servers
 		if len(pathServers) == 0 { // it's always set, so we ignore it if empty
@@ -1178,6 +1184,13 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 				operationRouteDefaults = pathRouteDefaults
 			}
 
+			if operationRoutePaths, err = getRoutePaths(operation.Extensions); err != nil {
+				return nil, fmt.Errorf("operation '%s %s': %w", methodKey, pathKey, err)
+			}
+			if operationRoutePaths == nil {
+				operationRoutePaths = pathRoutePaths
+			}
+
 			// if there is no operation level servers block, use the path one
 			operationServers = operation.Servers
 			if len(operationServers) == 0 {
@@ -1341,7 +1354,13 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 					convertedPath = strings.Replace(convertedPath, placeHolder, regexMatch, 1)
 				}
 			}
-			route["paths"] = []string{"~" + convertedPath + "$"}
+			if operationRoutePaths != nil {
+				// an explicit x-kong-route-path was provided, use it as-is instead of the generated path
+				logbasics.Debug("using x-kong-route-path", "paths", operationRoutePaths)
+				route["paths"] = append([]string{}, operationRoutePaths...)
+			} else {
+				route["paths"] = []string{"~" + convertedPath + "$"}
+			}
 			if !opts.SkipID {
 				route["id"] = uuid.NewSHA1(opts.UUIDNamespace, []byte(operationBaseName+".route")).String()
 			}

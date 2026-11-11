@@ -1,0 +1,82 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "server1.com",
+      "id": "5c22db3e-b8c0-51b7-9fd3-e75593b0a897",
+      "name": "route-path-override-with-headers",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "headers": {
+            "X-API-Version": [
+              "v1"
+            ]
+          },
+          "id": "82435267-f3dc-5ac0-a3e9-0420453e0a27",
+          "methods": [
+            "GET"
+          ],
+          "name": "route-path-override-with-headers_getversioned_0",
+          "paths": [
+            "~/versioned/?$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_40-route-path-with-headers.yaml"
+          ]
+        },
+        {
+          "headers": {
+            "X-API-Version": [
+              "v2"
+            ]
+          },
+          "id": "3d2837f4-f8f0-5b98-9a45-93f0319dfb0e",
+          "methods": [
+            "GET"
+          ],
+          "name": "route-path-override-with-headers_getversioned_1",
+          "paths": [
+            "~/versioned/?$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_40-route-path-with-headers.yaml"
+          ]
+        },
+        {
+          "id": "5d173a54-3955-521e-b1e1-e8cb2e041ffb",
+          "methods": [
+            "GET"
+          ],
+          "name": "route-path-override-with-headers_getversioned",
+          "paths": [
+            "~/versioned/?$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_40-route-path-with-headers.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_40-route-path-with-headers.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}

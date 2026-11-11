@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/pb33f/libopenapi/orderedmap"
 	"github.com/stretchr/testify/assert"
 	"go.yaml.in/yaml/v4"
 )
@@ -46,6 +47,18 @@ func Test_Openapi2kong_InvalidPaths(t *testing.T) {
 		"multiple-security-schemes.yaml":      "within a security-requirement only a single security-scheme is supported",
 		"unsupported-security-type.yaml":      "only security-schemes of type 'openIdConnect' are supported",
 		"missing-security-scheme.yaml":        "no security-schemes with name 'nonExistentScheme' found in components",
+		"route-path-invalid-prefix.yaml": "path '/path1': invalid 'x-kong-route-path' value 'path1/?$'; " +
+			"a route path must start with '/' (plain path) or '~/' (regex path)",
+		"route-path-invalid-regex-prefix.yaml": "operation 'GET /path1': invalid 'x-kong-route-path' value '~^/path1/?$'",
+		"route-path-not-a-string.yaml": "path '/path1': expected 'x-kong-route-path' to be a string " +
+			"or a non-empty array of strings",
+		"route-path-empty-array.yaml":      "got an empty array",
+		"route-path-array-non-string.yaml": "got a non-string array entry",
+		"route-path-invalid-regex.yaml": "path '/path1': invalid 'x-kong-route-path' value " +
+			"'~/users/(foo/profile'; invalid regex '/users/(foo/profile': missing closing )",
+		"route-path-empty-segment.yaml":        "must not have empty segments",
+		"route-path-not-normalized.yaml":       "must be normalized, consider using '/path2' instead",
+		"route-path-bad-percent-encoding.yaml": "invalid url-encoded value: '%2G'",
 	}
 
 	for _, file := range files {
@@ -425,4 +438,261 @@ paths:
 			}
 		})
 	}
+}
+
+func Test_getRoutePaths(t *testing.T) {
+	tests := []struct {
+		name        string
+		yamlDoc     string // a yaml mapping holding the extensions
+		expected    []string
+		expectedErr string
+	}{
+		{
+			name:     "not present",
+			yamlDoc:  `x-kong-name: something`,
+			expected: nil,
+		},
+		{
+			name:     "single plain path",
+			yamlDoc:  `x-kong-route-path: /catalog/products/v1`,
+			expected: []string{"/catalog/products/v1"},
+		},
+		{
+			name:     "single regex path",
+			yamlDoc:  `x-kong-route-path: ~/catalog/products/v1/?$`,
+			expected: []string{"~/catalog/products/v1/?$"},
+		},
+		{
+			name:     "quoted regex path with special characters",
+			yamlDoc:  `x-kong-route-path: "~/items/(?<id>[0-9]+)/(a|b)*$"`,
+			expected: []string{"~/items/(?<id>[0-9]+)/(a|b)*$"},
+		},
+		{
+			name: "array of mixed paths",
+			yamlDoc: `x-kong-route-path:
+  - /plain
+  - ~/regex/?$`,
+			expected: []string{"/plain", "~/regex/?$"},
+		},
+		{
+			name:     "flow style array",
+			yamlDoc:  `x-kong-route-path: ["/a", "~/b$"]`,
+			expected: []string{"/a", "~/b$"},
+		},
+		{
+			name:        "missing leading slash",
+			yamlDoc:     `x-kong-route-path: catalog/products/v1`,
+			expectedErr: "a route path must start with '/' (plain path) or '~/' (regex path)",
+		},
+		{
+			name:        "regex without slash after tilde",
+			yamlDoc:     `x-kong-route-path: ~^/catalog$`,
+			expectedErr: "invalid 'x-kong-route-path' value '~^/catalog$'",
+		},
+		{
+			name:        "empty string",
+			yamlDoc:     `x-kong-route-path: ""`,
+			expectedErr: "invalid 'x-kong-route-path' value ''",
+		},
+		{
+			name:        "number",
+			yamlDoc:     `x-kong-route-path: 123`,
+			expectedErr: "expected 'x-kong-route-path' to be a string or a non-empty array of strings, got '123'",
+		},
+		{
+			name:        "boolean",
+			yamlDoc:     `x-kong-route-path: true`,
+			expectedErr: "expected 'x-kong-route-path' to be a string or a non-empty array of strings",
+		},
+		{
+			name:        "null",
+			yamlDoc:     `x-kong-route-path: null`,
+			expectedErr: "expected 'x-kong-route-path' to be a string or a non-empty array of strings",
+		},
+		{
+			name:        "object",
+			yamlDoc:     "x-kong-route-path:\n  path: /a",
+			expectedErr: "expected 'x-kong-route-path' to be a string or a non-empty array of strings",
+		},
+		{
+			name:        "empty array",
+			yamlDoc:     `x-kong-route-path: []`,
+			expectedErr: "got an empty array",
+		},
+		{
+			name:        "array with non-string entry",
+			yamlDoc:     `x-kong-route-path: ["/a", 1]`,
+			expectedErr: "got a non-string array entry",
+		},
+		{
+			name:        "array with nested array",
+			yamlDoc:     `x-kong-route-path: ["/a", ["/b"]]`,
+			expectedErr: "got a non-string array entry",
+		},
+		{
+			name:        "array with an invalid path",
+			yamlDoc:     `x-kong-route-path: ["/a", "b"]`,
+			expectedErr: "invalid 'x-kong-route-path' value 'b'",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var root yaml.Node
+			if err := yaml.Unmarshal([]byte(tc.yamlDoc), &root); err != nil {
+				t.Fatalf("invalid test yaml: %v", err)
+			}
+			mapping := root.Content[0]
+			extensions := orderedmap.New[string, *yaml.Node]()
+			for i := 0; i < len(mapping.Content); i += 2 {
+				extensions.Set(mapping.Content[i].Value, mapping.Content[i+1])
+			}
+
+			paths, err := getRoutePaths(extensions)
+			if tc.expectedErr != "" {
+				assert.ErrorContains(t, err, tc.expectedErr)
+				assert.Nil(t, paths)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expected, paths)
+		})
+	}
+
+	t.Run("nil extensions", func(t *testing.T) {
+		paths, err := getRoutePaths(nil)
+		assert.NoError(t, err)
+		assert.Nil(t, paths)
+	})
+}
+
+// Test_Openapi2kong_RoutePath verifies the generated route paths for x-kong-route-path,
+// independent of the golden files, and checks that the other route properties
+// (names, methods, regex_priority) are generated as usual.
+func Test_Openapi2kong_RoutePath(t *testing.T) {
+	spec := `
+openapi: 3.0.3
+info:
+  title: catalog
+  version: v1
+servers:
+  - url: https://example.com
+paths:
+  /catalog/products/v1:
+    x-kong-route-path: ~/catalog/products/v1/?$
+    get:
+      operationId: listProducts
+      responses:
+        "200":
+          description: OK
+    post:
+      operationId: createProduct
+      x-kong-route-path:
+        - /catalog/products/v1/messages
+        - ~/catalog/products/v1/msg/?$
+      responses:
+        "200":
+          description: OK
+  /items/{id}:
+    x-kong-route-path: ~/items/(?<id>\d+)$
+    get:
+      responses:
+        "200":
+          description: OK
+  /untouched/{id}:
+    get:
+      responses:
+        "200":
+          description: OK
+`
+	testCases := []struct {
+		opts              O2kOptions
+		listProductsName  string
+		createProductName string
+	}{
+		{O2kOptions{}, "catalog_listproducts", "catalog_createproduct"},
+		{O2kOptions{InsoCompat: true, SkipID: true}, "catalog-listProducts", "catalog-createProduct"},
+	}
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("inso=%v", tc.opts.InsoCompat), func(t *testing.T) {
+			result, err := Convert([]byte(spec), tc.opts)
+			if !assert.NoError(t, err) {
+				return
+			}
+
+			// collect routes by their method + first path for easy lookup
+			type routeInfo struct {
+				name          string
+				paths         []string
+				regexPriority any
+			}
+			routes := map[string]routeInfo{}
+			for _, svc := range result["services"].([]interface{}) {
+				for _, r := range svc.(map[string]interface{})["routes"].([]interface{}) {
+					route := r.(map[string]interface{})
+					method := route["methods"].([]string)[0]
+					paths := route["paths"].([]string)
+					routes[method+" "+paths[0]] = routeInfo{
+						name:          route["name"].(string),
+						paths:         paths,
+						regexPriority: route["regex_priority"],
+					}
+				}
+			}
+
+			assert.Len(t, routes, 4)
+
+			listProducts := routes["GET ~/catalog/products/v1/?$"]
+			assert.Equal(t, []string{"~/catalog/products/v1/?$"}, listProducts.paths)
+			assert.Equal(t, tc.listProductsName, listProducts.name)
+
+			createProduct := routes["POST /catalog/products/v1/messages"]
+			assert.Equal(t, []string{"/catalog/products/v1/messages", "~/catalog/products/v1/msg/?$"},
+				createProduct.paths, "operation level must override path level")
+			assert.Equal(t, tc.createProductName, createProduct.name)
+
+			item := routes[`GET ~/items/(?<id>\d+)$`]
+			assert.Equal(t, []string{`~/items/(?<id>\d+)$`}, item.paths)
+			assert.Equal(t, regexPriorityWithPathParams, item.regexPriority,
+				"regex_priority is still derived from the OAS path")
+
+			untouched := routes["GET ~/untouched/(?<id>[^#?/]+)$"]
+			assert.Equal(t, []string{"~/untouched/(?<id>[^#?/]+)$"}, untouched.paths,
+				"paths without the extension must be generated as before")
+		})
+	}
+}
+
+// Test_Openapi2kong_RoutePathNotShared verifies that routes sharing the same
+// x-kong-route-path value get independent copies of the paths array.
+func Test_Openapi2kong_RoutePathNotShared(t *testing.T) {
+	spec := `
+openapi: 3.0.3
+info:
+  title: shared
+  version: v1
+servers:
+  - url: https://example.com
+paths:
+  /a:
+    x-kong-route-path: ["/a", "/b"]
+    get:
+      responses:
+        "200":
+          description: OK
+    post:
+      responses:
+        "200":
+          description: OK
+`
+	result, err := Convert([]byte(spec), O2kOptions{})
+	if !assert.NoError(t, err) {
+		return
+	}
+	routes := result["services"].([]interface{})[0].(map[string]interface{})["routes"].([]interface{})
+	assert.Len(t, routes, 2)
+	paths0 := routes[0].(map[string]interface{})["paths"].([]string)
+	paths1 := routes[1].(map[string]interface{})["paths"].([]string)
+	paths0[0] = "/modified"
+	assert.Equal(t, []string{"/a", "/b"}, paths1)
 }

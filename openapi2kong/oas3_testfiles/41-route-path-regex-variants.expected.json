@@ -1,0 +1,226 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "server1.com",
+      "id": "42cedcb7-53eb-5eea-8f85-43c3c0f336d3",
+      "name": "regex-variants",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "eea4bcdb-7158-5f77-b1ec-ff8d541b1441",
+          "methods": [
+            "GET"
+          ],
+          "name": "regex-variants_alternation_get",
+          "paths": [
+            "~/(v1|v2|v3)/alternation$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_41-route-path-regex-variants.yaml"
+          ]
+        },
+        {
+          "id": "7951755f-d3d2-548c-beaa-341eb401241a",
+          "methods": [
+            "GET"
+          ],
+          "name": "regex-variants_case-insensitive_get",
+          "paths": [
+            "~/(?i)case-insensitive/?$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_41-route-path-regex-variants.yaml"
+          ]
+        },
+        {
+          "id": "1afc7edf-2b54-53ad-bece-0e9aef9da07e",
+          "methods": [
+            "GET"
+          ],
+          "name": "regex-variants_character-classes_get",
+          "paths": [
+            "~/character-classes/[a-zA-Z0-9_-]+/[^/]+/[[:digit:]]+/\\w+\\.json$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_41-route-path-regex-variants.yaml"
+          ]
+        },
+        {
+          "id": "faf5931d-3e19-5529-888a-9e9b5910173e",
+          "methods": [
+            "GET"
+          ],
+          "name": "regex-variants_double-quoted_get",
+          "paths": [
+            "~/double-quoted/\\d+/\\.json$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_41-route-path-regex-variants.yaml"
+          ]
+        },
+        {
+          "id": "f045f4a9-2a69-5216-88c2-f14ad0f2d1b6",
+          "methods": [
+            "GET"
+          ],
+          "name": "regex-variants_named-captures-version-id_get",
+          "paths": [
+            "~/named-captures/(?<version>v[0-9]+)/(?P<id>[0-9a-f-]{36})$"
+          ],
+          "plugins": [],
+          "regex_priority": 100,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_41-route-path-regex-variants.yaml"
+          ]
+        },
+        {
+          "id": "e8e0d9f5-dda1-5068-967b-1f4de32123a4",
+          "methods": [
+            "GET"
+          ],
+          "name": "regex-variants_non-capturing_get",
+          "paths": [
+            "~/api/(?:v1|v2)/non-capturing(/[0-9]+)?$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_41-route-path-regex-variants.yaml"
+          ]
+        },
+        {
+          "id": "12907201-daa4-5c12-a54a-0cda918e701e",
+          "methods": [
+            "GET"
+          ],
+          "name": "regex-variants_optional-trailing-slash_get",
+          "paths": [
+            "~/optional-trailing-slash/?$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_41-route-path-regex-variants.yaml"
+          ]
+        },
+        {
+          "id": "d828637e-2938-537c-a985-1880484e6d2e",
+          "methods": [
+            "GET"
+          ],
+          "name": "regex-variants_pcre-lookahead_get",
+          "paths": [
+            "~/pcre-lookahead/(?!admin)\\w+$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_41-route-path-regex-variants.yaml"
+          ]
+        },
+        {
+          "id": "594a1ad4-9803-54c8-9623-f4e7f5a96ee3",
+          "methods": [
+            "GET"
+          ],
+          "name": "regex-variants_percent-encoded_get",
+          "paths": [
+            "/percent-encoded/a%2Fb",
+            "~/percent-encoded/reg%65x/\\d+$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_41-route-path-regex-variants.yaml"
+          ]
+        },
+        {
+          "id": "567bf755-a007-51c5-96f0-7c643fd68ce4",
+          "methods": [
+            "GET"
+          ],
+          "name": "regex-variants_quantifiers_get",
+          "paths": [
+            "~/quantifiers/a{2}/b{2,}/c{2,5}/d*/e+/f?$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_41-route-path-regex-variants.yaml"
+          ]
+        },
+        {
+          "id": "499ad97a-60b5-501a-8437-898a2a70ce27",
+          "methods": [
+            "GET"
+          ],
+          "name": "regex-variants_regex-prefix-id_get",
+          "paths": [
+            "~/regex-prefix/\\d+"
+          ],
+          "plugins": [],
+          "regex_priority": 100,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_41-route-path-regex-variants.yaml"
+          ]
+        },
+        {
+          "id": "0eae4b1f-650e-529a-b250-2466d2f7bca8",
+          "methods": [
+            "GET"
+          ],
+          "name": "regex-variants_subtree_get",
+          "paths": [
+            "~/subtree(/.*)?$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_41-route-path-regex-variants.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_41-route-path-regex-variants.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}
