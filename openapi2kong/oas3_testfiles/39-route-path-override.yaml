@@ -1,0 +1,94 @@
+# x-kong-route-path overrides the route `paths` generated from the OAS path key.
+# It can be set on the Path level (applies to all operations), and on the
+# Operation level (overrides the Path level). The value is either a single
+# string, or an array of strings. Each entry must start with "/" (plain path)
+# or "~/" (regex path), and is used as-is.
+
+openapi: '3.0.0'
+info:
+  title: Route path override
+  version: v1
+servers:
+  - url: https://server1.com/
+paths:
+  /catalog/products/v1:
+    # single regex path on Path level, makes the trailing slash optional,
+    # applies to all operations of this path
+    x-kong-route-path: ~/catalog/products/v1/?$
+    get:
+      operationId: listProducts
+      responses:
+        '200':
+          description: OK
+    post:
+      operationId: createProduct
+      responses:
+        '200':
+          description: OK
+  /plain/prefix:
+    # plain (non-regex) prefix path
+    x-kong-route-path: /plain/prefix
+    get:
+      operationId: plainPrefix
+      responses:
+        '200':
+          description: OK
+  /multi:
+    # multiple paths, mixing plain and regex
+    x-kong-route-path:
+      - /multi
+      - ~/multi/v(1|2)/?$
+    get:
+      operationId: multiPaths
+      responses:
+        '200':
+          description: OK
+  /ops-override:
+    x-kong-route-path: ~/ops-override/?$
+    get:
+      # inherits the Path level value
+      operationId: opsInherits
+      responses:
+        '200':
+          description: OK
+    put:
+      # Operation level overrides the Path level value
+      x-kong-route-path: ~/ops-override/put-only$
+      operationId: opsOverrides
+      responses:
+        '200':
+          description: OK
+  /items/{itemId}:
+    # path parameters in the OAS path are replaced by the override; a user
+    # provided regex can use its own named capture groups and patterns
+    x-kong-route-path: ~/items/(?<itemId>[0-9]+)/?$
+    parameters:
+      - in: path
+        name: itemId
+        required: true
+        schema:
+          type: integer
+    get:
+      operationId: getItem
+      responses:
+        '200':
+          description: OK
+  /with-route-defaults:
+    # x-kong-route-defaults are still honored, and do not change the path
+    x-kong-route-defaults:
+      strip_path: true
+      paths:
+        - /ignored-by-defaults
+    x-kong-route-path: ~/with-route-defaults/?$
+    get:
+      operationId: withRouteDefaults
+      responses:
+        '200':
+          description: OK
+  /no-override:
+    # no extension, output is exactly as before
+    get:
+      operationId: noOverride
+      responses:
+        '200':
+          description: OK

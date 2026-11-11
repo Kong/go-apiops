@@ -113,6 +113,8 @@ x-kong-route-defaults:
   # to only apply to that subset of the spec.
   # Fields `regex_priority` and `strip_path` should not be set. If provided they will
   # be used, but verify the results carefully as setting them can cause unexpected results!
+  # NOTE: the `paths` field cannot be set here, it is always generated from the OAS
+  # path. To override it use the `x-kong-route-path` directive (see below).
 
 
 paths:
@@ -257,6 +259,17 @@ paths:
         '400':
           description: Bad Request
   "/videos":
+    x-kong-route-path: ~/videos/?$
+    # By default the route `paths` are generated from the OAS path, eg. "~/videos$".
+    # The `x-kong-route-path` directive replaces the generated value, and is used as-is.
+    # Here it makes the trailing slash optional, matching both "/videos" and "/videos/".
+    # - it can be a single string, or an array of strings (multiple paths for a route)
+    # - every entry must start with "/" (plain prefix path) or "~/" (regex path), any
+    #   regex supported by Kong can be used, eg. "~/videos/(?<videoId>[0-9]+)/?$"
+    # - it can be specified on the "path" and "operation" objects, where the operation
+    #   level value overrides the path level value
+    # - all other route properties (name, methods, regex_priority, x-kong-route-defaults, etc)
+    #   are generated as usual
     get:
       tags:
       - learn

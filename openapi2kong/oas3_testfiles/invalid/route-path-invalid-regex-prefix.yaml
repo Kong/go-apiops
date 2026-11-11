@@ -1,0 +1,15 @@
+# regex x-kong-route-path entries must start with "~/", anchors go after it
+
+openapi: '3.0.0'
+info:
+  title: Simple API overview
+  version: v2
+servers:
+  - url: https://server1.com/
+paths:
+  /path1:
+    get:
+      x-kong-route-path: ~^/path1/?$
+      responses:
+        '200':
+          description: OK

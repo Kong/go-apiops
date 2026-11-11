@@ -1,0 +1,26 @@
+# x-kong-route-path is applied to all routes generated for an operation,
+# including the additional routes generated for required header parameters.
+
+openapi: '3.0.0'
+info:
+  title: Route path override with headers
+  version: v1
+servers:
+  - url: https://server1.com/
+paths:
+  /versioned:
+    x-kong-route-path: ~/versioned/?$
+    get:
+      operationId: getVersioned
+      parameters:
+        - in: header
+          name: X-API-Version
+          required: true
+          schema:
+            type: string
+            enum:
+              - v1
+              - v2
+      responses:
+        '200':
+          description: OK

@@ -1,0 +1,15 @@
+# x-kong-route-path must not be an empty array
+
+openapi: '3.0.0'
+info:
+  title: Simple API overview
+  version: v2
+servers:
+  - url: https://server1.com/
+paths:
+  /path1:
+    x-kong-route-path: []
+    get:
+      responses:
+        '200':
+          description: OK

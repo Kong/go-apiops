@@ -1,0 +1,175 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "server1.com",
+      "id": "189b66f3-aafc-5846-9ec9-dfa679042c0c",
+      "name": "route-path-override",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "id": "3e7bf5c9-1a0d-5c49-bf4d-280a99b33c3c",
+          "methods": [
+            "GET"
+          ],
+          "name": "route-path-override_listproducts",
+          "paths": [
+            "~/catalog/products/v1/?$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_39-route-path-override.yaml"
+          ]
+        },
+        {
+          "id": "4820c479-88c1-50d0-a219-0048a3713443",
+          "methods": [
+            "POST"
+          ],
+          "name": "route-path-override_createproduct",
+          "paths": [
+            "~/catalog/products/v1/?$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_39-route-path-override.yaml"
+          ]
+        },
+        {
+          "id": "8d07886c-ce00-5102-8483-a533164d682c",
+          "methods": [
+            "GET"
+          ],
+          "name": "route-path-override_getitem",
+          "paths": [
+            "~/items/(?<itemId>[0-9]+)/?$"
+          ],
+          "plugins": [],
+          "regex_priority": 100,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_39-route-path-override.yaml"
+          ]
+        },
+        {
+          "id": "2ab8d82d-cef2-5cb9-98a5-c9ab3e5c8c24",
+          "methods": [
+            "GET"
+          ],
+          "name": "route-path-override_multipaths",
+          "paths": [
+            "/multi",
+            "~/multi/v(1|2)/?$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_39-route-path-override.yaml"
+          ]
+        },
+        {
+          "id": "56ef2014-57ed-5c9f-8af7-d19d64edd156",
+          "methods": [
+            "GET"
+          ],
+          "name": "route-path-override_nooverride",
+          "paths": [
+            "~/no-override$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_39-route-path-override.yaml"
+          ]
+        },
+        {
+          "id": "a759ca52-3782-5fc0-9197-492b955afb6d",
+          "methods": [
+            "GET"
+          ],
+          "name": "route-path-override_opsinherits",
+          "paths": [
+            "~/ops-override/?$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_39-route-path-override.yaml"
+          ]
+        },
+        {
+          "id": "026147ea-7312-52a5-93fe-5ca4cc25d488",
+          "methods": [
+            "PUT"
+          ],
+          "name": "route-path-override_opsoverrides",
+          "paths": [
+            "~/ops-override/put-only$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_39-route-path-override.yaml"
+          ]
+        },
+        {
+          "id": "2495ec0a-6a49-5cfd-aba8-00378decd14e",
+          "methods": [
+            "GET"
+          ],
+          "name": "route-path-override_plainprefix",
+          "paths": [
+            "/plain/prefix"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_39-route-path-override.yaml"
+          ]
+        },
+        {
+          "id": "c755b4a4-167a-517e-a35a-c7fa1d3668ac",
+          "methods": [
+            "GET"
+          ],
+          "name": "route-path-override_withroutedefaults",
+          "paths": [
+            "~/with-route-defaults/?$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": true,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_39-route-path-override.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_39-route-path-override.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}
