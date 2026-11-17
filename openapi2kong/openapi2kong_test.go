@@ -46,6 +46,7 @@ func Test_Openapi2kong_InvalidPaths(t *testing.T) {
 		"multiple-security-schemes.yaml":      "within a security-requirement only a single security-scheme is supported",
 		"unsupported-security-type.yaml":      "only security-schemes of type 'openIdConnect' are supported",
 		"missing-security-scheme.yaml":        "no security-schemes with name 'nonExistentScheme' found in components",
+		"operation-invalid-kong-name.yaml":    "expected 'x-kong-name' to be a string",
 	}
 
 	for _, file := range files {
@@ -87,6 +88,7 @@ func Test_Openapi2kong(t *testing.T) {
 			// Test option configuration
 			allHeadersRequired := false
 			reuseServices := false
+			routeNameFromPathMethod := false
 
 			var config map[string]any
 			yaml.Unmarshal(dataIn, &config)
@@ -97,6 +99,9 @@ func Test_Openapi2kong(t *testing.T) {
 				if val, ok := testConfig["reuseServices"]; ok {
 					reuseServices = val.(bool)
 				}
+				if val, ok := testConfig["routeNameFromPathMethod"]; ok {
+					routeNameFromPathMethod = val.(bool)
+				}
 			}
 
 			dataOut, err := Convert(dataIn, O2kOptions{
@@ -104,6 +109,7 @@ func Test_Openapi2kong(t *testing.T) {
 				OIDC:                      true,
 				TreatAllHeadersAsRequired: allHeadersRequired,
 				ReuseServices:             reuseServices,
+				RouteNameFromPathMethod:   routeNameFromPathMethod,
 			})
 			if err != nil {
 				t.Error(fmt.Sprintf("'%s' didn't expect error: %%w", fixturePath+fileNameIn), err)
@@ -130,10 +136,21 @@ func Test_Openapi2kong_InsoCompat(t *testing.T) {
 		fileNameOut := fileName + ".generated_inso.json"
 
 		dataIn, _ := os.ReadFile(fixturePath + fileNameIn)
+
+		routeNameFromPathMethod := false
+		var config map[string]any
+		yaml.Unmarshal(dataIn, &config)
+		if testConfig, ok := config["x-test-config"].(map[string]any); ok {
+			if val, ok := testConfig["routeNameFromPathMethod"]; ok {
+				routeNameFromPathMethod = val.(bool)
+			}
+		}
+
 		dataOut, err := Convert(dataIn, O2kOptions{
-			Tags:       []string{"OAS3_import", "OAS3file_" + fileNameIn},
-			InsoCompat: true,
-			SkipID:     true,
+			Tags:                    []string{"OAS3_import", "OAS3file_" + fileNameIn},
+			InsoCompat:              true,
+			SkipID:                  true,
+			RouteNameFromPathMethod: routeNameFromPathMethod,
 		})
 
 		if err != nil {

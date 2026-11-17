@@ -1,0 +1,15 @@
+# the x-kong-name of an operation must be a valid string
+
+openapi: '3.0.0'
+info:
+  title: Simple API overview
+  version: v2
+servers:
+  - url: https://server1.com/
+paths:
+  /path1:
+    get:
+      x-kong-name: "invalid: name"
+      responses:
+        '200':
+          description: OK

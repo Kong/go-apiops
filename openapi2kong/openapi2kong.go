@@ -57,6 +57,10 @@ type O2kOptions struct {
 	// and no path-level plugins, they will share a single Kong service instead of
 	// creating duplicate services. This reduces resource bloat in Kong.
 	ReuseServices bool
+	// Always name routes by their path and method, ignoring the x-kong-name and
+	// operationId of the operations (and the x-kong-name of the paths). By default
+	// routes are named by x-kong-name, else operationId, else path and method.
+	RouteNameFromPathMethod bool
 }
 
 // setDefaults sets the defaults for the OpenAPI2Kong operation.
@@ -916,6 +920,7 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 
 	// create a sorted array of paths, to be deterministic in our output order
 	allPaths := doc.Paths.PathItems
+	routeNames := make(routeNameRegistry)
 	sortedPaths := make([]string, allPaths.Len())
 	path := allPaths.First()
 	i := 0
@@ -940,26 +945,11 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 		}
 		if pathBaseName == "" {
 			// no given name, so use the path itself to construct the name
-			if !opts.InsoCompat {
-				pathBaseName = openapitools.Slugify(opts.InsoCompat, pathKey)
-				if strings.HasSuffix(pathKey, "/") {
-					// a common case is 2 paths, one with and one without a trailing "/" so to prevent
-					// duplicate names being generated, we add a "~" suffix as a special case to cater
-					// for different names. Better user solution is to use operation-id's.
-					pathBaseName = pathBaseName + "~"
-				}
-			} else {
-				// we need inso compatibility
-				pathBaseName = openapitools.Slugify(opts.InsoCompat, pathKey)
-			}
+			pathBaseName = pathKeySlug(pathKey, opts.InsoCompat)
 		} else {
 			pathBaseName = openapitools.Slugify(opts.InsoCompat, pathBaseName)
 		}
-		if pathBaseName != "" {
-			pathBaseName = docBaseName + nameConcatChar + pathBaseName
-		} else {
-			pathBaseName = docBaseName
-		}
+		pathBaseName = joinName(docBaseName, pathBaseName, nameConcatChar)
 		logbasics.Debug("path name (namespace for UUID generation)", "name", pathBaseName)
 
 		// Set up the defaults on the Path level
@@ -1119,32 +1109,17 @@ func Convert(content []byte, opts O2kOptions) (map[string]interface{}, error) {
 
 			var operationRoutes []interface{} // the routes array we need to add to
 
-			// determine operation name, precedence: specified -> operation-ID -> method-name
-			if operationBaseName, err = getKongName(operation.Extensions); err != nil {
+			// determine operation name, precedence: specified -> operation-ID -> method-name,
+			// or always path+method if RouteNameFromPathMethod is set
+			var operationKongName string
+			if operationKongName, err = getKongName(operation.Extensions); err != nil {
 				return nil, err
 			}
-			if operationBaseName != "" {
-				if opts.InsoCompat {
-					// an x-kong-name was provided, so build as "doc-name"
-					operationBaseName = docBaseName + nameConcatChar + openapitools.Slugify(opts.InsoCompat, operationBaseName)
-				} else {
-					// an x-kong-name was provided, so build as "doc-path-name"
-					operationBaseName = pathBaseName + nameConcatChar + openapitools.Slugify(opts.InsoCompat, operationBaseName)
-				}
-			} else {
-				operationBaseName = operation.OperationId
-				if operationBaseName == "" {
-					// no operation ID provided, so build as "doc-path-method"
-					if opts.InsoCompat {
-						operationBaseName = pathBaseName +
-							nameConcatChar + openapitools.Slugify(opts.InsoCompat, strings.ToLower(methodKey))
-					} else {
-						operationBaseName = pathBaseName +
-							nameConcatChar + openapitools.Slugify(opts.InsoCompat, methodKey)
-					}
-				} else {
-					// operation ID is provided, so build as "doc-operationid"
-					operationBaseName = docBaseName + nameConcatChar + openapitools.Slugify(opts.InsoCompat, operationBaseName)
+			operationBaseName = buildOperationBaseName(operationKongName, operation.OperationId, methodKey, pathKey,
+				docBaseName, pathBaseName, nameConcatChar, opts.InsoCompat, opts.RouteNameFromPathMethod)
+			if opts.RouteNameFromPathMethod {
+				if err = routeNames.register(operationBaseName, methodKey+" "+pathKey); err != nil {
+					return nil, err
 				}
 			}
 			logbasics.Debug("operation base name (namespace for UUID generation)", "name", operationBaseName)

@@ -1,0 +1,79 @@
+# With the RouteNameFromPathMethod option (decK: --route-name-from-path-method),
+# routes are always named by their path and method. The x-kong-name and operationId
+# of operations, and the x-kong-name of paths, are ignored for route names.
+# Without the option, the names would be: x-kong-name -> operationId -> path+method.
+
+x-test-config:
+  routeNameFromPathMethod: true
+
+openapi: '3.0.0'
+info:
+  title: Route name from path method
+  version: v1
+servers:
+  - url: https://server1.com/
+paths:
+  /orders:
+    get:
+      # operationId is ignored
+      operationId: listOrders
+      responses:
+        '200':
+          description: OK
+    post:
+      # x-kong-name and operationId are ignored
+      x-kong-name: create-order
+      operationId: createOrder
+      responses:
+        '200':
+          description: OK
+    put:
+      # x-kong-name is ignored
+      x-kong-name: replace-orders
+      responses:
+        '200':
+          description: OK
+    delete:
+      # neither, same as without the option
+      responses:
+        '200':
+          description: OK
+  /orders/{orderId}:
+    # path level x-kong-name is ignored for route names (still used for the service name)
+    x-kong-name: single-order
+    x-kong-service-defaults:
+      retries: 3
+    parameters:
+      - in: path
+        name: orderId
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getOrder
+      responses:
+        '200':
+          description: OK
+  /orders/{orderId}/items/:
+    # trailing slash
+    get:
+      operationId: listOrderItems
+      responses:
+        '200':
+          description: OK
+  /orders/{orderId}/status:
+    get:
+      # header based routes are suffixed as usual
+      operationId: getOrderStatus
+      parameters:
+        - in: header
+          name: X-API-Version
+          required: true
+          schema:
+            type: string
+            enum:
+              - v1
+              - v2
+      responses:
+        '200':
+          description: OK

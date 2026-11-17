@@ -1,0 +1,189 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "server1.com",
+      "name": "Route_name_from_path_method",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "methods": [
+            "DELETE"
+          ],
+          "name": "Route_name_from_path_method-orders-delete",
+          "paths": [
+            "~/orders$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_42-route-name-from-path-method.yaml"
+          ]
+        },
+        {
+          "methods": [
+            "GET"
+          ],
+          "name": "Route_name_from_path_method-orders-get",
+          "paths": [
+            "~/orders$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_42-route-name-from-path-method.yaml"
+          ]
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "name": "Route_name_from_path_method-orders-post",
+          "paths": [
+            "~/orders$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_42-route-name-from-path-method.yaml"
+          ]
+        },
+        {
+          "methods": [
+            "PUT"
+          ],
+          "name": "Route_name_from_path_method-orders-put",
+          "paths": [
+            "~/orders$"
+          ],
+          "plugins": [],
+          "regex_priority": 200,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_42-route-name-from-path-method.yaml"
+          ]
+        },
+        {
+          "methods": [
+            "GET"
+          ],
+          "name": "Route_name_from_path_method-orders_orderId_items-get",
+          "paths": [
+            "~/orders/(?<orderId>[^#?/]+)/items/$"
+          ],
+          "plugins": [],
+          "regex_priority": 100,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_42-route-name-from-path-method.yaml"
+          ]
+        },
+        {
+          "headers": {
+            "X-API-Version": [
+              "v1"
+            ]
+          },
+          "methods": [
+            "GET"
+          ],
+          "name": "Route_name_from_path_method-orders_orderId_status-get_0",
+          "paths": [
+            "~/orders/(?<orderId>[^#?/]+)/status$"
+          ],
+          "plugins": [],
+          "regex_priority": 100,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_42-route-name-from-path-method.yaml"
+          ]
+        },
+        {
+          "headers": {
+            "X-API-Version": [
+              "v2"
+            ]
+          },
+          "methods": [
+            "GET"
+          ],
+          "name": "Route_name_from_path_method-orders_orderId_status-get_1",
+          "paths": [
+            "~/orders/(?<orderId>[^#?/]+)/status$"
+          ],
+          "plugins": [],
+          "regex_priority": 100,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_42-route-name-from-path-method.yaml"
+          ]
+        },
+        {
+          "methods": [
+            "GET"
+          ],
+          "name": "Route_name_from_path_method-orders_orderId_status-get",
+          "paths": [
+            "~/orders/(?<orderId>[^#?/]+)/status$"
+          ],
+          "plugins": [],
+          "regex_priority": 100,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_42-route-name-from-path-method.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_42-route-name-from-path-method.yaml"
+      ]
+    },
+    {
+      "host": "server1.com",
+      "name": "Route_name_from_path_method-single-order",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "retries": 3,
+      "routes": [
+        {
+          "methods": [
+            "GET"
+          ],
+          "name": "Route_name_from_path_method-orders_orderId-get",
+          "paths": [
+            "~/orders/(?<orderId>[^#?/]+)$"
+          ],
+          "plugins": [],
+          "regex_priority": 100,
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_42-route-name-from-path-method.yaml"
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_42-route-name-from-path-method.yaml"
+      ]
+    }
+  ],
+  "upstreams": []
+}
