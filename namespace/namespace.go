@@ -8,7 +8,7 @@ import (
 	"github.com/kong/go-apiops/deckformat"
 	"github.com/kong/go-apiops/logbasics"
 	"github.com/kong/go-apiops/yamlbasics"
-	"go.yaml.in/yaml/v4"
+	"github.com/pb33f/go-yaml"
 )
 
 // CheckNamespace validates the prefix namespace. Returns updated namespace. Must start with "/",

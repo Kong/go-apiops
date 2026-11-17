@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/pb33f/go-yaml"
 	"github.com/stretchr/testify/assert"
-	"go.yaml.in/yaml/v4"
 )
 
 const fixturePath = "./oas3_testfiles/"

@@ -4,7 +4,7 @@ import (
 	. "github.com/kong/go-apiops/yamlbasics"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"go.yaml.in/yaml/v4"
+	"github.com/pb33f/go-yaml"
 )
 
 var _ = Describe("NodeSet", func() {
