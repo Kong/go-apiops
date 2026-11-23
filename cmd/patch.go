@@ -137,7 +137,7 @@ The input file will be read, the patches will be applied, and if successful, wri
 to the output file. The patches can be specified by a '--selector' and one or more
 '--value' tags, or via patch-files.
 
-When using '--selector' and '--values', the items will be selected by the 'selector' which is
+When using '--selector' and '--value', the items will be selected by the 'selector' which is
 a JSONpath query. From the array of nodes found, only the objects will be updated.
 The 'values' will be applied on each of the JSONobjects returned by the 'selector'.
 
