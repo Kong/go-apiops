@@ -1,0 +1,87 @@
+{
+  "_format_version": "3.0",
+  "services": [
+    {
+      "host": "api.example.com",
+      "name": "parameter-composition-api",
+      "path": "/",
+      "plugins": [],
+      "port": 443,
+      "protocol": "https",
+      "routes": [
+        {
+          "name": "parameter-composition-api-mcp",
+          "paths": [
+            "/parameter-composition-api-mcp"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "mode": "conversion-listener",
+                "tools": [
+                  {
+                    "annotations": {
+                      "title": "Get an item"
+                    },
+                    "description": "Get an item",
+                    "method": "GET",
+                    "name": "get-item",
+                    "parameters": [
+                      {
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "in": "query",
+                        "name": "sort",
+                        "required": false,
+                        "schema": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "in": "query",
+                        "name": "filter",
+                        "required": false,
+                        "schema": {
+                          "properties": {
+                            "active": {
+                              "type": "boolean"
+                            },
+                            "name": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "name"
+                          ],
+                          "type": "object"
+                        }
+                      }
+                    ],
+                    "path": "/items/{id}"
+                  }
+                ]
+              },
+              "name": "ai-mcp-proxy",
+              "tags": []
+            }
+          ],
+          "tags": []
+        }
+      ],
+      "tags": []
+    }
+  ]
+}
